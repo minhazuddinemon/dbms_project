@@ -1,0 +1,26 @@
+services:
+  backend:
+    build: ./backend # Tells Compose to look inside the backend folder for the Dockerfile
+    ports:
+      - "8080:8080" # Bridges your laptop to the Go server
+    environment:
+      DB_HOST: database # Connects directly to the database service below over the virtual network
+      DB_USER: gopher
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: demo_db
+    depends_on:
+      - database # Ensures Postgres boots up before Go tries to connect
+
+  database:
+    image: postgres:16-alpine # Uses the official, pre-baked light Linux Postgres image
+    ports:
+      - "5432:5432" # Bridges your laptop port so you can inspect data using graphical tools
+    environment:
+      POSTGRES_USER: gopher
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: demo_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Saves your database tables securely on your laptop's disk
+
+volumes:
+  postgres_data: # Named volume declaration
