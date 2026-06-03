@@ -1,26 +1,16 @@
 package cmd
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
-	"net/http"
 	"os"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func Serve() {
-	db := servedb()
-	defer db.Close()
-	http.HandleFunc("/", root)
-	http.ListenAndServe(":8080", nil)
-}
-
-func root(w http.ResponseWriter, r *http.Request) {
-	str := "database connected successfully"
-	strb := []byte(str)
-	w.Write(strb)
-}
-
-func servedb() *sql.DB {
+func ConnectDB(ctx context.Context) *pgxpool.Pool {
 	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
@@ -28,18 +18,19 @@ func servedb() *sql.DB {
 
 	dst := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbUser, dbPassword, dbName)
 
-	var db *sql.DB
+	var db *pgxpool.Pool
 	var err error
 	for i := 1; i <= 10; i++ {
 		fmt.Printf("connecting to the database attempt %d/10 ......\n", i)
-		db, err = sql.Open("postgres", dst)
+		db, err = pgxpool.New(ctx, dst)
 		if err == nil {
-			err = db.Ping()
+			err = db.Ping(context.Background())
 			if err == nil {
-				fmt.Println("database connected successfully.")
+				fmt.Println("database connected successfully. ")
 				break
 			}
 		}
+		time.Sleep(2 * time.Second)
 	}
 
 	if err != nil {

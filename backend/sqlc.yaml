@@ -2,9 +2,10 @@ version: "2"
 sql:
   - engine: postgresql
     schema: "database/migrations" # Path to your database tables setup
-    queries: "database/query.sql" # Path to your raw SQL queries
+    queries: "database/queries/*.sql" # Path to your raw SQL queries
     gen:
       go:
         package: "db" # Name of the generated Go package
         out: "database/db" # Folder where Go files will be saved
         sql_package: "pgx/v5" # Force sqlc to generate code using modern pgx/v5
+        emit_interface: true

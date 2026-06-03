@@ -10,6 +10,11 @@ services:
       DB_NAME: demo_db
     depends_on:
       - database # Ensures Postgres boots up before Go tries to connect
+    develop:
+      watch:
+        - action: rebuild
+          path: ./backend
+          target: /app
 
   database:
     image: postgres:16-alpine # Uses the official, pre-baked light Linux Postgres image
