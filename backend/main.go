@@ -14,7 +14,6 @@ func main() {
 
 	store := db.NewStore(dbPool)
 	server := rest.NewServer(store)
-
 	err := http.ListenAndServe(":8080", server.Router)
 	if err != nil {
 		panic(err)

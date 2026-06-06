@@ -22,6 +22,6 @@ func NewServer(store db.Store) *Server {
 
 func (server *Server) RegisterRoutes() {
 	server.Router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hello, building a dbms projecttesting the docker "))
+		w.Write([]byte("hello, building a dbms project"))
 	})
 }
