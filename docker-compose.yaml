@@ -1,35 +1,52 @@
 services:
+  db:
+    image: mariadb:10.11
+    container_name: admission_db
+    restart: always
+    environment:
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    # Ensures MariaDB is fully initialized before backend tries to connect
+    healthcheck:
+      test: ["CMD", "healthcheck-sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: admission_backend
+    restart: always
     ports:
       - "8080:8080"
     environment:
-      DB_HOST: database
-      DB_USER: gopher
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: demo_db
+      - DB_DSN=${DB_DSN}
     depends_on:
-      - database
+      db:
+        condition: service_healthy
 
-    # ─── ADD THESE TWO VOLUMES FOR INSTANT REBUILD SPEEDS ───
-    volumes:
-      - ./backend:/app
-      - go_build_cache:/root/.cache/go-build
-      - go_mod_cache:/go/pkg/mod
-
-  database:
-    image: postgres:16-alpine
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: admission_frontend
+    restart: always
     ports:
-      - "5432:5432"
+      - "3000:3000"
     environment:
-      POSTGRES_USER: gopher
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: demo_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - PORT=3000
+      - ORIGIN=http://localhost:3000
+      - VITE_API_BASE_URL=http://localhost:8080
+    depends_on:
+      - backend
 
 volumes:
-  postgres_data:
-  # ─── DECLARE THE GO CACHE VOLUMES AT THE BOTTOM ───
-  go_build_cache:
-  go_mod_cache:
+  mariadb_data:

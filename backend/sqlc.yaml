@@ -1,11 +1,13 @@
 version: "2"
 sql:
-  - engine: postgresql
-    schema: "database/migrations" # Path to your database tables setup
-    queries: "database/queries/*.sql" # Path to your raw SQL queries
+  - engine: "mysql"
+    queries: "database/queries"
+    schema: "database/migrations"
     gen:
       go:
-        package: "db" # Name of the generated Go package
-        out: "database/db" # Folder where Go files will be saved
-        sql_package: "pgx/v5" # Force sqlc to generate code using modern pgx/v5
+        package: "db"
+        out: "internal/db"
+        emit_json_tags: true
+        emit_prepared_queries: false
         emit_interface: true
+        emit_exact_table_names: false
