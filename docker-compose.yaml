@@ -14,10 +14,12 @@ services:
       - mariadb_data:/var/lib/mysql
     # Ensures MariaDB is fully initialized before backend tries to connect
     healthcheck:
-      test: ["CMD", "healthcheck-sh", "--connect", "--innodb_initialized"]
+      # Fixed typo: healthcheck.sh (dot instead of hyphen)
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   backend:
     build:
