@@ -1,122 +1,316 @@
 <!-- src/routes/+page.svelte -->
 <script lang="ts">
-	import { ArrowRight, CheckCircle2, Search, Award, Sparkles, Building2, ShieldCheck, Clock } from 'lucide-svelte';
+	import { fetchStats, fetchFeatures, fetchTestimonials } from '$lib/api/landing';
+	import type { Stat, Feature, Testimonial } from '$lib/types/landing';
 	import { authState } from '$lib/state/auth.svelte';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { Sparkles, ArrowRight, Search, Award, MapPin, ShieldCheck, CheckCircle2, ChevronRight, Star, GraduationCap, Users, Target, Clock, Quote } from 'lucide-svelte';
+
+	let stats = $state<Stat[]>([]);
+	let features = $state<Feature[]>([]);
+	let testimonials = $state<Testimonial[]>([]);
+	let searchKeyword = $state('');
+
+	onMount(async () => {
+		try {
+			const [s, f, t] = await Promise.all([fetchStats(), fetchFeatures(), fetchTestimonials()]);
+			stats = s;
+			features = f;
+			testimonials = t;
+		} catch (err) {
+			console.error('Error fetching landing data:', err);
+		}
+
+		// Scroll reveal observer
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						entry.target.classList.add('active');
+					}
+				});
+			},
+			{ threshold: 0.1 }
+		);
+
+		document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+		return () => observer.disconnect();
+	});
+
+	function handleSearch(e: Event) {
+		e.preventDefault();
+		if (searchKeyword.trim()) {
+			goto(`/programs?search=${encodeURIComponent(searchKeyword.trim())}`);
+		} else {
+			goto('/programs');
+		}
+	}
 </script>
 
-<!-- Hero Section -->
-<section class="relative overflow-hidden bg-gradient-to-b from-indigo-900 via-indigo-950 to-slate-950 text-white py-20 lg:py-28">
-	<!-- Background Mesh & Glows -->
-	<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent pointer-events-none"></div>
-	<div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+<svelte:head>
+	<title>UniApp - Unified Public University Admission System</title>
+</svelte:head>
 
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-		<div class="max-w-3xl mx-auto text-center space-y-6">
-			<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-400/20 text-indigo-300 text-xs font-semibold uppercase tracking-wider backdrop-blur-md">
-				<Sparkles class="w-4 h-4 text-emerald-400" />
-				Unified University Admission System
-			</div>
+<!-- Hero Section with Background Parallax Effect -->
+<section class="relative w-full min-h-[85vh] flex flex-col items-center justify-center px-6 overflow-hidden hero-parallax-container py-16">
+	<!-- High quality background hero gradient mesh -->
+	<div
+		class="absolute inset-0 w-full h-full z-0 opacity-20 transition-transform duration-500 ease-out bg-cover bg-center"
+		style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD1R5Z3nJp6JEaw2UxWiGNNHQKr2GeT2M7g_7wd6MlmdFjSWiOx5YryrDrtsxZr2kdqKC4HNLp9p2cIY7OKeysYiAbrmFs37kJfEs3kGXsugLAiPCGTeMd2-TXv0kxhE2fSxX66VFiU8w4UyRwNNP9tOOyYcMBZ57YNIllJfkS1_DeVtJyymmc1X3E8Z1FgXE_D48Nkb6CGgvG2sHCUIB4Af0mdAcxlLRtDdibQcUO2QGnhtHyeCHJ4FTTZOrC5_ZEzkSlS3wWrRN4o");'
+	></div>
+	
+	<!-- Glow accent -->
+	<div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-primary/20 via-primary-container/10 to-tertiary-fixed/15 rounded-full blur-3xl pointer-events-none"></div>
 
-			<h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
-				Find Your Dream <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-300 bg-clip-text text-transparent">University & Program</span>
-			</h1>
-
-			<p class="text-lg sm:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
-				Check your academic eligibility instantly, apply to public university programs, track minimum cutmarks, and manage admission forms in one place.
-			</p>
-
-			<div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-				<a
-					href="/eligible"
-					class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105 transition-all flex items-center justify-center gap-2"
-				>
-					<Award class="w-5 h-5" />
-					Check My Eligibility
-					<ArrowRight class="w-4 h-4" />
-				</a>
-
-				<a
-					href="/programs"
-					class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold bg-white/10 hover:bg-white/15 text-white border border-white/20 backdrop-blur-md transition-all flex items-center justify-center gap-2"
-				>
-					<Search class="w-5 h-5 text-indigo-300" />
-					Browse Programs
-				</a>
-			</div>
+	<div class="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center gap-6 animate-fade-in-up">
+		<div class="glass-panel px-5 py-2 rounded-full inline-flex items-center gap-2 shadow-sm border border-outline-variant/40 hover:shadow-md transition-shadow">
+			<Sparkles class="w-4 h-4 text-primary" />
+			<span class="text-xs font-bold text-primary uppercase tracking-wider">One Profile. Unlimited Opportunities.</span>
 		</div>
 
-		<!-- Quick Stats Row -->
-		<div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-			<div class="bg-white/5 border border-white/10 rounded-2xl p-5 text-center backdrop-blur-md">
-				<span class="block text-3xl font-extrabold text-white">50+</span>
-				<span class="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1 block">Universities</span>
-			</div>
-			<div class="bg-white/5 border border-white/10 rounded-2xl p-5 text-center backdrop-blur-md">
-				<span class="block text-3xl font-extrabold text-emerald-400">100%</span>
-				<span class="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1 block">Rule Accuracy</span>
-			</div>
-			<div class="bg-white/5 border border-white/10 rounded-2xl p-5 text-center backdrop-blur-md">
-				<span class="block text-3xl font-extrabold text-indigo-300">Live</span>
-				<span class="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1 block">Cutmarks Tracker</span>
-			</div>
-			<div class="bg-white/5 border border-white/10 rounded-2xl p-5 text-center backdrop-blur-md">
-				<span class="block text-3xl font-extrabold text-white">Instant</span>
-				<span class="text-xs font-medium text-slate-400 uppercase tracking-wider mt-1 block">Application Form</span>
-			</div>
+		<h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-on-surface leading-tight tracking-tight">
+			Your Future Begins <span class="bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent">Here.</span>
+		</h1>
+
+		<p class="text-lg sm:text-xl text-on-surface-variant max-w-2xl leading-relaxed">
+			Streamline your Bangladesh public university application process. Explore institutions, track travel routes, and match minimum cutmarks with a single profile.
+		</p>
+
+		<div class="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto">
+			<a
+				href="/eligible"
+				class="bg-primary text-white text-base font-bold px-8 py-3.5 rounded-2xl hover:bg-primary-container hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2.5 shadow-lg shadow-primary/25"
+			>
+				<span>Check Eligibility Now</span>
+				<ArrowRight class="w-5 h-5" />
+			</a>
+			<a
+				href="/routes-finder"
+				class="glass-panel text-primary text-base font-bold px-8 py-3.5 rounded-2xl hover:bg-surface-container-low transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2 border border-outline-variant/40"
+			>
+				<MapPin class="w-5 h-5 text-tertiary" />
+				<span>Explore Routes</span>
+			</a>
 		</div>
+
+		<!-- Hero Search Input Box -->
+		<form onsubmit={handleSearch} class="w-full max-w-2xl mt-8 glass-panel rounded-2xl p-2.5 flex items-center gap-2 border border-outline-variant/40 focus-within:ring-2 focus-within:ring-primary/40 transition-all duration-300 hover:shadow-lg">
+			<Search class="w-5 h-5 text-outline ml-3 shrink-0" />
+			<input
+				type="text"
+				bind:value={searchKeyword}
+				placeholder="Search universities, programs, or units (e.g. Computer Science, Unit A)..."
+				class="w-full bg-transparent border-none text-base text-on-surface placeholder:text-outline p-3 focus:outline-none focus:ring-0"
+			/>
+			<button type="submit" class="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-container transition-all shrink-0">
+				Search
+			</button>
+		</form>
 	</div>
 </section>
 
-<!-- Main Features Grid -->
-<section class="py-20 bg-slate-50">
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-		<div class="text-center max-w-2xl mx-auto mb-16">
-			<h2 class="text-3xl font-extrabold text-slate-900 sm:text-4xl">Smart Admission Tools</h2>
-			<p class="mt-3 text-lg text-slate-600">Everything you need to navigate public university admissions efficiently.</p>
+<!-- Mesh Background Wrapper for Stats & Features -->
+<div class="bg-mesh relative z-10 w-full min-h-screen">
+	<!-- Stats Section -->
+	<section class="py-12 px-6 md:px-10 max-w-7xl mx-auto reveal">
+		<div class="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] p-8 sm:p-12 shadow-2xl shadow-primary/5 border border-outline-variant/30">
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0 lg:divide-x divide-outline-variant/30">
+				<!-- Stat 1 -->
+				<div class="flex flex-col items-center text-center px-4 group hover:-translate-y-1 transition-all duration-300">
+					<div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+						<GraduationCap class="w-6 h-6" />
+					</div>
+					<span class="text-4xl sm:text-5xl font-black text-indigo-600 tracking-tight mb-1">50+</span>
+					<span class="text-xs sm:text-sm font-extrabold text-on-surface-variant uppercase tracking-wider">Partner Universities</span>
+				</div>
+
+				<!-- Stat 2 -->
+				<div class="flex flex-col items-center text-center px-4 group hover:-translate-y-1 transition-all duration-300">
+					<div class="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 border border-violet-100 flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 group-hover:bg-violet-600 group-hover:text-white transition-all duration-300">
+						<Users class="w-6 h-6" />
+					</div>
+					<span class="text-4xl sm:text-5xl font-black text-violet-600 tracking-tight mb-1">10k</span>
+					<span class="text-xs sm:text-sm font-extrabold text-on-surface-variant uppercase tracking-wider">Active Students</span>
+				</div>
+
+				<!-- Stat 3 -->
+				<div class="flex flex-col items-center text-center px-4 group hover:-translate-y-1 transition-all duration-300">
+					<div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+						<Target class="w-6 h-6" />
+					</div>
+					<span class="text-4xl sm:text-5xl font-black text-emerald-600 tracking-tight mb-1">95%</span>
+					<span class="text-xs sm:text-sm font-extrabold text-on-surface-variant uppercase tracking-wider">Match Accuracy</span>
+				</div>
+
+				<!-- Stat 4 -->
+				<div class="flex flex-col items-center text-center px-4 group hover:-translate-y-1 transition-all duration-300">
+					<div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
+						<Clock class="w-6 h-6" />
+					</div>
+					<span class="text-4xl sm:text-5xl font-black text-amber-600 tracking-tight mb-1">24h</span>
+					<span class="text-xs sm:text-sm font-extrabold text-on-surface-variant uppercase tracking-wider">Support Response</span>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Features Section -->
+	<section class="py-20 px-6 max-w-7xl mx-auto">
+		<div class="mb-14 text-center reveal">
+			<h2 class="text-3xl sm:text-4xl font-extrabold text-on-surface mb-3">Powerful Features for Your Journey</h2>
+			<p class="text-lg text-on-surface-variant max-w-2xl mx-auto">Everything you need to manage your applications in one seamless platform.</p>
 		</div>
 
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-			<!-- Feature 1 -->
-			<div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
-				<div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-					<Award class="w-6 h-6" />
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+			<!-- Feature 1: Wide Card -->
+			<div class="md:col-span-2 glass-panel bg-white/80 backdrop-blur-2xl rounded-[2rem] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 reveal delay-100 border border-outline-variant/30">
+				<div class="absolute -right-16 -top-16 w-72 h-72 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-colors duration-500"></div>
+				<div>
+					<div class="w-14 h-14 bg-primary-fixed text-primary rounded-2xl flex items-center justify-center mb-6 shadow-md transform group-hover:scale-110 transition-transform duration-300">
+						<Award class="w-7 h-7" />
+					</div>
+					<h3 class="text-2xl font-bold text-on-surface mb-3">Smart Eligibility Engine</h3>
+					<p class="text-on-surface-variant text-base leading-relaxed max-w-lg">
+						Instantly see which universities you qualify for based on your GPA and HSC subject marks (Physics, Mathematics, Chemistry). Stop guessing and start applying with confidence.
+					</p>
 				</div>
-				<h3 class="text-xl font-bold text-slate-900">Eligibility Engine</h3>
-				<p class="text-slate-600 text-sm leading-relaxed">
-					Automatically verifies your SSC/HSC GPA and individual subject marks (Physics, Math, Chemistry) against program rules.
-				</p>
-				<a href="/eligible" class="inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-700 gap-1 pt-2">
-					Try Eligibility Engine &rarr;
+				<a href="/eligible" class="inline-flex items-center gap-2 text-primary font-extrabold text-sm uppercase tracking-wider hover:gap-3 transition-all pt-6">
+					<span>Try Engine</span>
+					<ArrowRight class="w-4 h-4" />
 				</a>
 			</div>
 
 			<!-- Feature 2 -->
-			<div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
-				<div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-					<Building2 class="w-6 h-6" />
+			<div class="glass-panel bg-white/80 backdrop-blur-2xl rounded-[2rem] p-8 sm:p-10 flex flex-col justify-between group hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 reveal delay-200 border border-outline-variant/30">
+				<div>
+					<div class="w-14 h-14 bg-tertiary-fixed text-tertiary rounded-2xl flex items-center justify-center mb-6 shadow-md transform group-hover:scale-110 transition-transform duration-300">
+						<MapPin class="w-7 h-7" />
+					</div>
+					<h3 class="text-2xl font-bold text-on-surface mb-3">Route Tracker</h3>
+					<p class="text-on-surface-variant text-base leading-relaxed">
+						Visualize travel times, transport routes, and shuttle train timings for major university exam centers across Bangladesh.
+					</p>
 				</div>
-				<h3 class="text-xl font-bold text-slate-900">Program Search</h3>
-				<p class="text-slate-600 text-sm leading-relaxed">
-					Filter programs by Unit A, B, or C, search by keyword, view total seat count, cutmarks history, and application deadlines.
-				</p>
-				<a href="/programs" class="inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-700 gap-1 pt-2">
-					Search Programs &rarr;
+				<a href="/routes-finder" class="inline-flex items-center gap-2 text-tertiary font-extrabold text-sm uppercase tracking-wider hover:gap-3 transition-all pt-6">
+					<span>View Routes</span>
+					<ArrowRight class="w-4 h-4" />
 				</a>
 			</div>
 
 			<!-- Feature 3 -->
-			<div class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-4">
-				<div class="w-12 h-12 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center">
-					<ShieldCheck class="w-6 h-6" />
+			<div class="glass-panel bg-white/80 backdrop-blur-2xl rounded-[2rem] p-8 sm:p-10 flex flex-col justify-between group hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 reveal delay-100 border border-outline-variant/30">
+				<div>
+					<div class="w-14 h-14 bg-secondary-fixed text-secondary rounded-2xl flex items-center justify-center mb-6 shadow-md transform group-hover:scale-110 transition-transform duration-300">
+						<Sparkles class="w-7 h-7" />
+					</div>
+					<h3 class="text-2xl font-bold text-on-surface mb-3">Live Alerts</h3>
+					<p class="text-on-surface-variant text-base leading-relaxed">
+						Never miss a deadline or exam date with synchronized notifications for Unit A, B, and C admissions.
+					</p>
 				</div>
-				<h3 class="text-xl font-bold text-slate-900">One-Click Application</h3>
-				<p class="text-slate-600 text-sm leading-relaxed">
-					Apply directly to programs. The system automatically notifies you of any missing required profile parameters.
-				</p>
-				<a href={authState.isAuthenticated ? "/profile" : "/register"} class="inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-700 gap-1 pt-2">
-					{authState.isAuthenticated ? "Manage Profile" : "Register Account"} &rarr;
+				<a href="/dashboard" class="inline-flex items-center gap-2 text-secondary font-extrabold text-sm uppercase tracking-wider hover:gap-3 transition-all pt-6">
+					<span>View Alerts</span>
+					<ArrowRight class="w-4 h-4" />
+				</a>
+			</div>
+
+			<!-- Feature 4: Wide Card -->
+			<div class="md:col-span-2 glass-panel bg-white/80 backdrop-blur-2xl rounded-[2rem] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden group hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 reveal delay-300 border border-outline-variant/30">
+				<div>
+					<div class="w-14 h-14 bg-error-container text-error rounded-2xl flex items-center justify-center mb-6 shadow-md transform group-hover:scale-110 transition-transform duration-300">
+						<ShieldCheck class="w-7 h-7" />
+					</div>
+					<h3 class="text-2xl font-bold text-on-surface mb-3">Unified Applications</h3>
+					<p class="text-on-surface-variant text-base leading-relaxed max-w-lg">
+						Fill out your academic profile once. Apply to multiple programs with automatic verification of missing required profile parameters.
+					</p>
+				</div>
+				<a href="/profile" class="inline-flex items-center gap-2 text-primary font-extrabold text-sm uppercase tracking-wider hover:gap-3 transition-all pt-6">
+					<span>Manage Profile</span>
+					<ArrowRight class="w-4 h-4" />
 				</a>
 			</div>
 		</div>
-	</div>
-</section>
+	</section>
+
+	<!-- Testimonials Section -->
+	<section class="py-20 px-6 max-w-7xl mx-auto reveal">
+		<div class="mb-14 text-center">
+			<h2 class="text-3xl sm:text-4xl font-extrabold text-on-surface mb-3">Loved by Applicants Nationwide</h2>
+			<p class="text-lg text-on-surface-variant max-w-2xl mx-auto">See how UniApp helped thousands of Bangladeshi students secure university admission.</p>
+		</div>
+
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+			<!-- Testimonial 1 -->
+			<div class="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] p-8 sm:p-10 border border-outline-variant/30 shadow-lg shadow-primary/5 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between space-y-6 group">
+				<div class="space-y-4">
+					<div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 border border-indigo-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+						<Quote class="w-6 h-6 rotate-180" />
+					</div>
+					<p class="text-on-surface/90 text-base leading-relaxed font-normal">
+						"UniApp made finding eligible universities incredibly easy. The interface is clean, and the recommendations were spot on. Highly recommended for stressed students!"
+					</p>
+				</div>
+				<div class="flex items-center gap-4 pt-6 border-t border-outline-variant/20">
+					<img
+						src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80"
+						alt="Rahim Uddin"
+						class="w-12 h-12 rounded-full object-cover border-2 border-primary/20 shadow-sm"
+					/>
+					<div>
+						<h4 class="font-bold text-on-surface text-base">Rahim Uddin</h4>
+						<p class="text-xs font-semibold text-primary">Accepted to BUET</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Testimonial 2 -->
+			<div class="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] p-8 sm:p-10 border border-outline-variant/30 shadow-lg shadow-primary/5 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between space-y-6 group">
+				<div class="space-y-4">
+					<div class="w-12 h-12 rounded-2xl bg-violet-50 text-violet-500 border border-violet-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+						<Quote class="w-6 h-6 rotate-180" />
+					</div>
+					<p class="text-on-surface/90 text-base leading-relaxed font-normal">
+						"The unified application feature saved me weeks of repetitive typing. I could focus on my exams instead of filling out the same forms twenty times."
+					</p>
+				</div>
+				<div class="flex items-center gap-4 pt-6 border-t border-outline-variant/20">
+					<img
+						src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80"
+						alt="Sarah Ahmed"
+						class="w-12 h-12 rounded-full object-cover border-2 border-primary/20 shadow-sm"
+					/>
+					<div>
+						<h4 class="font-bold text-on-surface text-base">Sarah Ahmed</h4>
+						<p class="text-xs font-semibold text-violet-600">Accepted to DU</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Testimonial 3 -->
+			<div class="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] p-8 sm:p-10 border border-outline-variant/30 shadow-lg shadow-primary/5 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between space-y-6 group">
+				<div class="space-y-4">
+					<div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+						<Quote class="w-6 h-6 rotate-180" />
+					</div>
+					<p class="text-on-surface/90 text-base leading-relaxed font-normal">
+						"Tracking deadlines across different varsity routes used to be a nightmare. The calendar and alerts on this platform are lifesavers."
+					</p>
+				</div>
+				<div class="flex items-center gap-4 pt-6 border-t border-outline-variant/20">
+					<img
+						src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
+						alt="Fahad Hossain"
+						class="w-12 h-12 rounded-full object-cover border-2 border-primary/20 shadow-sm"
+					/>
+					<div>
+						<h4 class="font-bold text-on-surface text-base">Fahad Hossain</h4>
+						<p class="text-xs font-semibold text-emerald-600">Accepted to RUET</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</div>

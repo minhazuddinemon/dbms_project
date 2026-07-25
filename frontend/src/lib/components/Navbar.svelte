@@ -1,7 +1,7 @@
 <!-- src/lib/components/Navbar.svelte -->
 <script lang="ts">
 	import { authState } from '$lib/state/auth.svelte';
-	import { GraduationCap, LogIn, UserPlus, LogOut, User, Compass, Award, MapPin, Search } from 'lucide-svelte';
+	import { GraduationCap, LogIn, UserPlus, LogOut, User, Compass, Search, Award, MapPin, LayoutDashboard, HelpCircle, Menu, X } from 'lucide-svelte';
 
 	let mobileMenuOpen = $state(false);
 
@@ -10,56 +10,66 @@
 	}
 </script>
 
-<nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80 shadow-sm transition-all duration-300">
+<nav class="sticky top-0 z-50 bg-white/85 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm transition-all duration-300">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-		<div class="flex items-center justify-between h-16">
+		<div class="flex items-center justify-between h-20">
 			<!-- Logo -->
-			<a href="/" class="flex items-center gap-3 group">
-				<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+			<a href="/" class="flex items-center gap-3.5 group">
+				<div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary via-primary-container to-tertiary-fixed-dim flex items-center justify-center text-white shadow-lg shadow-primary/25 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
 					<GraduationCap class="w-6 h-6" />
 				</div>
 				<div>
-					<span class="text-xl font-extrabold bg-gradient-to-r from-indigo-900 via-indigo-700 to-indigo-900 bg-clip-text text-transparent">UniApp</span>
-					<span class="block text-[10px] uppercase tracking-widest text-slate-400 font-semibold -mt-1">Admission Portal</span>
+					<span class="text-2xl font-black bg-gradient-to-r from-on-surface via-primary to-primary-container bg-clip-text text-transparent tracking-tight">UniApp</span>
+					<span class="block text-[11px] font-bold uppercase tracking-widest text-outline -mt-1">Admission Portal</span>
 				</div>
 			</a>
 
 			<!-- Desktop Nav Links -->
-			<div class="hidden md:flex items-center gap-1 lg:gap-2">
-				<a href="/programs" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5">
-					<Search class="w-4 h-4 text-slate-400" />
+			<div class="hidden lg:flex items-center gap-1 xl:gap-2 bg-surface-container-low/70 p-1.5 rounded-2xl border border-outline-variant/30">
+				<a href="/programs" class="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-white transition-all duration-200 flex items-center gap-2">
+					<Search class="w-4 h-4 text-outline" />
 					Programs
 				</a>
-				<a href="/eligible" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5">
-					<Award class="w-4 h-4 text-emerald-500" />
+				<a href="/eligible" class="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-tertiary hover:bg-white transition-all duration-200 flex items-center gap-2">
+					<Award class="w-4 h-4 text-tertiary" />
 					Eligible Varsity
 				</a>
-				<a href="/routes-finder" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-slate-50 transition-colors flex items-center gap-1.5">
-					<MapPin class="w-4 h-4 text-slate-400" />
+				<a href="/routes-finder" class="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-white transition-all duration-200 flex items-center gap-2">
+					<MapPin class="w-4 h-4 text-outline" />
 					Route Tracker
+				</a>
+				{#if authState.isAuthenticated}
+					<a href="/dashboard" class="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-white transition-all duration-200 flex items-center gap-2">
+						<LayoutDashboard class="w-4 h-4 text-primary" />
+						Dashboard
+					</a>
+				{/if}
+				<a href="/helpdesk" class="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-white transition-all duration-200 flex items-center gap-2">
+					<HelpCircle class="w-4 h-4 text-outline" />
+					Support
 				</a>
 			</div>
 
-			<!-- User Auth Actions -->
-			<div class="hidden md:flex items-center gap-3">
+			<!-- User Actions -->
+			<div class="hidden lg:flex items-center gap-3">
 				{#if authState.isAuthenticated}
-					<a href="/profile" class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100 transition-all flex items-center gap-2 border border-slate-200">
-						<User class="w-4 h-4 text-indigo-600" />
-						Profile & Marks
+					<a href="/profile" class="px-5 py-2.5 rounded-xl text-sm font-bold text-on-surface bg-surface-container hover:bg-surface-container-high transition-all duration-200 flex items-center gap-2 border border-outline-variant/40">
+						<User class="w-4 h-4 text-primary" />
+						My Profile
 					</a>
 					<button
 						onclick={() => authState.logout()}
-						class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:text-red-600 hover:bg-red-50 transition-all flex items-center gap-1.5"
+						class="px-4 py-2.5 rounded-xl text-sm font-bold text-error hover:bg-error-container/40 transition-all duration-200 flex items-center gap-1.5"
 					>
 						<LogOut class="w-4 h-4" />
 						Logout
 					</button>
 				{:else}
-					<a href="/login" class="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 transition-all flex items-center gap-1.5">
-						<LogIn class="w-4 h-4 text-slate-400" />
+					<a href="/login" class="px-5 py-2.5 rounded-xl text-sm font-bold text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-all duration-200 flex items-center gap-2">
+						<LogIn class="w-4 h-4 text-outline" />
 						Sign In
 					</a>
-					<a href="/register" class="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all flex items-center gap-1.5">
+					<a href="/register" class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-primary-container shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2">
 						<UserPlus class="w-4 h-4" />
 						Register
 					</a>
@@ -67,31 +77,50 @@
 			</div>
 
 			<!-- Mobile Menu Button -->
-			<div class="md:hidden flex items-center">
+			<div class="lg:hidden flex items-center">
 				<button
 					onclick={toggleMenu}
-					class="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-					aria-label="Toggle menu"
+					class="p-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors"
+					aria-label="Toggle navigation menu"
 				>
-					<Compass class="w-6 h-6" />
+					{#if mobileMenuOpen}
+						<X class="w-6 h-6" />
+					{:else}
+						<Menu class="w-6 h-6" />
+					{/if}
 				</button>
 			</div>
 		</div>
 	</div>
 
-	<!-- Mobile Dropdown -->
+	<!-- Mobile Menu Drawer -->
 	{#if mobileMenuOpen}
-		<div class="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2">
-			<a href="/programs" onclick={() => mobileMenuOpen = false} class="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50">Explore Programs</a>
-			<a href="/eligible" onclick={() => mobileMenuOpen = false} class="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50">Check Eligibility</a>
-			<a href="/routes-finder" onclick={() => mobileMenuOpen = false} class="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-50">Route Finder</a>
-			<div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+		<div class="lg:hidden border-t border-outline-variant/30 bg-white/95 backdrop-blur-2xl px-6 pt-4 pb-6 space-y-3 animate-fade-in-up">
+			<a href="/programs" onclick={() => mobileMenuOpen = false} class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-on-surface hover:bg-surface-container">
+				<Search class="w-5 h-5 text-primary" /> Browse Programs
+			</a>
+			<a href="/eligible" onclick={() => mobileMenuOpen = false} class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-on-surface hover:bg-surface-container">
+				<Award class="w-5 h-5 text-tertiary" /> Eligible Universities
+			</a>
+			<a href="/routes-finder" onclick={() => mobileMenuOpen = false} class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-on-surface hover:bg-surface-container">
+				<MapPin class="w-5 h-5 text-primary" /> Route Tracker
+			</a>
+			{#if authState.isAuthenticated}
+				<a href="/dashboard" onclick={() => mobileMenuOpen = false} class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-on-surface hover:bg-surface-container">
+					<LayoutDashboard class="w-5 h-5 text-primary" /> Dashboard
+				</a>
+			{/if}
+			<a href="/helpdesk" onclick={() => mobileMenuOpen = false} class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-on-surface hover:bg-surface-container">
+				<HelpCircle class="w-5 h-5 text-outline" /> Helpdesk & Support
+			</a>
+
+			<div class="pt-4 border-t border-outline-variant/30 flex flex-col gap-2">
 				{#if authState.isAuthenticated}
-					<a href="/profile" onclick={() => mobileMenuOpen = false} class="w-full text-center px-4 py-2 rounded-lg font-semibold bg-slate-100 text-slate-800">My Profile</a>
-					<button onclick={() => { authState.logout(); mobileMenuOpen = false; }} class="w-full text-center px-4 py-2 rounded-lg font-semibold bg-red-50 text-red-600">Logout</button>
+					<a href="/profile" onclick={() => mobileMenuOpen = false} class="w-full text-center px-4 py-3 rounded-xl font-bold bg-primary-fixed text-on-primary-fixed">My Profile</a>
+					<button onclick={() => { authState.logout(); mobileMenuOpen = false; }} class="w-full text-center px-4 py-3 rounded-xl font-bold bg-error-container text-on-error-container">Logout</button>
 				{:else}
-					<a href="/login" onclick={() => mobileMenuOpen = false} class="w-full text-center px-4 py-2 rounded-lg font-semibold border border-slate-300 text-slate-700">Sign In</a>
-					<a href="/register" onclick={() => mobileMenuOpen = false} class="w-full text-center px-4 py-2 rounded-lg font-semibold bg-indigo-600 text-white">Register Account</a>
+					<a href="/login" onclick={() => mobileMenuOpen = false} class="w-full text-center px-4 py-3 rounded-xl font-bold border border-outline-variant text-on-surface">Sign In</a>
+					<a href="/register" onclick={() => mobileMenuOpen = false} class="w-full text-center px-4 py-3 rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20">Register Account</a>
 				{/if}
 			</div>
 		</div>

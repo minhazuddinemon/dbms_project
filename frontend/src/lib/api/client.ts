@@ -1,6 +1,6 @@
 // src/lib/api/client.ts
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export function getAuthToken(): string | null {
 	if (typeof window !== 'undefined') {
@@ -19,17 +19,39 @@ export function setAuthToken(token: string | null): void {
 	}
 }
 
+export function getAdminToken(): string | null {
+	if (typeof window !== 'undefined') {
+		return localStorage.getItem('uniapp_admin_token') || localStorage.getItem('uniapp_token');
+	}
+	return null;
+}
+
+export function setAdminToken(token: string | null): void {
+	if (typeof window !== 'undefined') {
+		if (token) {
+			localStorage.setItem('uniapp_admin_token', token);
+		} else {
+			localStorage.removeItem('uniapp_admin_token');
+		}
+	}
+}
+
 export async function apiFetch<T>(
 	endpoint: string,
 	options: RequestInit = {}
 ): Promise<T> {
-	const token = getAuthToken();
+	const isAdminEndpoint = endpoint.startsWith('/admin') && !endpoint.startsWith('/admin/login');
+	const token = isAdminEndpoint ? getAdminToken() : getAuthToken();
+
+	const customHeaders = (options.headers as Record<string, string>) || {};
 	const headers: Record<string, string> = {
 		'Content-Type': 'application/json',
-		...(options.headers as Record<string, string>)
+		...customHeaders
 	};
 
-	if (token) {
+	const hasAuthHeader = Object.keys(headers).some((k) => k.toLowerCase() === 'authorization');
+
+	if (token && !hasAuthHeader) {
 		headers['Authorization'] = `Bearer ${token}`;
 	}
 
@@ -66,3 +88,4 @@ export async function apiFetch<T>(
 		return text as unknown as T;
 	}
 }
+

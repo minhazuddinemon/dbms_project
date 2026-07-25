@@ -18,3 +18,4 @@ backend/tmp/
 # OS Junk
 .DS_Store
 Thumbs.db
+.agents
