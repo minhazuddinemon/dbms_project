@@ -17,3 +17,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?);
 -- name: GetStudentAcademics :many
 SELECT * FROM Student_Academics
 WHERE student_id = ?;
+
+-- name: GetStudentSubjectMarks :many
+SELECT subject_name, marks, grade
+FROM Student_Subject_Marks
+WHERE student_id = ? AND exam_level = ?;

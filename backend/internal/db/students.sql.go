@@ -63,7 +63,7 @@ func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (s
 }
 
 const getStudentAcademics = `-- name: GetStudentAcademics :many
-SELECT student_id, exam_level, year, roll_no, reg_no, gpa, board FROM Student_Academics
+SELECT student_id, exam_level, year, roll_no, reg_no, gpa, board, edu_group FROM Student_Academics
 WHERE student_id = ?
 `
 
@@ -84,6 +84,7 @@ func (q *Queries) GetStudentAcademics(ctx context.Context, studentID int32) ([]S
 			&i.RegNo,
 			&i.Gpa,
 			&i.Board,
+			&i.EduGroup,
 		); err != nil {
 			return nil, err
 		}
@@ -134,4 +135,44 @@ func (q *Queries) GetStudentByID(ctx context.Context, studentID int32) (Student,
 		&i.Dob,
 	)
 	return i, err
+}
+
+const getStudentSubjectMarks = `-- name: GetStudentSubjectMarks :many
+SELECT subject_name, marks, grade
+FROM Student_Subject_Marks
+WHERE student_id = ? AND exam_level = ?
+`
+
+type GetStudentSubjectMarksParams struct {
+	StudentID int32  `json:"student_id"`
+	ExamLevel string `json:"exam_level"`
+}
+
+type GetStudentSubjectMarksRow struct {
+	SubjectName string         `json:"subject_name"`
+	Marks       string         `json:"marks"`
+	Grade       sql.NullString `json:"grade"`
+}
+
+func (q *Queries) GetStudentSubjectMarks(ctx context.Context, arg GetStudentSubjectMarksParams) ([]GetStudentSubjectMarksRow, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentSubjectMarks, arg.StudentID, arg.ExamLevel)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetStudentSubjectMarksRow
+	for rows.Next() {
+		var i GetStudentSubjectMarksRow
+		if err := rows.Scan(&i.SubjectName, &i.Marks, &i.Grade); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

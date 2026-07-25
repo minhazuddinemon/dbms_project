@@ -76,7 +76,6 @@ func main() {
 	mux.HandleFunc("/programs", h.HandleListPrograms)
 	mux.HandleFunc("/programs/detail", h.HandleGetProgramByID)
 	// Protected Routes (Requires valid JWT)
-	mux.HandleFunc("/profile", middleware.RequireAuth(h.HandleProfile))
 	mux.HandleFunc("/programs/eligible", middleware.RequireAuth(h.HandleEligiblePrograms))
 
 	// Wrap the entire router with the logger middleware

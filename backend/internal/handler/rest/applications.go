@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"dbms-project/internal/db"
 	"dbms-project/internal/middleware"
 )
 
@@ -20,7 +21,6 @@ func (h *Handler) HandleEligiblePrograms(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 1. Get logged-in student's ID from context
 	studentID, ok := r.Context().Value(middleware.StudentIDKey).(int32)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -29,31 +29,48 @@ func (h *Handler) HandleEligiblePrograms(w http.ResponseWriter, r *http.Request)
 
 	ctx := r.Context()
 
-	// 2. Fetch Student's Academics using your GetStudentAcademics query
+	// 1. Fetch Student Academics
 	academics, err := h.Queries.GetStudentAcademics(ctx, studentID)
 	if err != nil {
 		http.Error(w, "Failed to fetch student academics", http.StatusInternalServerError)
 		return
 	}
 
-	// Map exam_level (e.g. "SSC", "HSC") to GPA float
 	studentGPA := make(map[string]float64)
+	studentGroup := make(map[string]string)
+
 	for _, acad := range academics {
-		// acad.ExamLevel is string, acad.Gpa is string (NUMERIC)
-		gpaVal, err := strconv.ParseFloat(acad.Gpa, 64)
-		if err == nil {
+		if gpaVal, err := strconv.ParseFloat(acad.Gpa, 64); err == nil {
 			studentGPA[acad.ExamLevel] = gpaVal
+		}
+		studentGroup[acad.ExamLevel] = acad.EduGroup // 'Science', 'Humanities', etc.
+	}
+
+	// 2. Fetch HSC Subject Marks (Crucial for Engineering & Unit A)
+	hscMarksList, err := h.Queries.GetStudentSubjectMarks(ctx, db.GetStudentSubjectMarksParams{
+		StudentID: studentID,
+		ExamLevel: "HSC",
+	})
+	if err != nil {
+		http.Error(w, "Failed to fetch subject marks", http.StatusInternalServerError)
+		return
+	}
+
+	hscMarks := make(map[string]float64)
+	for _, m := range hscMarksList {
+		if val, err := strconv.ParseFloat(m.Marks, 64); err == nil {
+			hscMarks[m.SubjectName] = val
 		}
 	}
 
-	// 3. Fetch all programs and their eligibility rules
+	// 3. Fetch Programs & Rules
 	programRules, err := h.Queries.GetAllProgramsWithRules(ctx)
 	if err != nil {
 		http.Error(w, "Failed to fetch programs", http.StatusInternalServerError)
 		return
 	}
 
-	// 4. Evaluate eligibility logic
+	// 4. Evaluate Rules
 	eligibleMap := make(map[int32]EligibleProgram)
 	disqualifiedMap := make(map[int32]bool)
 
@@ -62,23 +79,50 @@ func (h *Handler) HandleEligiblePrograms(w http.ResponseWriter, r *http.Request)
 			continue
 		}
 
-		// Check rules if rule_type and rule_value are present
 		if pr.RuleType.Valid && pr.RuleValue.Valid {
-			requiredGPA, _ := strconv.ParseFloat(pr.RuleValue.String, 64)
+			ruleType := pr.RuleType.String
+			ruleVal := pr.RuleValue.String
 
-			if pr.RuleType.String == "MIN_SSC_GPA" && studentGPA["SSC"] < requiredGPA {
+			// Check Required Education Group (e.g. Science only)
+			if ruleType == "REQ_HSC_GROUP" && studentGroup["HSC"] != ruleVal {
 				disqualifiedMap[pr.ProgramID] = true
 				delete(eligibleMap, pr.ProgramID)
 				continue
 			}
-			if pr.RuleType.String == "MIN_HSC_GPA" && studentGPA["HSC"] < requiredGPA {
-				disqualifiedMap[pr.ProgramID] = true
-				delete(eligibleMap, pr.ProgramID)
-				continue
+
+			// Check Minimum GPAs
+			if requiredGPA, err := strconv.ParseFloat(ruleVal, 64); err == nil {
+				if ruleType == "MIN_SSC_GPA" && studentGPA["SSC"] < requiredGPA {
+					disqualifiedMap[pr.ProgramID] = true
+					delete(eligibleMap, pr.ProgramID)
+					continue
+				}
+				if ruleType == "MIN_HSC_GPA" && studentGPA["HSC"] < requiredGPA {
+					disqualifiedMap[pr.ProgramID] = true
+					delete(eligibleMap, pr.ProgramID)
+					continue
+				}
+			}
+
+			// Check Subject Specific Marks (e.g. MIN_HSC_PHYSICS = 80)
+			if ruleType == "MIN_HSC_PHYSICS" || ruleType == "MIN_HSC_MATH" || ruleType == "MIN_HSC_CHEMISTRY" {
+				reqScore, _ := strconv.ParseFloat(ruleVal, 64)
+				subj := "Physics"
+				switch ruleType {
+				case "MIN_HSC_MATH":
+					subj = "Mathematics"
+				case "MIN_HSC_CHEMISTRY":
+					subj = "Chemistry"
+				}
+
+				if hscMarks[subj] < reqScore {
+					disqualifiedMap[pr.ProgramID] = true
+					delete(eligibleMap, pr.ProgramID)
+					continue
+				}
 			}
 		}
 
-		// Add program to eligible map if not disqualified
 		eligibleMap[pr.ProgramID] = EligibleProgram{
 			ProgramID:      pr.ProgramID,
 			ProgramName:    pr.PName,
@@ -86,7 +130,6 @@ func (h *Handler) HandleEligiblePrograms(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	// 5. Format results into JSON array
 	var results []EligibleProgram
 	for _, p := range eligibleMap {
 		results = append(results, p)

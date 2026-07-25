@@ -86,11 +86,20 @@ type StudentAcademic struct {
 	RegNo     string `json:"reg_no"`
 	Gpa       string `json:"gpa"`
 	Board     string `json:"board"`
+	EduGroup  string `json:"edu_group"`
 }
 
 type StudentMobile struct {
 	StudentID int32  `json:"student_id"`
 	MobileNo  string `json:"mobile_no"`
+}
+
+type StudentSubjectMark struct {
+	StudentID   int32          `json:"student_id"`
+	ExamLevel   string         `json:"exam_level"`
+	SubjectName string         `json:"subject_name"`
+	Marks       string         `json:"marks"`
+	Grade       sql.NullString `json:"grade"`
 }
 
 type University struct {
