@@ -1,0 +1,530 @@
+<!DOCTYPE html><html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Academic Data Collection - UniApp</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-high": "#e6e8ea",
+                        "surface-tint": "#494bd6",
+                        "on-primary-fixed": "#07006c",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-container": "#eceef0",
+                        "on-surface-variant": "#464554",
+                        "on-secondary-fixed": "#100069",
+                        "surface-dim": "#d8dadc",
+                        "outline-variant": "#c7c4d7",
+                        "tertiary-container": "#00885d",
+                        "surface-bright": "#f7f9fb",
+                        "primary": "#4648d4",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#c0c1ff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-tertiary-fixed": "#002113",
+                        "on-background": "#191c1e",
+                        "secondary-fixed-dim": "#c3c0ff",
+                        "on-primary-container": "#fffbff",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-secondary-fixed-variant": "#372abf",
+                        "tertiary": "#006c49",
+                        "surface": "#f7f9fb",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#e3dfff",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "primary-fixed": "#e1e0ff",
+                        "outline": "#767586",
+                        "background": "#f7f9fb",
+                        "surface-variant": "#e0e3e5",
+                        "secondary-container": "#6860ef",
+                        "primary-container": "#6063ee",
+                        "on-tertiary-container": "#000703",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-surface": "#191c1e",
+                        "secondary": "#4e45d5",
+                        "inverse-surface": "#2d3133",
+                        "on-secondary-container": "#fffbff"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "margin-page": "2rem",
+                        "stack-sm": "0.5rem",
+                        "stack-lg": "2rem",
+                        "padding-card": "1.5rem",
+                        "gutter-grid": "1.5rem",
+                        "stack-md": "1rem"
+                    },
+                    fontFamily: {
+                        "label-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    fontSize: {
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(199, 196, 215, 0.5);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.08);
+        }
+        
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Input focus glow */
+        .input-glow:focus {
+            box-shadow: 0 0 0 4px rgba(70, 72, 212, 0.15);
+            border-color: #4648d4;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden min-h-screen flex">
+<!-- Background Shader -->
+<div class="fixed inset-0 z-[-2] w-full h-full">
+<!-- STITCH_SHADER_START:ANIMATION_23 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_23" style="display:block;width:100%;height:100%" width="1280" height="2331"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_23');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+varying vec2 v_texCoord;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+void main() {
+    vec2 uv = v_texCoord;
+    
+    // Create a very subtle, slow-moving gradient wave
+    float wave = sin(uv.x * 3.0 + u_time * 0.5) * 0.05;
+    float wave2 = cos(uv.y * 2.0 + u_time * 0.3) * 0.05;
+    
+    vec3 color1 = vec3(0.96, 0.98, 1.0); // Light Cyan/White
+    vec3 color2 = vec3(0.93, 0.95, 0.98); // Slightly deeper soft blue
+    
+    vec3 finalColor = mix(color1, color2, uv.y + wave + wave2);
+    
+    // Add a very faint "academic" grain/grid feel
+    float grid = (sin(uv.x * u_resolution.x * 0.5) * 0.5 + 0.5) * (sin(uv.y * u_resolution.y * 0.5) * 0.5 + 0.5);
+    finalColor -= grid * 0.005;
+
+    gl_FragColor = vec4(finalColor, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_23 -->
+</div>
+<!-- University Image Overlay -->
+<div class="fixed top-0 left-0 w-full h-[40vh] z-[-1] opacity-10 pointer-events-none" data-alt="A softly blurred, bright, and majestic university building in daylight, conveying institutional authority and academic excellence. Light mode aesthetic with deep indigo subtle tints." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCzTHFmsbiRavnswjATlzraZs_J2DIvdMNhgupAdL66kCOBA0aAQiWKEaw3ESIYPwXx6Alii6NQzmpoj5PJXVddsmpZGqVcpEE9hy9LlnXp93VF4VtDPobzGaUuwBu71_RLQj3pVstr-1LkvRcH5sc2kwFub65iBhc9k4ivKVea5_DWEeF2LYrcaF2scgVPkKEaWBLZmecfUsZy8Ow966xgB-Q5scSwTms4hDDgToDqKflS0SO2Hktqt-cUkmjoAAcJrzvficjAFTWn'); background-size: cover; background-position: center;">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-background"></div>
+</div>
+<!-- Side Navigation (Desktop) -->
+<aside class="hidden md:flex flex-col h-screen w-[280px] border-r border-outline-variant bg-surface/90 backdrop-blur-xl fixed left-0 top-0 z-50 py-8 px-6 shadow-sm overflow-y-auto">
+<div class="flex items-center gap-3 mb-10">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-on-primary font-bold text-xl">U</div>
+<div class="flex flex-col">
+<span class="text-headline-md font-headline-md font-bold text-primary">UniApp</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">One Profile. Unlimited Opportunities.</span>
+</div>
+</div>
+<nav class="flex flex-col gap-2 flex-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="text-label-lg font-label-lg">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-xl border-l-4 border-primary scale-95 transition-transform duration-150 shadow-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">edit_note</span>
+<span class="text-label-lg font-label-lg font-bold">Fill Info</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">school</span>
+<span class="text-label-lg font-label-lg">Eligible Universities</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">payments</span>
+<span class="text-label-lg font-label-lg">Apply / Payments</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">military_tech</span>
+<span class="text-label-lg font-label-lg">Results &amp; Merit List</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">route</span>
+<span class="text-label-lg font-label-lg">Varsity Routes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help_center</span>
+<span class="text-label-lg font-label-lg">Support &amp; Helpdesk</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="text-label-lg font-label-lg">Account &amp; Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">logout</span>
+<span class="text-label-lg font-label-lg">Logout</span>
+</a></nav>
+<div class="mt-auto pt-6 border-outline-variant/30" style="opacity: 0;"></div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col min-h-screen md:ml-[280px] w-full">
+<!-- Top Navigation -->
+<header class="flex justify-between items-center w-full h-20 px-4 md:px-8 bg-surface/80 docked full-width top-0 sticky z-40 backdrop-blur-md border-b border-outline-variant/30 shadow-sm shadow-primary/5">
+<!-- Mobile Menu Trigger -->
+<button class="md:hidden p-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- Search Bar -->
+<div class="hidden md:flex flex-1 max-w-md ml-4 focus-within:ring-2 focus-within:ring-primary/20 rounded-xl transition-all">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-xl py-2.5 pl-10 pr-4 text-body-md font-body-md text-on-surface focus:ring-0 placeholder:text-outline/70" placeholder="Search universities, programs..." type="text">
+</div>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4 ml-auto">
+<button class="relative p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="hidden sm:flex items-center gap-3 pl-4 border-l border-outline-variant/30 cursor-pointer hover:bg-surface-container-low p-1.5 rounded-lg transition-colors">
+<div class="flex flex-col items-end">
+<span class="text-label-lg font-label-lg text-on-surface">Fahad Hossain</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Student</span>
+</div>
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="A professional headshot of a young male student in a bright, modern setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuByuVyw1oAIAi92-d6EBEMQM9fMowFJOcAAdKcETfJvAsQB1_gVMDYV0CV3AND5jAJVNnHqX-CfiwUsYjxxv14jLIcmC3Vdz1zFo_SLi6QSfRvezkwSQoba1ptGrEIvpiKYlY0Z6CyvrGWYBa_d96llGajdmM75u2KwNsIIu9v7uNBByXLCDcEA07lYiyZOdsnxLtWSo2qCTEJhBEiqBt72aICR3jEr7h2cJi01Mz_h438a-shv5WIq1Ak_SZxwZnfufcPbYXaRUT0t">
+<span class="material-symbols-outlined text-outline">expand_more</span>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 p-4 md:p-margin-page pb-24">
+<div class="max-w-4xl mx-auto space-y-8">
+<!-- Hero Header -->
+<section class="fade-in-up py-6 visible">
+<h1 class="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg text-on-surface mb-2">Complete Your Academic Profile</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant">Accurate data ensures the best university matches. Let's build your path.</p>
+</section>
+<form class="space-y-stack-lg">
+<!-- Segment 1: Basic Credentials -->
+<section class="fade-in-up glass-panel rounded-2xl p-padding-card transition-transform hover:-translate-y-1 duration-300 visible">
+<div class="flex items-center gap-3 mb-6 border-b border-outline-variant/30 pb-4">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<h2 class="text-headline-md font-headline-md text-on-surface">Basic Credentials</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-grid">
+<div class="flex flex-col gap-2 md:col-span-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">Student ID (Auto-generated)</label>
+<input class="bg-surface-container text-on-surface-variant border-outline-variant/50 rounded-xl px-4 py-3 text-body-md font-body-md cursor-not-allowed" disabled="" type="text" value="UNI-24-9821">
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">First Name</label>
+<input class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all" placeholder="Fahad" type="text">
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">Last Name</label>
+<input class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all" placeholder="Hossain" type="text">
+</div>
+<div class="flex flex-col gap-2 md:col-span-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">Email Address</label>
+<input class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all" placeholder="fahad@example.com" type="email">
+</div>
+<div class="flex flex-col gap-2 md:col-span-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">Date of Birth</label>
+<input class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all text-on-surface" type="date">
+</div>
+</div>
+</section>
+<!-- Segment 2: SSC Record -->
+<section class="fade-in-up glass-panel rounded-2xl p-padding-card transition-transform hover:-translate-y-1 duration-300 visible" style="transition-delay: 100ms;">
+<div class="flex items-center gap-3 mb-6 border-b border-outline-variant/30 pb-4">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">menu_book</span>
+</div>
+<h2 class="text-headline-md font-headline-md text-on-surface">SSC Record</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-grid">
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">SSC Roll Number</label>
+<input class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all" placeholder="Enter Roll" type="text">
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">SSC Registration</label>
+<input class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all" placeholder="Enter Reg" type="text">
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">SSC GPA</label>
+<input class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all" max="5" min="0" placeholder="5.00" step="0.01" type="number">
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">SSC Year</label>
+<select class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all">
+<option disabled="" selected="" value="">Select Year</option>
+<option value="2022">2022</option>
+<option value="2021">2021</option>
+<option value="2020">2020</option>
+</select>
+</div>
+<div class="flex flex-col gap-2 md:col-span-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">Education Board</label>
+<select class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all">
+<option disabled="" selected="" value="">Select Board</option>
+<option value="dhaka">Dhaka</option>
+<option value="rajshahi">Rajshahi</option>
+<option value="chittagong">Chittagong</option>
+<option value="sylhet">Sylhet</option>
+</select>
+</div>
+</div>
+</section>
+<!-- Segment 3: HSC Record -->
+<section class="fade-in-up glass-panel rounded-2xl p-padding-card transition-transform hover:-translate-y-1 duration-300 visible" style="transition-delay: 200ms;">
+<div class="flex items-center gap-3 mb-6 border-b border-outline-variant/30 pb-4">
+<div class="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">auto_stories</span>
+</div>
+<h2 class="text-headline-md font-headline-md text-on-surface">HSC Record</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-grid">
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">HSC Roll Number</label>
+<input class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all" placeholder="Enter Roll" type="text">
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">HSC Registration</label>
+<input class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all" placeholder="Enter Reg" type="text">
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">HSC GPA</label>
+<input class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all" max="5" min="0" placeholder="5.00" step="0.01" type="number">
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">HSC Year</label>
+<select class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all">
+<option disabled="" selected="" value="">Select Year</option>
+<option value="2024">2024</option>
+<option value="2023">2023</option>
+</select>
+</div>
+<div class="flex flex-col gap-2 md:col-span-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">Education Board</label>
+<select class="input-glow bg-surface border-outline-variant rounded-xl px-4 py-3 text-body-md font-body-md transition-all">
+<option disabled="" selected="" value="">Select Board</option>
+<option value="dhaka">Dhaka</option>
+<option value="rajshahi">Rajshahi</option>
+<option value="chittagong">Chittagong</option>
+<option value="sylhet">Sylhet</option>
+</select>
+</div>
+</div>
+</section><section class="fade-in-up glass-panel rounded-2xl p-padding-card transition-transform hover:-translate-y-1 duration-300 visible" style="transition-delay: 300ms;">
+<div class="flex items-center gap-3 mb-6 border-b border-outline-variant/30 pb-4">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">upload_file</span>
+</div>
+<h2 class="text-headline-md font-headline-md text-on-surface">Upload Documents</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-grid">
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">Passport Photo</label>
+<div class="flex items-center justify-between bg-surface border border-dashed border-outline-variant rounded-xl px-4 py-3">
+<span class="text-body-md text-outline">No file chosen</span>
+<button type="button" class="text-primary font-label-lg flex items-center gap-1 hover:underline"><span class="material-symbols-outlined text-sm">upload</span> Upload</button>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">Digital Signature</label>
+<div class="flex items-center justify-between bg-surface border border-dashed border-outline-variant rounded-xl px-4 py-3">
+<span class="text-body-md text-outline">No file chosen</span>
+<button type="button" class="text-primary font-label-lg flex items-center gap-1 hover:underline"><span class="material-symbols-outlined text-sm">upload</span> Upload</button>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">SSC Transcript</label>
+<div class="flex items-center justify-between bg-surface border border-dashed border-outline-variant rounded-xl px-4 py-3">
+<span class="text-body-md text-outline">No file chosen</span>
+<button type="button" class="text-primary font-label-lg flex items-center gap-1 hover:underline"><span class="material-symbols-outlined text-sm">upload</span> Upload</button>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-label-lg font-label-lg text-on-surface-variant">HSC Transcript</label>
+<div class="flex items-center justify-between bg-surface border border-dashed border-outline-variant rounded-xl px-4 py-3">
+<span class="text-body-md text-outline">No file chosen</span>
+<button type="button" class="text-primary font-label-lg flex items-center gap-1 hover:underline"><span class="material-symbols-outlined text-sm">upload</span> Upload</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Action Area -->
+<div class="fade-in-up flex justify-end gap-4 pt-6 visible" style="transition-delay: 400ms;">
+<button class="px-4 py-2 rounded-lg border border-outline-variant text-on-surface font-label-lg hover:bg-surface-container transition-colors" type="button">Save Draft</button>
+<button class="px-6 py-2 rounded-lg bg-primary text-on-primary font-label-lg hover:bg-secondary shadow-lg shadow-primary/20 transition-all hover:scale-105 flex items-center gap-2" type="submit"><span class="">Continue</span><span class="material-symbols-outlined text-sm">arrow_forward</span></button>
+</div>
+</form>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full border-t border-outline-variant bg-surface-container-lowest grid grid-cols-1 md:grid-cols-4 gap-8 px-8 py-12 mt-auto">
+<div class="md:col-span-1">
+<span class="text-headline-md font-headline-md font-bold text-primary mb-4 block">UniApp</span>
+<p class="text-label-sm font-label-sm text-on-surface-variant">© 2024 UniApp Admission Portal. All rights reserved.</p>
+</div>
+<div class="md:col-span-3 flex flex-wrap gap-6 justify-start md:justify-end">
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">About Us</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Contact Support</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">University Partners</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Careers</a>
+</div>
+</footer>
+</div>
+<script>
+        // Intersection Observer for scroll animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+            document.querySelectorAll('.fade-in-up').forEach((el) => {
+                observer.observe(el);
+            });
+            
+            // Trigger initial visible items
+            setTimeout(() => {
+                document.querySelectorAll('.fade-in-up').forEach((el, index) => {
+                    const rect = el.getBoundingClientRect();
+                    if(rect.top < window.innerHeight) {
+                        el.classList.add('visible');
+                    }
+                });
+            }, 100);
+        });
+    </script>
+
+
+
+
+</body></html>

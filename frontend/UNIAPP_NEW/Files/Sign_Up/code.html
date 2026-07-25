@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>UniApp - Authentication</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "surface": "#f7f9fb",
+                        "on-error": "#ffffff",
+                        "on-background": "#191c1e",
+                        "outline-variant": "#c7c4d7",
+                        "on-primary-container": "#fffbff",
+                        "inverse-surface": "#2d3133",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-tint": "#494bd6",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed-dim": "#c3c0ff",
+                        "outline": "#767586",
+                        "on-primary-fixed": "#07006c",
+                        "surface-container-high": "#e6e8ea",
+                        "on-surface": "#191c1e",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "tertiary-container": "#00885d",
+                        "surface-container": "#eceef0",
+                        "primary": "#4648d4",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#464554",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#e3dfff",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-fixed": "#100069",
+                        "on-secondary-container": "#fffbff",
+                        "surface-variant": "#e0e3e5",
+                        "surface-dim": "#d8dadc",
+                        "error": "#ba1a1a",
+                        "secondary": "#4e45d5",
+                        "on-tertiary-fixed": "#002113",
+                        "tertiary": "#006c49",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#372abf",
+                        "secondary-container": "#6860ef",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "on-tertiary-container": "#000703",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "background": "#f7f9fb",
+                        "primary-fixed": "#e1e0ff",
+                        "inverse-primary": "#c0c1ff",
+                        "primary-container": "#6063ee"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "0.5rem",
+                        "margin-page": "2rem",
+                        "gutter-grid": "1.5rem",
+                        "stack-lg": "2rem",
+                        "padding-card": "1.5rem",
+                        "stack-md": "1rem"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "label-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                        "headline-lg": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 24px -8px rgba(70, 72, 212, 0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+        
+        .input-group {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-group:focus-within {
+            transform: translateY(-2px);
+        }
+        
+        .input-glow {
+            transition: all 0.3s ease;
+        }
+
+        .input-glow:focus {
+            box-shadow: 0 4px 12px -4px rgba(70, 72, 212, 0.15), 0 0 0 2px rgba(70, 72, 212, 0.2);
+            border-color: #4648d4;
+            outline: none;
+            background: #ffffff;
+        }
+
+        .tab-btn.active {
+            border-bottom: 2px solid #4648d4;
+            color: #4648d4;
+            font-weight: 600;
+        }
+
+        .tab-btn {
+            color: #464554;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface flex items-center justify-center relative md:overflow-hidden min-h-screen md:h-screen w-full p-4 md:p-8">
+<!-- Ambient Background Graphic -->
+<div class="fixed inset-0 z-0 pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-primary-fixed rounded-full blur-[120px] opacity-40"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-secondary-fixed rounded-full blur-[150px] opacity-30"></div>
+</div>
+<!-- Main Container -->
+<div class="relative z-10 w-full max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8 md:gap-12 fade-in-up">
+<!-- Left Side: Brand & Hero Graphic -->
+<div class="flex flex-col flex-1 max-w-lg w-full text-center md:text-left">
+<div class="flex items-center justify-center md:justify-start gap-2 mb-4">
+<div class="w-10 h-10 bg-primary text-on-primary rounded-lg flex items-center justify-center font-bold text-xl shadow-md shadow-primary/20">U</div>
+<h1 class="font-headline-md text-headline-md text-primary font-black tracking-tight">UniApp</h1>
+</div>
+<h2 class="font-headline-lg text-on-surface mb-3 leading-tight">Your gateway to top universities.</h2>
+<p class="font-body-lg text-on-surface-variant mb-6 text-sm md:text-base">One Profile. Unlimited Opportunities. Streamline your admission journey with our smart recommendation engine.</p>
+<!-- Hero Illustration Placeholder -->
+<div class="relative w-full aspect-video rounded-xl overflow-hidden glass-panel border-outline-variant/30 hidden md:flex items-center justify-center shadow-lg shadow-primary/5" data-alt="A modern, abstract digital illustration showing students connecting with futuristic university campuses. The scene is bright and airy, using soft indigo, light purple, and pristine white tones to create a high-tech, welcoming educational environment. Minimalist geometric shapes represent data flowing seamlessly." style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAjQ10-5y0leDZCe6C0HTWHoi9EkkIA_OOKg5dcM14fpWvoRbaViTBNMF9aKOHEM_RjBXeH_lHhmRe8ZoK_I4L8b_d8MxSNcl49SJzWNPo8dpLqcSe0FSqGQqh1Xogoi3JTL0pd4P4zfdEjUycz9s4i7HXSjKJGwrKyTTsNCks0suuJsZwgmsQpH1KFurKBh2Az_iRcuoUy3GVNnfOFEgZwiMUPiljv3hFgXUMJDPsSGlPbnWx32XeEC-2tqc5V5tlSZVDEuI2I-b6t"); background-size: cover; background-position: center center;'>
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent mix-blend-overlay"></div>
+</div>
+</div>
+<!-- Right Side: Auth Card -->
+<div class="w-full max-w-[380px] flex-none mx-auto md:mx-0">
+<div class="glass-panel rounded-[20px] p-6 w-full relative shadow-xl shadow-primary/5">
+<!-- Tabs -->
+<div class="flex mb-6 border-b border-outline-variant/30">
+<button class="flex-1 pb-2 text-center tab-btn active font-label-lg text-label-lg" id="tab-signin">Sign In</button>
+<button class="flex-1 pb-2 text-center tab-btn font-label-lg text-label-lg" id="tab-signup">Sign Up</button>
+</div>
+<!-- Sign In Form -->
+<form class="space-y-4 block" id="form-signin">
+<div class="input-group">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1.5 transition-colors group-focus-within:text-primary">Email or Phone</label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-[20px]">mail</span>
+<input class="w-full pl-10 pr-3 py-2.5 bg-surface-container-lowest/90 border border-outline-variant/50 rounded-lg input-glow text-on-surface placeholder:text-outline/60 text-sm" placeholder="Enter your email or phone" type="text"/>
+</div>
+</div>
+<div class="input-group">
+<div class="flex justify-between items-center mb-1.5">
+<label class="block font-label-sm text-label-sm text-on-surface-variant group-focus-within:text-primary transition-colors">Password</label>
+<a class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors" href="#">Forgot?</a>
+</div>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-[20px]">lock</span>
+<input class="w-full pl-10 pr-10 py-2.5 bg-surface-container-lowest/90 border border-outline-variant/50 rounded-lg input-glow text-on-surface placeholder:text-outline/60 text-sm" placeholder="Enter your password" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">visibility_off</span>
+</button>
+</div>
+</div>
+<div class="flex items-center pt-1">
+<input class="w-4 h-4 rounded border-outline-variant/50 text-primary focus:ring-primary/20 bg-surface-container-lowest transition-colors" id="remember" type="checkbox"/>
+<label class="ml-2 font-body-md text-body-md text-on-surface-variant text-sm cursor-pointer select-none" for="remember">Remember me</label>
+</div>
+<button class="w-full py-2.5 mt-4 bg-primary hover:bg-on-primary-fixed text-on-primary rounded-lg font-label-lg text-label-lg transition-all active:scale-[0.98] shadow-md shadow-primary/20 flex items-center justify-center gap-2" type="submit">
+                        Sign In <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<div class="relative flex items-center py-4">
+<div class="flex-grow border-t border-outline-variant/30"></div>
+<span class="flex-shrink-0 mx-3 text-outline/80 font-label-sm text-xs">or continue with</span>
+<div class="flex-grow border-t border-outline-variant/30"></div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2 py-2 border border-outline-variant/40 rounded-lg bg-surface-container-lowest/90 hover:bg-surface-container-lowest transition-all hover:shadow text-on-surface font-label-sm text-label-sm" type="button">
+<img class="w-4 h-4" data-alt="A clean, flat Google G logo isolated on a white background with standard corporate colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBydNGnyUA7Hp1fQHb9kGP-ADr_lHhmo7HE3oV7YZ-xMNU7X-70L7uYr_ylmDQJAMkr7yCj61xdxu9uP5jlZl-momiKXfJqfxIqVvg4Zf4dctQmBkri2uu6ZBIUXmxG6-gA3RJRwbqiifrGGku-ppCO3QG3zqwDLXIohRWJG5J_2QGEvsq3so_I8FdIfhk3oUvmGlECg6h5em_PGWx9KVnMwQPPWTim2ncMUw-4k4zyUoI8vY9al9ustMONtObsjfmaONBdArzV6RS2"/> Google
+                        </button>
+<button class="flex items-center justify-center gap-2 py-2 border border-outline-variant/40 rounded-lg bg-surface-container-lowest/90 hover:bg-surface-container-lowest transition-all hover:shadow text-on-surface font-label-sm text-label-sm" type="button">
+<img class="w-4 h-4" data-alt="A clean, flat Facebook f logo isolated on a white background with standard corporate blue." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIQGWfDpfa4mEuYX6LSajb9jtfjrOdbR0yPjnAHhjCMCTXL5HoidTGSBLWjhypJAv80tv0GO3PjTQL1KXnrrLcL7xFVICcrdbfFjt4iWQ_5NPBtCjOygP3CwRuilARNNVsEOn6065Zs3YKBbM-RCvS813J8yKM3wNdIJlQ1jLrway1uv4DT-yjg1ByEFuscbuNkPC23lONnSiG1ya5uj1FVl5Zf2xGn4ad6bkcJAIu1wVt0hFY81nNjT729MJni3c7PGHFObkdFLMv"/> Facebook
+                        </button>
+</div>
+</form>
+<!-- Sign Up Form (Initially Hidden) -->
+<form class="space-y-3.5 hidden" id="form-signup">
+<div class="grid grid-cols-2 gap-3">
+<div class="col-span-2 input-group">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 group-focus-within:text-primary transition-colors">Full Name</label>
+<input class="w-full px-3 py-2 bg-surface-container-lowest/90 border border-outline-variant/50 rounded-lg input-glow text-on-surface placeholder:text-outline/60 text-sm" placeholder="John Doe" type="text"/>
+</div>
+<div class="input-group">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 group-focus-within:text-primary transition-colors">Email</label>
+<input class="w-full px-3 py-2 bg-surface-container-lowest/90 border border-outline-variant/50 rounded-lg input-glow text-on-surface placeholder:text-outline/60 text-sm" placeholder="john@example.com" type="email"/>
+</div>
+<div class="input-group">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 group-focus-within:text-primary transition-colors">Mobile</label>
+<input class="w-full px-3 py-2 bg-surface-container-lowest/90 border border-outline-variant/50 rounded-lg input-glow text-on-surface placeholder:text-outline/60 text-sm" placeholder="+880 1xxx" type="tel"/>
+</div>
+</div>
+<div class="border-t border-outline-variant/30 pt-3 mt-2">
+<div class="grid grid-cols-2 gap-3 mb-2">
+<div class="input-group">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 group-focus-within:text-primary transition-colors">Password</label>
+<input class="w-full px-3 py-2 bg-surface-container-lowest/90 border border-outline-variant/50 rounded-lg input-glow text-on-surface placeholder:text-outline/60 text-sm" placeholder="Create password" type="password"/>
+</div>
+<div class="input-group">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 group-focus-within:text-primary transition-colors">Confirm</label>
+<input class="w-full px-3 py-2 bg-surface-container-lowest/90 border border-outline-variant/50 rounded-lg input-glow text-on-surface placeholder:text-outline/60 text-sm" placeholder="Confirm" type="password"/>
+</div>
+</div>
+<!-- Password Strength Indicator -->
+<div class="flex gap-1 h-1 w-full mb-1">
+<div class="flex-1 bg-error rounded-full transition-all"></div>
+<div class="flex-1 bg-surface-variant rounded-full transition-all"></div>
+<div class="flex-1 bg-surface-variant rounded-full transition-all"></div>
+<div class="flex-1 bg-surface-variant rounded-full transition-all"></div>
+</div>
+<p class="text-xs text-outline font-label-sm">Weak: Add numbers and symbols</p>
+</div>
+<div class="flex items-start mt-3">
+<input class="w-4 h-4 mt-0.5 rounded border-outline-variant/50 text-primary focus:ring-primary/20 bg-surface-container-lowest transition-colors cursor-pointer" id="terms" type="checkbox"/>
+<label class="ml-2 font-body-md text-on-surface-variant text-xs leading-snug cursor-pointer select-none" for="terms">
+                            I agree to the <a class="text-primary hover:text-primary-container transition-colors" href="#">Terms of Service</a> and <a class="text-primary hover:text-primary-container transition-colors" href="#">Privacy Policy</a>
+</label>
+</div>
+<button class="w-full py-2.5 mt-4 bg-primary hover:bg-on-primary-fixed text-on-primary rounded-lg font-label-lg text-label-lg transition-all active:scale-[0.98] shadow-md shadow-primary/20" type="submit">
+                        Create Account
+                    </button>
+</form>
+</div>
+<p class="text-center mt-6 font-label-sm text-sm text-outline/80">
+                Having trouble? <a class="text-primary hover:text-primary-container transition-colors font-semibold" href="#">Contact Support</a>
+</p>
+</div>
+</div>
+<script>
+        // Simple tab switching logic
+        const tabSignin = document.getElementById('tab-signin');
+        const tabSignup = document.getElementById('tab-signup');
+        const formSignin = document.getElementById('form-signin');
+        const formSignup = document.getElementById('form-signup');
+
+        tabSignin.addEventListener('click', () => {
+            tabSignin.classList.add('active');
+            tabSignup.classList.remove('active');
+            formSignin.classList.remove('hidden');
+            formSignin.classList.add('block');
+            formSignup.classList.add('hidden');
+            formSignup.classList.remove('block');
+        });
+
+        tabSignup.addEventListener('click', () => {
+            tabSignup.classList.add('active');
+            tabSignin.classList.remove('active');
+            formSignup.classList.remove('hidden');
+            formSignup.classList.add('block');
+            formSignin.classList.add('hidden');
+            formSignin.classList.remove('block');
+        });
+    </script>
+</body></html>

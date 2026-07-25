@@ -1,0 +1,371 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Support &amp; Helpdesk - UniApp</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#767586",
+                        "surface-dim": "#d8dadc",
+                        "surface-variant": "#e0e3e5",
+                        "tertiary": "#006c49",
+                        "secondary-fixed-dim": "#c3c0ff",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#494bd6",
+                        "primary-fixed": "#e1e0ff",
+                        "on-background": "#191c1e",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#c0c1ff",
+                        "on-tertiary-fixed": "#002113",
+                        "primary": "#4648d4",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#372abf",
+                        "tertiary-fixed": "#6ffbbe",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-low": "#f2f4f6",
+                        "primary-container": "#6063ee",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#07006c",
+                        "tertiary-container": "#00885d",
+                        "on-error-container": "#93000a",
+                        "background": "#f7f9fb",
+                        "on-secondary-fixed": "#100069",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "outline-variant": "#c7c4d7",
+                        "secondary-fixed": "#e3dfff",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-container": "#000703",
+                        "on-surface": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "surface": "#f7f9fb",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "on-secondary-container": "#fffbff",
+                        "surface-bright": "#f7f9fb",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#6860ef",
+                        "on-error": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "secondary": "#4e45d5",
+                        "on-surface-variant": "#464554"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "padding-card": "1.5rem",
+                        "stack-md": "1rem",
+                        "stack-lg": "2rem",
+                        "gutter-grid": "1.5rem",
+                        "stack-sm": "0.5rem",
+                        "margin-page": "2rem"
+                    },
+                    "fontFamily": {
+                        "label-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: theme('colors.background'); }
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid theme('colors.outline-variant');
+            box-shadow: 0 4px 24px -4px rgba(70, 72, 212, 0.05);
+        }
+    </style>
+</head>
+<body class="text-on-surface antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-[280px] bg-surface border-r border-outline-variant flex flex-col py-8 px-6 z-50">
+<div class="flex items-center gap-3 mb-10 pl-2">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary font-bold text-lg">U</div>
+<div class="flex flex-col">
+<span class="text-headline-md font-headline-md font-bold text-primary">UniApp</span>
+<span class="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider">One Profile. Unlimited Opportunities.</span>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
+<!-- Inactive Tabs -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-lg font-label-lg">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="text-label-lg font-label-lg">Fill Info</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="text-label-lg font-label-lg">Eligible Universities</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-label-lg font-label-lg">Apply / Payments</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">military_tech</span>
+<span class="text-label-lg font-label-lg">Results &amp; Merit List</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">route</span>
+<span class="text-label-lg font-label-lg">Varsity Routes</span>
+</a>
+<!-- Active Tab -->
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-xl border-l-4 border-primary scale-95 transition-transform duration-150 shadow-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">help_center</span>
+<span class="text-label-lg font-label-lg font-bold">Support &amp; Helpdesk</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#"><span class="material-symbols-outlined">settings</span><span class="text-label-lg font-label-lg">Account &amp; Settings</span></a><a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-error transition-colors hover:bg-surface-container-high rounded-xl" href="#"><span class="material-symbols-outlined">logout</span><span class="text-label-lg font-label-lg">Logout</span></a></nav>
+<div class="mt-auto pt-6 border-t border-outline-variant/50">
+
+
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="ml-[280px] flex-1 flex flex-col h-screen overflow-y-auto bg-background/50">
+<!-- TopNavBar -->
+<header class="docked full-width top-0 sticky z-40 backdrop-blur-md bg-surface/80 border-b border-outline-variant/30 flex justify-between items-center w-full h-20 px-8 shadow-sm shadow-primary/5">
+<div class="flex items-center bg-surface-container-low rounded-full px-4 py-2 w-96 border border-outline-variant/30 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<span class="material-symbols-outlined text-outline mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md text-on-surface w-full placeholder:text-outline/70" placeholder="Search knowledge base..." type="text">
+</div>
+<div class="flex items-center gap-6">
+<button class="relative p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+</button>
+<div class="flex items-center gap-3 border-l border-outline-variant/30 pl-6 cursor-pointer hover:opacity-80 transition-opacity">
+<img alt="Fahad Hossain" class="w-10 h-10 rounded-full object-cover border border-outline-variant/30 shadow-sm" data-alt="A professional headshot of a young male student, Fahad Hossain, with a neat haircut, wearing a casual light blue button-down shirt. The background is a soft, blurred bright white office environment, conveying a modern and approachable look suitable for a university admission platform profile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpv1pAsIkzjgtZgpyM5I9uc22HuCiEC4Jj1u6OML79U_Vpr2ssbdtotzd3Gs6vn_gcF5escwcFfPsja0jp1phl5jvGCT1ss2-qDd9H8hr7oTp7ZSheHk8hk3t9K5KuNvwgJYrEj4ASmFxtBKcZ7VuddzuF5B-K4L9Qlk7M-XM6SKDnI_EwZUi7vbUypfGCYqCMD-aIb9w2uiMAKhtcu2_8pjRjrXqZivh1IQQvs2skkqcbFzlGZVusevVqEwLXb0HKu13JW877pENK">
+<div class="flex flex-col">
+<span class="text-label-lg font-label-lg text-on-surface">Fahad Hossain</span>
+<span class="text-[12px] text-on-surface-variant">Applicant</span>
+</div>
+<span class="material-symbols-outlined text-outline">expand_more</span>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-8 px-10 max-w-[1600px] mx-auto w-full">
+<!-- Page Header & FAQ Search Hero -->
+<div class="mb-8 glass-card rounded-3xl p-10 relative overflow-hidden bg-gradient-to-br from-surface to-surface-container-lowest">
+<div class="absolute right-0 top-0 w-1/2 h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60"></div>
+<div class="relative z-10 max-w-2xl">
+<h1 class="text-display-lg font-display-lg text-on-surface mb-4">How can we help you today?</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant mb-8">Search our comprehensive guides, common admission queries, or reach out directly to our support team.</p>
+<div class="flex items-center bg-surface rounded-2xl p-2 shadow-sm border border-outline-variant/40 focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+<span class="material-symbols-outlined text-primary ml-4 mr-2 text-2xl">search</span>
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-body-lg py-3 px-2 text-on-surface placeholder:text-outline" placeholder="e.g., 'How to upload documents' or 'Payment failed'" type="text">
+<button class="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-lg hover:bg-primary-fixed-variant transition-colors">Search</button>
+</div>
+<div class="mt-6 flex flex-wrap gap-2">
+<span class="text-label-sm text-on-surface-variant py-2 mr-2">Popular:</span>
+<button class="px-4 py-1.5 rounded-full border border-outline-variant text-label-sm text-on-surface hover:bg-surface-container-low transition-colors">Payment Issues</button>
+<button class="px-4 py-1.5 rounded-full border border-outline-variant text-label-sm text-on-surface hover:bg-surface-container-low transition-colors">Admit Card</button>
+<button class="px-4 py-1.5 rounded-full border border-outline-variant text-label-sm text-on-surface hover:bg-surface-container-low transition-colors">Document Verification</button>
+</div>
+</div>
+</div>
+<!-- Bento Grid Content -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+<!-- Left Column: Support Ticket Form (Spans 7 cols) -->
+<div class="xl:col-span-7 flex flex-col gap-6">
+<div class="glass-card rounded-2xl p-padding-card flex flex-col h-full">
+<div class="flex items-center justify-between mb-6 border-b border-outline-variant/30 pb-4">
+<div>
+<h2 class="text-headline-md font-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">support_agent</span>
+                                    Submit a Ticket
+                                </h2>
+<p class="text-label-sm text-on-surface-variant mt-1">Our team typically responds within 2-4 hours.</p>
+</div>
+</div>
+<form class="flex flex-col gap-5 flex-1">
+<div class="grid grid-cols-2 gap-5">
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface mb-1.5">Category</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none">
+<option>Select issue type...</option>
+<option>Application Process</option>
+<option>Payment &amp; Refunds</option>
+<option>Technical Issue</option>
+</select>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface mb-1.5">Priority</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none">
+<option>Normal</option>
+<option>High (Deadlines approaching)</option>
+<option>Urgent (System failure)</option>
+</select>
+</div>
+</div>
+<div>
+<label class="block text-label-sm font-label-sm text-on-surface mb-1.5">Subject</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Brief description of the issue" type="text">
+</div>
+<div class="flex-1 flex flex-col">
+<label class="block text-label-sm font-label-sm text-on-surface mb-1.5">Description</label>
+<textarea class="w-full flex-1 min-h-[150px] bg-surface-container-lowest border border-outline-variant rounded-xl px-4 py-3 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none" placeholder="Provide detailed information about your problem..."></textarea>
+</div>
+<!-- File Upload Area -->
+<div class="border-2 border-dashed border-outline-variant/60 rounded-xl p-6 flex flex-col items-center justify-center bg-surface-container-lowest/50 hover:bg-surface-container-low transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-3xl text-outline mb-2 group-hover:text-primary transition-colors">cloud_upload</span>
+<span class="text-label-sm font-label-sm text-on-surface">Drag &amp; drop files or <span class="text-primary underline">browse</span></span>
+<span class="text-[11px] text-on-surface-variant mt-1">Supported: JPG, PNG, PDF (Max 5MB)</span>
+</div>
+<div class="flex justify-end pt-4 mt-auto">
+<button class="px-6 py-2.5 rounded-xl border border-outline-variant text-on-surface font-label-lg mr-3 hover:bg-surface-container-low transition-colors" type="button">Cancel</button>
+<button class="px-8 py-2.5 rounded-xl bg-primary text-on-primary font-label-lg hover:bg-primary-fixed-variant transition-all shadow-sm shadow-primary/20 flex items-center gap-2" type="submit">
+                                    Send Message
+                                    <span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</form>
+</div>
+</div>
+<!-- Right Column: Info Cards (Spans 5 cols) -->
+<div class="xl:col-span-5 flex flex-col gap-6">
+<!-- Emergency Helpline -->
+<div class="glass-card rounded-2xl p-padding-card bg-gradient-to-br from-error-container/30 to-surface border-error/20">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-error">emergency</span>
+                            Emergency Helpline
+                        </h3>
+<p class="text-body-md text-on-surface-variant mb-6">For urgent issues during admission deadlines or severe technical failures preventing application submission.</p>
+<div class="flex flex-col gap-3">
+<div class="bg-surface rounded-xl p-4 flex items-center justify-between border border-outline-variant/30 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined">call</span>
+</div>
+<div>
+<div class="text-label-lg font-label-lg text-on-surface">Technical Support</div>
+<div class="text-label-sm text-outline font-mono mt-0.5">16444 (Toll Free)</div>
+</div>
+</div>
+<button class="p-2 rounded-lg text-primary hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="bg-surface rounded-xl p-4 flex items-center justify-between border border-outline-variant/30 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-tertiary-container/20 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">chat</span>
+</div>
+<div>
+<div class="text-label-lg font-label-lg text-on-surface">Live Chat</div>
+<div class="text-label-sm text-outline mt-0.5 flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-tertiary inline-block"></span> Online Now
+                                        </div>
+</div>
+</div>
+<button class="px-4 py-1.5 rounded-lg bg-tertiary/10 text-tertiary font-label-sm hover:bg-tertiary/20 transition-colors">Start Chat</button>
+</div>
+</div>
+</div>
+<!-- Admission Office Directory -->
+<div class="glass-card rounded-2xl p-padding-card flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">account_balance</span>
+                            University Directory
+                        </h3>
+<p class="text-label-sm text-on-surface-variant mb-5">Direct contacts for university-specific queries.</p>
+<div class="flex flex-col gap-2 overflow-y-auto pr-2 max-h-[300px] custom-scrollbar">
+<!-- Directory Item 1 -->
+<div class="p-3 rounded-xl hover:bg-surface-container-low transition-colors border border-transparent hover:border-outline-variant/30 flex items-start gap-3 cursor-pointer group">
+<div class="w-8 h-8 rounded-full bg-surface-dim flex items-center justify-center text-on-surface-variant mt-1 group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-sm">school</span>
+</div>
+<div>
+<div class="text-label-lg font-label-lg text-on-surface">BUET Admission Office</div>
+<div class="text-[12px] text-on-surface-variant mt-0.5">admissions@buet.ac.bd</div>
+<div class="text-[12px] text-outline font-mono mt-0.5">+880 2 55167100</div>
+</div>
+</div>
+<!-- Directory Item 2 -->
+<div class="p-3 rounded-xl hover:bg-surface-container-low transition-colors border border-transparent hover:border-outline-variant/30 flex items-start gap-3 cursor-pointer group">
+<div class="w-8 h-8 rounded-full bg-surface-dim flex items-center justify-center text-on-surface-variant mt-1 group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-sm">school</span>
+</div>
+<div>
+<div class="text-label-lg font-label-lg text-on-surface">Dhaka University Helpdesk</div>
+<div class="text-[12px] text-on-surface-variant mt-0.5">helpdesk@du.ac.bd</div>
+<div class="text-[12px] text-outline font-mono mt-0.5">+880 2 9661900</div>
+</div>
+</div>
+<!-- Directory Item 3 -->
+<div class="p-3 rounded-xl hover:bg-surface-container-low transition-colors border border-transparent hover:border-outline-variant/30 flex items-start gap-3 cursor-pointer group">
+<div class="w-8 h-8 rounded-full bg-surface-dim flex items-center justify-center text-on-surface-variant mt-1 group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-sm">school</span>
+</div>
+<div>
+<div class="text-label-lg font-label-lg text-on-surface">SUST Admission Cell</div>
+<div class="text-[12px] text-on-surface-variant mt-0.5">admission@sust.edu</div>
+<div class="text-[12px] text-outline font-mono mt-0.5">+880 821 713491</div>
+</div>
+</div>
+</div>
+<button class="w-full mt-4 py-2 border border-outline-variant text-label-sm font-label-sm text-on-surface rounded-lg hover:bg-surface-container-low transition-colors">View All Directory</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full border-t border-outline-variant bg-surface-container-lowest px-8 py-12">
+<div class="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+<div>
+<h4 class="text-headline-md font-headline-md font-bold text-primary mb-4">UniApp</h4>
+<p class="text-label-sm text-on-surface-variant">© 2024 UniApp Admission Portal. All rights reserved.</p>
+</div>
+<div class="flex flex-col gap-2 text-body-md font-body-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">About Us</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
+</div>
+<div class="flex flex-col gap-2 text-body-md font-body-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Contact Support</a>
+</div>
+<div class="flex flex-col gap-2 text-body-md font-body-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">University Partners</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Careers</a>
+</div>
+</div>
+</footer>
+</div>
+
+
+</body></html>

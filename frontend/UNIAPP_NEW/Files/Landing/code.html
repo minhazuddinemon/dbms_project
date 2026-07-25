@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>UniApp - Your University Journey</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#767586",
+                        "surface-dim": "#d8dadc",
+                        "surface-variant": "#e0e3e5",
+                        "tertiary": "#006c49",
+                        "secondary-fixed-dim": "#c3c0ff",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#494bd6",
+                        "primary-fixed": "#e1e0ff",
+                        "on-background": "#191c1e",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#c0c1ff",
+                        "on-tertiary-fixed": "#002113",
+                        "primary": "#4648d4",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#372abf",
+                        "tertiary-fixed": "#6ffbbe",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-low": "#f2f4f6",
+                        "primary-container": "#6063ee",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#07006c",
+                        "tertiary-container": "#00885d",
+                        "on-error-container": "#93000a",
+                        "background": "#f7f9fb",
+                        "on-secondary-fixed": "#100069",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "outline-variant": "#c7c4d7",
+                        "secondary-fixed": "#e3dfff",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-container": "#000703",
+                        "on-surface": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "surface": "#f7f9fb",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "on-secondary-container": "#fffbff",
+                        "surface-bright": "#f7f9fb",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#6860ef",
+                        "on-error": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "secondary": "#4e45d5",
+                        "on-surface-variant": "#464554"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "padding-card": "1.5rem",
+                        "stack-md": "1rem",
+                        "stack-lg": "2rem",
+                        "gutter-grid": "1.5rem",
+                        "stack-sm": "0.5rem",
+                        "margin-page": "2rem"
+                    },
+                    "fontFamily": {
+                        "label-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    },
+                    "animation": {
+                        'gradient-xy': 'gradient-xy 15s ease infinite',
+                        'float': 'float 15s ease-in-out infinite',
+                    },
+                    "keyframes": {
+                        'gradient-xy': {
+                            '0%, 100%': {
+                                'background-size': '400% 400%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            }
+                        },
+                        'float': {
+                            '0%, 100%': { transform: 'translateY(0) scale(1)' },
+                            '50%': { transform: 'translateY(-15px) scale(1.02)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .glass-panel {
+                @apply bg-surface/80 backdrop-blur-xl border border-outline-variant/30 shadow-sm shadow-primary/5;
+            }
+            .material-symbols-outlined {
+                font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            }
+            .bg-mesh {
+                background: radial-gradient(at 0% 0%, hsla(242, 63%, 55%, 0.1) 0px, transparent 50%),
+                            radial-gradient(at 100% 0%, hsla(168, 100%, 80%, 0.15) 0px, transparent 50%),
+                            radial-gradient(at 100% 100%, hsla(242, 63%, 55%, 0.1) 0px, transparent 50%),
+                            radial-gradient(at 0% 100%, hsla(168, 100%, 80%, 0.15) 0px, transparent 50%);
+                @apply bg-surface-container-lowest;
+            }
+        }
+        
+        /* Reveal Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+            will-change: transform, opacity;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Stagger Delays */
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+        .delay-400 { transition-delay: 400ms; }
+
+        /* Initial Load Animation for Hero */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s cubic-bezier(0.5, 0, 0, 1) forwards;
+        }
+
+        /* Parallax Container */
+        .hero-parallax-container {
+            perspective: 1000px;
+        }
+
+        /* Respect prefers-reduced-motion */
+        @media (prefers-reduced-motion: reduce) {
+            .reveal {
+                transition: none;
+                transform: none;
+                opacity: 1;
+            }
+            .animate-fade-in-up {
+                animation: none;
+                transform: none;
+                opacity: 1;
+            }
+            .bg-mesh {
+                animation: none;
+            }
+            .animate-float {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased overflow-x-hidden">
+<header class="fixed top-0 w-full z-50 glass-panel h-20 flex justify-between items-center px-8">
+<div class="flex items-center gap-2 text-headline-md font-headline-md font-black text-primary hover:scale-105 transition-transform cursor-pointer">
+<span class="material-symbols-outlined text-3xl" style='font-variation-settings: "FILL" 1;'>school</span>
+        UniApp
+    </div>
+<nav class="hidden md:flex gap-8">
+<a class="text-label-lg font-label-lg text-primary font-bold border-b-2 border-primary" href="#">Home</a>
+<a class="text-label-lg font-label-lg text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Features</a>
+<a class="text-label-lg font-label-lg text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Testimonials</a>
+<a class="text-label-lg font-label-lg text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">FAQ</a>
+</nav>
+<div class="flex gap-4">
+<button class="text-label-lg font-label-lg text-primary px-4 py-2 hover:bg-surface-container-low rounded-lg transition-colors duration-300">Login</button>
+<button class="bg-primary text-on-primary text-label-lg font-label-lg px-6 py-2 rounded-lg hover:bg-primary-container hover:text-on-primary-container shadow-sm shadow-primary/20 hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5">Get Started</button>
+</div>
+</header>
+<main class="pt-20">
+<!-- Hero Section with Parallax -->
+<section class="relative w-full min-h-[921px] flex flex-col items-center justify-center px-6 overflow-hidden hero-parallax-container" id="hero">
+<div class="absolute inset-0 w-full h-full z-0 opacity-40 mix-blend-multiply transition-transform duration-200 ease-out" data-alt="A striking, high-key digital illustration of a prominent university building resembling Dhaka University, bathed in soft morning light. The scene features a modern, clean light-mode aesthetic with bright white spaces and subtle deep indigo accents. The architecture is majestic yet approachable, blending traditional institutional authority with a sleek, forward-thinking tech atmosphere. High resolution." id="hero-parallax-bg" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD1R5Z3nJp6JEaw2UxWiGNNHQKr2GeT2M7g_7wd6MlmdFjSWiOx5YryrDrtsxZr2kdqKC4HNLp9p2cIY7OKeysYiAbrmFs37kJfEs3kGXsugLAiPCGTeMd2-TXv0kxhE2fSxX66VFiU8w4UyRwNNP9tOOyYcMBZ57YNIllJfkS1_DeVtJyymmc1X3E8Z1FgXE_D48Nkb6CGgvG2sHCUIB4Af0mdAcxlLRtDdibQcUO2QGnhtHyeCHJ4FTTZOrC5_ZEzkSlS3wWrRN4o"); background-size: cover; background-position: center center;'></div>
+<div class="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center gap-8 mt-12 animate-fade-in-up opacity-0">
+<div class="glass-panel px-6 py-2 rounded-full inline-flex items-center gap-2 mb-4 hover:shadow-md transition-shadow duration-300">
+<span class="material-symbols-outlined text-primary text-sm">stars</span>
+<span class="text-label-sm font-label-sm text-primary">One Profile. Unlimited Opportunities.</span>
+</div>
+<h1 class="text-display-lg font-display-lg text-on-surface leading-tight">
+                Your Future Begins <span class="text-primary">Here.</span>
+</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-2xl">
+                Streamline your university application process. Explore top institutions, track your routes, and apply with a single, powerful profile.
+            </p>
+<div class="flex flex-col sm:flex-row gap-4 mt-4 w-full sm:w-auto">
+<button class="bg-primary text-on-primary text-body-md font-label-lg px-6 py-2.5 rounded-xl hover:bg-primary-container hover:text-on-primary-container shadow-md shadow-primary/20 transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                    Check Eligibility Now
+                    <span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+<button class="glass-panel text-primary text-body-md font-label-lg px-6 py-2.5 rounded-xl hover:bg-surface-container-low transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">route</span>
+                    Explore Routes
+                </button>
+</div>
+<div class="w-full max-w-2xl mt-12 glass-panel rounded-2xl p-2 flex items-center gap-2 focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300 hover:shadow-md">
+<span class="material-symbols-outlined text-outline ml-4">search</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-body-md font-body-md text-on-surface placeholder:text-outline p-4 outline-none transition-colors duration-300" placeholder="Search universities, programs, or locations..." type="text"/>
+<button class="bg-surface-container-high text-on-surface text-label-lg font-label-lg px-5 py-2.5 rounded-xl hover:bg-surface-variant transition-colors duration-300">Search</button>
+</div>
+</div>
+</section>
+<div class="bg-mesh animate-gradient-xy relative z-10 w-full min-h-screen pt-2">
+<!-- Stats Section -->
+<section class="py-24 px-6 md:px-12 max-w-7xl mx-auto bg-surface-container-lowest/80 backdrop-blur-md rounded-[2rem] my-12 shadow-sm border border-outline-variant/20 relative z-20 reveal">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-outline-variant/30">
+<div class="flex flex-col items-center gap-2 reveal delay-100">
+<span class="text-display-lg font-display-lg text-primary">50+</span>
+<span class="text-label-lg font-label-lg text-on-surface-variant">Partner Universities</span>
+</div>
+<div class="flex flex-col items-center gap-2 reveal delay-200">
+<span class="text-display-lg font-display-lg text-primary">10k</span>
+<span class="text-label-lg font-label-lg text-on-surface-variant">Active Students</span>
+</div>
+<div class="flex flex-col items-center gap-2 reveal delay-300">
+<span class="text-display-lg font-display-lg text-primary">95%</span>
+<span class="text-label-lg font-label-lg text-on-surface-variant">Match Accuracy</span>
+</div>
+<div class="flex flex-col items-center gap-2 reveal delay-400">
+<span class="text-display-lg font-display-lg text-primary">24h</span>
+<span class="text-label-lg font-label-lg text-on-surface-variant">Support Response</span>
+</div>
+</div>
+</section>
+<!-- Features Section -->
+<section class="py-24 px-6 max-w-7xl mx-auto">
+<div class="mb-16 text-center reveal">
+<h2 class="text-headline-lg font-headline-lg text-on-surface mb-4">Powerful Features for Your Journey</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-2xl mx-auto">Everything you need to manage your applications in one seamless platform.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[300px]">
+<div class="md:col-span-2 glass-panel bg-surface-container-lowest/80 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden group hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 reveal delay-100">
+<div class="absolute -right-12 -top-12 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors duration-500"></div>
+<div>
+<div class="w-12 h-12 bg-primary-fixed text-primary rounded-xl flex items-center justify-center mb-6 transform group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-2xl">troubleshoot</span>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2">Smart Eligibility Engine</h3>
+<p class="text-body-md font-body-md text-on-surface-variant max-w-md">Instantly see which universities you qualify for based on your academic profile. Stop guessing and start applying with confidence.</p>
+</div>
+<div class="flex items-center gap-2 text-primary font-label-lg text-label-lg cursor-pointer group-hover:gap-4 transition-all duration-300">
+                        Try Engine <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</div>
+</div>
+<div class="glass-panel bg-surface-container-lowest/80 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between group hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 reveal delay-200">
+<div>
+<div class="w-12 h-12 bg-tertiary-fixed text-tertiary rounded-xl flex items-center justify-center mb-6 transform group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-2xl">route</span>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2">Route Tracker</h3>
+<p class="text-body-md font-body-md text-on-surface-variant">Visualize your application journey from submission to enrollment.</p>
+</div>
+</div>
+<div class="glass-panel bg-surface-container-lowest/80 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between group hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 reveal delay-100">
+<div>
+<div class="w-12 h-12 bg-secondary-fixed text-secondary rounded-xl flex items-center justify-center mb-6 transform group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-2xl">notifications_active</span>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2">Live Alerts</h3>
+<p class="text-body-md font-body-md text-on-surface-variant">Never miss a deadline or exam date with synchronized notifications.</p>
+</div>
+</div>
+<div class="md:col-span-2 glass-panel bg-surface-container-lowest/80 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between relative overflow-hidden group hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 transition-all duration-300 bg-gradient-to-br from-surface/80 to-surface-container-low/80 reveal delay-200">
+<div>
+<div class="w-12 h-12 bg-error-container text-error rounded-xl flex items-center justify-center mb-6 transform group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined text-2xl">payments</span>
+</div>
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2">Unified Payments</h3>
+<p class="text-body-md font-body-md text-on-surface-variant max-w-md">Handle all application fees and document verification costs through a single, secure gateway. Track your spending effortlessly.</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Testimonials Section -->
+<section class="py-24 bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-6">
+<div class="text-center mb-16 reveal">
+<h2 class="text-headline-lg font-headline-lg text-on-surface">Student Success Stories</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="glass-panel p-8 rounded-2xl flex flex-col gap-6 reveal delay-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+<span class="material-symbols-outlined text-primary text-4xl opacity-20">format_quote</span>
+<p class="text-body-md font-body-md text-on-surface">"UniApp made finding eligible universities incredibly easy. The interface is clean, and the recommendations were spot on. Highly recommended for stressed students!"</p>
+<div class="flex items-center gap-4 mt-auto pt-6 border-t border-outline-variant/20">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="A professional headshot of a smiling young South Asian male student in a bright, modern indoor setting, evoking a sense of success and relief. Soft, flattering light-mode lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLziJYhQnn30-MTMtOT99AVJamee_uzadOU7t6j80_pzscLftLLFaoFjS9BfZC2FqhBpsF5yvJvQU_AwIfCLSH_ciDda_1Gqo_fU_83gTiPXhO9el-ORu5XiE3XFqEvvoFdgBA0f7ckB776EHUjF7rubCKOKkyRykGJSwbjpprWLTB-50r6PvZvgd864LkH3LlvLscEVeDusFxBL38nAHowB1H9TDK70TyGk_OJt2hegiq4DA_1QMUPNI6J3pv7fdnymxSp2pxVy7-"/>
+<div>
+<h4 class="text-label-lg font-label-lg text-on-surface">Rahim Uddin</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Accepted to BUET</p>
+</div>
+</div>
+</div>
+<div class="glass-panel p-8 rounded-2xl flex flex-col gap-6 reveal delay-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+<span class="material-symbols-outlined text-primary text-4xl opacity-20">format_quote</span>
+<p class="text-body-md font-body-md text-on-surface">"The unified application feature saved me weeks of repetitive typing. I could focus on my exams instead of filling out the same forms twenty times."</p>
+<div class="flex items-center gap-4 mt-auto pt-6 border-t border-outline-variant/20">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="A professional headshot of a confident young South Asian female student in a modern library setting, looking optimistic. Bright, clean light-mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDR2xT4ceh2YdfWOjgnRQspgxJG-u2E8UI3sdVwP8FVJRZIHwSSTeLiZYyXZ_oIT7CKwdd8enfbud-NqPGTtWxkwfeBzCZySEhfsBA3-3ba2JvHhjLMG3GgA26WsFeqxgwQv4tEAZXla-5qeU7iUvaFRCTzSEoBaMZ22fRUIYwolud3l072x17M8-vyAWOtwbQjhWuIDoAV4cYIhKN_PZvNPnstNDOa6dlujLOXdGTWL26QAHQhMmfyhi0GILdK1baCz-wQZGu5Uvw3"/>
+<div>
+<h4 class="text-label-lg font-label-lg text-on-surface">Sarah Ahmed</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Accepted to DU</p>
+</div>
+</div>
+</div>
+<div class="glass-panel p-8 rounded-2xl flex flex-col gap-6 reveal delay-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+<span class="material-symbols-outlined text-primary text-4xl opacity-20">format_quote</span>
+<p class="text-body-md font-body-md text-on-surface">"Tracking deadlines across different varsity routes used to be a nightmare. The calendar and alerts on this platform are lifesavers."</p>
+<div class="flex items-center gap-4 mt-auto pt-6 border-t border-outline-variant/20">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="A professional headshot of a focused young South Asian male student wearing glasses, standing in a bright campus environment. Soft, modern corporate lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDM0VVrAXoa4v8Jpt2tKvJcAzl06t1LdrTrwx2LTIcI26wPw6k4jPmylqOGgwYgBvvWQ8rQDwvQJyITeMLys4P3taLjcFPsS7cganwzJBL3xE-iFYcImPJo8_P182TFN3QtS-46bgloNoCNUPzyTZRCwoEGkjiomPjB4Ok8XFoiwRQ3vk1lIGVgDlI6fUCIpOOnlu-7fb5r3tOOaVxDtYERWm-ACEIySWYkn71PFGNdYJPt4vmgTT3Ouz9BRAyrvQDQHo01FlWwcuRB"/>
+<div>
+<h4 class="text-label-lg font-label-lg text-on-surface">Fahad Hossain</h4>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Accepted to RUET</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="w-full border-t border-outline-variant grid grid-cols-1 md:grid-cols-4 gap-8 px-8 py-12" style="background: linear-gradient(135deg, rgb(247, 249, 251) 0%, rgb(238, 242, 243) 100%) 0% 0% / 100% 100%, radial-gradient(circle at 2px 2px, rgba(70, 72, 212, 0.03) 1px, transparent 0px) 0% 0% / 24px 24px;">
+<div class="flex flex-col gap-4 col-span-1 md:col-span-1">
+<div class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>school</span>
+            UniApp
+        </div>
+<p class="text-body-md font-body-md text-on-surface-variant mt-2">
+            © 2024 UniApp Admission Portal. All rights reserved.
+        </p>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="text-label-lg font-label-lg text-on-surface mb-2">Platform</h4>
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">About Us</a>
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">University Partners</a>
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Careers</a>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="text-label-lg font-label-lg text-on-surface mb-2">Support</h4>
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Contact Support</a>
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Help Center</a>
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">FAQ</a>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="text-label-lg font-label-lg text-on-surface mb-2">Legal</h4>
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Terms of Service</a>
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Privacy Policy</a>
+</div>
+</footer>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // --- 1. Intersection Observer for Scroll Animations ---
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    // Once animated, we don't need to observe it anymore
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Targeted elements to reveal
+        const revealElements = document.querySelectorAll('.reveal');
+        revealElements.forEach((el) => {
+            revealObserver.observe(el);
+        });
+
+        // --- 2. Hero Parallax Effect ---
+        const heroSection = document.getElementById('hero');
+        const parallaxBg = document.getElementById('hero-parallax-bg');
+
+        if (heroSection && parallaxBg && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            window.addEventListener('scroll', () => {
+                const scrolled = window.pageYOffset;
+                // Subtle parallax factor: 0.3 means background moves at 30% scroll speed
+                const translateY = scrolled * 0.3;
+                parallaxBg.style.transform = `translateY(${translateY}px)`;
+            });
+
+            // Optional: Mouse movement parallax (very subtle)
+            heroSection.addEventListener('mousemove', (e) => {
+                const { width, height } = heroSection.getBoundingClientRect();
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const moveX = (e.clientX - centerX) / 50;
+                const moveY = (e.clientY - centerY) / 50;
+                
+                // Combine with scroll transform if scroll hasn't moved yet, 
+                // or just apply as a secondary layer if needed. 
+                // Here we apply a slight tilt/shift to the whole content area
+                const heroContent = heroSection.querySelector('.relative.z-10');
+                if (heroContent) {
+                    heroContent.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                }
+            });
+            
+            heroSection.addEventListener('mouseleave', () => {
+                const heroContent = heroSection.querySelector('.relative.z-10');
+                if (heroContent) {
+                    heroContent.style.transition = 'transform 0.5s ease-out';
+                    heroContent.style.transform = `translate(0, 0)`;
+                    setTimeout(() => {
+                        heroContent.style.transition = '';
+                    }, 500);
+                }
+            });
+        }
+    });
+</script>
+</body></html>

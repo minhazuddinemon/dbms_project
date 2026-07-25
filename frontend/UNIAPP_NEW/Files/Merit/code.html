@@ -1,0 +1,334 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>UniApp - Results &amp; Merit List</title>
+<!-- Google Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#767586",
+                        "surface-dim": "#d8dadc",
+                        "surface-variant": "#e0e3e5",
+                        "tertiary": "#006c49",
+                        "secondary-fixed-dim": "#c3c0ff",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#494bd6",
+                        "primary-fixed": "#e1e0ff",
+                        "on-background": "#191c1e",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#c0c1ff",
+                        "on-tertiary-fixed": "#002113",
+                        "primary": "#4648d4",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#372abf",
+                        "tertiary-fixed": "#6ffbbe",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-low": "#f2f4f6",
+                        "primary-container": "#6063ee",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#07006c",
+                        "tertiary-container": "#00885d",
+                        "on-error-container": "#93000a",
+                        "background": "#f7f9fb",
+                        "on-secondary-fixed": "#100069",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "outline-variant": "#c7c4d7",
+                        "secondary-fixed": "#e3dfff",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-container": "#000703",
+                        "on-surface": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "surface": "#f7f9fb",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "on-secondary-container": "#fffbff",
+                        "surface-bright": "#f7f9fb",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#6860ef",
+                        "on-error": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "secondary": "#4e45d5",
+                        "on-surface-variant": "#464554"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "padding-card": "1.5rem",
+                        "stack-md": "1rem",
+                        "stack-lg": "2rem",
+                        "gutter-grid": "1.5rem",
+                        "stack-sm": "0.5rem",
+                        "margin-page": "2rem"
+                    },
+                    "fontFamily": {
+                        "label-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen">
+<!-- Side Navigation -->
+<aside class="fixed left-0 top-0 h-screen w-[280px] border-r border-outline-variant bg-surface/90 backdrop-blur-xl shadow-sm z-50 flex flex-col py-8 px-6 hidden md:flex">
+<!-- Brand -->
+<div class="mb-10 pl-2">
+<h1 class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-4xl" data-weight="fill">school</span>
+                UniApp
+            </h1>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-1">One Profile. Unlimited Opportunities.</p>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 space-y-2 overflow-y-auto">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-lg font-label-lg">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="text-label-lg font-label-lg">Fill Info</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="text-label-lg font-label-lg">Eligible Universities</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-label-lg font-label-lg">Apply / Payments</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-xl border-l-4 border-primary scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-weight="fill">military_tech</span>
+<span class="text-label-lg font-label-lg">Results &amp; Merit List</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">route</span>
+<span class="text-label-lg font-label-lg">Varsity Routes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">help_center</span>
+<span class="text-label-lg font-label-lg">Support &amp; Helpdesk</span>
+</a><a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-lg font-label-lg">Account &amp; Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary transition-colors hover:bg-surface-container-high rounded-xl" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-label-lg font-label-lg">Logout</span>
+</a>
+</nav>
+<!-- CTA & Footer Tab -->
+
+</aside>
+<!-- Top Navigation -->
+<header class="docked full-width top-0 sticky z-40 backdrop-blur-md bg-surface/80 border-b border-outline-variant/30 shadow-sm shadow-primary/5 hidden md:flex justify-between items-center w-full h-20 px-8 ml-[280px] max-w-[calc(100%-280px)]">
+<!-- Search Bar -->
+<div class="relative w-96 focus-within:ring-2 focus-within:ring-primary/20 rounded-full transition-shadow">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-12 pr-4 py-3 rounded-full bg-surface-container-low border-none focus:ring-0 text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant" placeholder="Search universities, programs..." type="text">
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-6">
+<button class="relative p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface"></span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-outline-variant/50 cursor-pointer hover:bg-surface-container-low p-2 rounded-xl transition-colors">
+<img alt="Fahad Hossain" class="w-10 h-10 rounded-full object-cover border border-outline-variant/30" data-alt="Professional headshot of a young male student, Fahad Hossain, with a friendly expression, wearing casual business attire, set against a clean, light-mode modern office background. High quality, crisp lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRAgMsldUF0Zbp__MhlE2Hdrs42t1FANyJRhtdWBaBv-H5TWtAc0KJDZ-9RsT5c3rUdWmQl90eerTd2uTPh5-hNENlMTMIMd24GY7H50AWtpHX8seMMaSWM6wVBiS0kHR4efVNptsa0oUTiIXpmQir1ztNheo4MQT-8PXKJNTEnGnwUiNlVJycIGOOTGIIBF4H7_OY9gGAugNDqqPITX5_z-p05mCy_shZlM4etyDQkiDzWAzb66978qR4Yb6Ufot1fpyVxDXzC28j">
+<div class="hidden lg:block">
+<p class="text-label-lg font-label-lg text-on-surface">Fahad Hossain</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Student</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-0 md:ml-[280px] p-6 lg:p-10 pt-24 md:pt-10">
+<!-- Page Header -->
+<div class="mb-8">
+<h2 class="text-headline-lg font-headline-lg text-on-surface mb-2">Results &amp; Merit List</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant">Track your admission status and download necessary documents.</p>
+</div>
+<!-- Filter & Search Bar for Table -->
+<div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/50 shadow-sm shadow-primary/5">
+<div class="flex gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+<button class="px-4 py-2 bg-primary-container text-primary rounded-lg text-label-sm font-label-sm font-semibold whitespace-nowrap">All Results</button>
+<button class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg text-label-sm font-label-sm transition-colors whitespace-nowrap">Selected</button>
+<button class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg text-label-sm font-label-sm transition-colors whitespace-nowrap">Waiting List</button>
+</div>
+<div class="relative w-full sm:w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">filter_list</span>
+<input class="w-full pl-9 pr-3 py-2 rounded-lg bg-surface-container-low border-none focus:ring-1 focus:ring-primary text-label-sm font-label-sm text-on-surface" placeholder="Filter by University..." type="text">
+</div>
+</div>
+<!-- Results Table Card -->
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden mb-10 relative">
+<div class="absolute inset-0 bg-white/40 backdrop-blur-[2px] pointer-events-none z-0"></div> <!-- Glassmorphic subtle overlay -->
+<div class="overflow-x-auto relative z-10">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/50 bg-surface-container-low/50">
+<th class="p-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">University</th>
+<th class="p-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Unit/Program</th>
+<th class="p-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Merit Rank</th>
+<th class="p-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Quota</th>
+<th class="p-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Status</th>
+<th class="p-4 text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<!-- Row 1: Selected -->
+<tr class="hover:bg-surface-container-low/30 transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant/50">
+<img alt="BUET" class="w-6 h-6 object-contain" data-alt="Logo of BUET university, simple clean design, set on a plain white circular background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZxFM9-Srhqen8ZByCJODBr2pKVHqoWgOXrMvumNJgmMYEdjs4AqD8hqtW0sGBvLsjfiwKd0vJRT-XpbvhIn10Qn8lA6U5Tmd3M8uaRZVZAGRgGqwA85lIzFXcC3ANlwKJb3tTN68ckoa8l4HePnHzEP3bVrckaHkmv9upCVYVeuqa3vKITbejmoyG9rENXcr_Z2nre7RjCTanusiSlW_dGTthqpSyMXL58PWSnj5majJqp4fgJECE7PHK3pLXiXrGQSTi9u5NQyv-">
+</div>
+<div>
+<p class="text-label-lg font-label-lg text-on-surface">BUET</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Bangladesh Univ. of Eng.</p>
+</div>
+</div>
+</td>
+<td class="p-4 text-body-md font-body-md text-on-surface">Engineering (Ka)</td>
+<td class="p-4">
+<span class="text-headline-sm font-bold text-on-surface">142</span>
+</td>
+<td class="p-4 text-body-md font-body-md text-on-surface-variant">-</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-tertiary-container/20 text-tertiary text-label-sm font-label-sm font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                                    Selected
+                                </span>
+</td>
+<td class="p-4 text-right">
+<button class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-label-sm font-label-sm transition-colors border border-primary/20">
+<span class="material-symbols-outlined text-sm">download</span>
+                                    Merit Token
+                                </button>
+</td>
+</tr>
+<!-- Row 2: Waiting -->
+<tr class="hover:bg-surface-container-low/30 transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant/50">
+<img alt="DU" class="w-6 h-6 object-contain" data-alt="Logo of Dhaka University (DU), clean crest design, set on a plain white circular background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCX7IMqO-i-z8IbsuntZMGWhyu0hBT4UU5EBKN9Q4OfjoH_PrH3HTpZIWbQiTMZFeY7tD4m-JK1x9MDYNJbGvoV_QvaLa-IcyL-yrKbvkILMD972YkIXbigva6DdWxNW9fbpG5rYnnGD73FbAV-5noiaIIhIouJFds3uX9cHUlR2fQYOl5NbRDOYCjQo3DDH1YpYGMd4YGKaRcDHrCog5fmPMMCnbNx8Pp0XDj-LyV2PwRy6XWkOsEDbFZUMgE7Pql82umYS-H41EA">
+</div>
+<div>
+<p class="text-label-lg font-label-lg text-on-surface">DU</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Dhaka University</p>
+</div>
+</div>
+</td>
+<td class="p-4 text-body-md font-body-md text-on-surface">Science (A Unit)</td>
+<td class="p-4">
+<span class="text-headline-sm font-bold text-on-surface">4502</span>
+</td>
+<td class="p-4 text-body-md font-body-md text-on-surface-variant">FF (120)</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/20 text-secondary text-label-sm font-label-sm font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                                    Waiting
+                                </span>
+</td>
+<td class="p-4 text-right">
+<button class="inline-flex items-center gap-2 px-4 py-2 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg text-label-sm font-label-sm transition-colors border border-outline-variant/50 opacity-50 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-sm">lock</span>
+                                    Token Locked
+                                </button>
+</td>
+</tr>
+<!-- Row 3: Result Pending / Admit Card phase -->
+<tr class="hover:bg-surface-container-low/30 transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center border border-outline-variant/50">
+<img alt="RUET" class="w-6 h-6 object-contain" data-alt="Logo of RUET university, clean modern design, set on a plain white circular background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2sK49T9zWCLztMVpdWxPz4Oy7eZDWF0I1KYhFpDM0qfIniLrsMy1PebAqFtpPjZYSKp01pvz7pkzXccLN8C33tL_fSxqVnpWS1PfCooi8k4VUk-PBv0ojD-Tk1s0bPJrQbehogdsGOcKZ-bXn-Om4TZAep9hMeDxPuhK3qE1EZ5a0M9y3Zk73dte9mnAqZLxdIKdvnzpmMjW_Jwk1WvfKRvNwnp0_pPub-FCE_gVLslh94Cx1ge_DxB3d70xYSmLw1d-XlijrZ94s">
+</div>
+<div>
+<p class="text-label-lg font-label-lg text-on-surface">RUET</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Rajshahi Univ. of Eng.</p>
+</div>
+</div>
+</td>
+<td class="p-4 text-body-md font-body-md text-on-surface">Architecture</td>
+<td class="p-4 text-body-md font-body-md text-on-surface-variant italic">
+                                Pending
+                            </td>
+<td class="p-4 text-body-md font-body-md text-on-surface-variant">-</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-variant text-on-surface-variant text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                                    Exam Upcoming
+                                </span>
+</td>
+<td class="p-4 text-right">
+<button class="inline-flex items-center gap-2 px-4 py-2 bg-surface-container-low text-on-surface hover:bg-surface-container-high rounded-lg text-label-sm font-label-sm transition-colors border border-outline-variant">
+<span class="material-symbols-outlined text-sm">badge</span>
+                                    Admit Card
+                                </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant flat grid grid-cols-1 md:grid-cols-4 gap-8 px-8 py-12 ml-0 md:ml-[280px] max-w-full md:max-w-[calc(100%-280px)] mt-auto">
+<div class="col-span-1 md:col-span-1">
+<h2 class="text-headline-md font-headline-md font-bold text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined">school</span> UniApp
+            </h2>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">© 2024 UniApp Admission Portal. All rights reserved.</p>
+</div>
+<div class="col-span-1 md:col-span-3 flex flex-wrap gap-x-8 gap-y-4 md:justify-end items-center">
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">About Us</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Contact Support</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">University Partners</a>
+<a class="text-label-sm font-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Careers</a>
+</div>
+</footer>
+
+
+</body></html>
