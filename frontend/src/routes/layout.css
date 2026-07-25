@@ -1,8 +1,14 @@
 @import 'tailwindcss';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@theme {
+	--color-surface: #f7f9fb;
+	--color-surface-container-lowest: #ffffff;
+	--color-primary: #4648d4;
+	--color-outline-variant: #c7c4d7;
+}
+
 @layer base {
 	body {
 		font-family: 'Inter', sans-serif;
@@ -10,7 +16,10 @@
 }
 @layer utilities {
 	.glass-panel {
-		@apply bg-surface/80 border-outline-variant/30 shadow-primary/5 border shadow-sm backdrop-blur-xl;
+		background-color: rgba(247, 249, 251, 0.8);
+		border-color: rgba(199, 196, 215, 0.3);
+		box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+		backdrop-filter: blur(24px);
 	}
 	.material-symbols-outlined {
 		font-variation-settings: 'FILL' 0,
@@ -23,7 +32,7 @@
 			radial-gradient(at 100% 0%, hsla(168, 100%, 80%, 0.15) 0px, transparent 50%),
 			radial-gradient(at 100% 100%, hsla(242, 63%, 55%, 0.1) 0px, transparent 50%),
 			radial-gradient(at 0% 100%, hsla(168, 100%, 80%, 0.15) 0px, transparent 50%);
-		@apply bg-surface-container-lowest;
+		background-color: #ffffff;
 	}
 	.reveal {
 		opacity: 0;
