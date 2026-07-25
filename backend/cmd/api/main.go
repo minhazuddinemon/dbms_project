@@ -102,6 +102,10 @@ func main() {
 	mux.HandleFunc("PUT /admin/university", middleware.RequireAdmin(h.HandleUpdateUniversity))
 	mux.HandleFunc("DELETE /admin/university", middleware.RequireAdmin(h.HandleDeleteUniversity))
 
+	mux.HandleFunc("POST /admin/program", middleware.RequireAdmin(h.HandleCreateProgram))
+	mux.HandleFunc("PUT /admin/program", middleware.RequireAdmin(h.HandleUpdateProgram))
+	mux.HandleFunc("DELETE /admin/program", middleware.RequireAdmin(h.HandleDeleteProgram))
+
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{
 			"http://localhost:3000", // Allow your local frontend

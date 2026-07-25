@@ -11,6 +11,16 @@ import (
 	"time"
 )
 
+const deleteProgram = `-- name: DeleteProgram :exec
+DELETE FROM Program
+WHERE program_id = ?
+`
+
+func (q *Queries) DeleteProgram(ctx context.Context, programID int32) error {
+	_, err := q.db.ExecContext(ctx, deleteProgram, programID)
+	return err
+}
+
 const getAllProgramsWithRules = `-- name: GetAllProgramsWithRules :many
 SELECT
     p.program_id,
@@ -216,6 +226,31 @@ func (q *Queries) GetStudentProgramRequirements(ctx context.Context, arg GetStud
 	return items, nil
 }
 
+const insertProgram = `-- name: InsertProgram :execresult
+INSERT INTO Program (p_name, p_unit, total_seats, prev_cutmarks, deadline, u_id)
+VALUES (?, ?, ?, ?, ?, ?)
+`
+
+type InsertProgramParams struct {
+	PName        string         `json:"p_name"`
+	PUnit        sql.NullString `json:"p_unit"`
+	TotalSeats   int32          `json:"total_seats"`
+	PrevCutmarks sql.NullString `json:"prev_cutmarks"`
+	Deadline     time.Time      `json:"deadline"`
+	UID          int32          `json:"u_id"`
+}
+
+func (q *Queries) InsertProgram(ctx context.Context, arg InsertProgramParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, insertProgram,
+		arg.PName,
+		arg.PUnit,
+		arg.TotalSeats,
+		arg.PrevCutmarks,
+		arg.Deadline,
+		arg.UID,
+	)
+}
+
 const listPrograms = `-- name: ListPrograms :many
 SELECT
     p.program_id,
@@ -359,4 +394,33 @@ func (q *Queries) ListUniversities(ctx context.Context) ([]University, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateProgram = `-- name: UpdateProgram :exec
+UPDATE Program
+SET p_name = ?, p_unit = ?, total_seats = ?, prev_cutmarks = ?, deadline = ?, u_id = ?
+WHERE program_id = ?
+`
+
+type UpdateProgramParams struct {
+	PName        string         `json:"p_name"`
+	PUnit        sql.NullString `json:"p_unit"`
+	TotalSeats   int32          `json:"total_seats"`
+	PrevCutmarks sql.NullString `json:"prev_cutmarks"`
+	Deadline     time.Time      `json:"deadline"`
+	UID          int32          `json:"u_id"`
+	ProgramID    int32          `json:"program_id"`
+}
+
+func (q *Queries) UpdateProgram(ctx context.Context, arg UpdateProgramParams) error {
+	_, err := q.db.ExecContext(ctx, updateProgram,
+		arg.PName,
+		arg.PUnit,
+		arg.TotalSeats,
+		arg.PrevCutmarks,
+		arg.Deadline,
+		arg.UID,
+		arg.ProgramID,
+	)
+	return err
 }

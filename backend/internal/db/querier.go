@@ -15,6 +15,7 @@ type Querier interface {
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (sql.Result, error)
 	CreatePayment(ctx context.Context, arg CreatePaymentParams) (sql.Result, error)
 	CreateStudent(ctx context.Context, arg CreateStudentParams) (sql.Result, error)
+	DeleteProgram(ctx context.Context, programID int32) error
 	DeleteUniversity(ctx context.Context, uID int32) error
 	GetAllProgramsWithRules(ctx context.Context) ([]GetAllProgramsWithRulesRow, error)
 	GetApplicationByID(ctx context.Context, arg GetApplicationByIDParams) (GetApplicationByIDRow, error)
@@ -32,6 +33,7 @@ type Querier interface {
 	GetStudentTestResults(ctx context.Context, studentID int32) ([]GetStudentTestResultsRow, error)
 	GetUniversityApplications(ctx context.Context, uID int32) ([]GetUniversityApplicationsRow, error)
 	GetUniversityByID(ctx context.Context, uID int32) (University, error)
+	InsertProgram(ctx context.Context, arg InsertProgramParams) (sql.Result, error)
 	InsertUniversity(ctx context.Context, arg InsertUniversityParams) (sql.Result, error)
 	ListPrograms(ctx context.Context, arg ListProgramsParams) ([]ListProgramsRow, error)
 	ListProgramsByUniversity(ctx context.Context, uID int32) ([]Program, error)
@@ -39,6 +41,7 @@ type Querier interface {
 	RecordPayment(ctx context.Context, arg RecordPaymentParams) (sql.Result, error)
 	RecordTestResult(ctx context.Context, arg RecordTestResultParams) error
 	UpdateApplicationStatus(ctx context.Context, arg UpdateApplicationStatusParams) error
+	UpdateProgram(ctx context.Context, arg UpdateProgramParams) error
 	UpdateUniversity(ctx context.Context, arg UpdateUniversityParams) error
 	UpsertStudentProfileField(ctx context.Context, arg UpsertStudentProfileFieldParams) error
 }

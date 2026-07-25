@@ -69,3 +69,16 @@ LEFT JOIN Student_Profile_Info spi
     ON prf.field_name = spi.field_name
     AND spi.student_id = ?
 WHERE prf.program_id = ?;
+
+-- name: InsertProgram :execresult
+INSERT INTO Program (p_name, p_unit, total_seats, prev_cutmarks, deadline, u_id)
+VALUES (?, ?, ?, ?, ?, ?);
+
+-- name: UpdateProgram :exec
+UPDATE Program
+SET p_name = ?, p_unit = ?, total_seats = ?, prev_cutmarks = ?, deadline = ?, u_id = ?
+WHERE program_id = ?;
+
+-- name: DeleteProgram :exec
+DELETE FROM Program
+WHERE program_id = ?;
