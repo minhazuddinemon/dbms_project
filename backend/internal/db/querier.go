@@ -13,6 +13,8 @@ type Querier interface {
 	AddStudentAcademic(ctx context.Context, arg AddStudentAcademicParams) error
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (sql.Result, error)
 	CreateStudent(ctx context.Context, arg CreateStudentParams) (sql.Result, error)
+	GetAllProgramsWithRules(ctx context.Context) ([]GetAllProgramsWithRulesRow, error)
+	GetProgramByID(ctx context.Context, programID int32) (GetProgramByIDRow, error)
 	GetProgramDetails(ctx context.Context, programID int32) (GetProgramDetailsRow, error)
 	GetProgramEligibilityRules(ctx context.Context, programID int32) ([]ProgramEligibilityRule, error)
 	GetStudentAcademics(ctx context.Context, studentID int32) ([]StudentAcademic, error)
@@ -20,6 +22,7 @@ type Querier interface {
 	GetStudentByEmail(ctx context.Context, email string) (Student, error)
 	GetStudentByID(ctx context.Context, studentID int32) (Student, error)
 	GetStudentTestResults(ctx context.Context, studentID int32) ([]GetStudentTestResultsRow, error)
+	ListPrograms(ctx context.Context, arg ListProgramsParams) ([]ListProgramsRow, error)
 	ListProgramsByUniversity(ctx context.Context, uID int32) ([]Program, error)
 	ListUniversities(ctx context.Context) ([]University, error)
 	RecordPayment(ctx context.Context, arg RecordPaymentParams) (sql.Result, error)

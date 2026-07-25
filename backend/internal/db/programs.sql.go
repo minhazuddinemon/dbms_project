@@ -11,6 +11,103 @@ import (
 	"time"
 )
 
+const getAllProgramsWithRules = `-- name: GetAllProgramsWithRules :many
+SELECT
+    p.program_id,
+    p.p_name,
+    u.u_name AS university_name,
+    r.rule_type,
+    r.rule_value
+FROM Program p
+JOIN University u ON p.u_id = u.u_id
+LEFT JOIN Program_Eligibility_Rules r ON p.program_id = r.program_id
+`
+
+type GetAllProgramsWithRulesRow struct {
+	ProgramID      int32          `json:"program_id"`
+	PName          string         `json:"p_name"`
+	UniversityName string         `json:"university_name"`
+	RuleType       sql.NullString `json:"rule_type"`
+	RuleValue      sql.NullString `json:"rule_value"`
+}
+
+func (q *Queries) GetAllProgramsWithRules(ctx context.Context) ([]GetAllProgramsWithRulesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllProgramsWithRules)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllProgramsWithRulesRow
+	for rows.Next() {
+		var i GetAllProgramsWithRulesRow
+		if err := rows.Scan(
+			&i.ProgramID,
+			&i.PName,
+			&i.UniversityName,
+			&i.RuleType,
+			&i.RuleValue,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getProgramByID = `-- name: GetProgramByID :one
+SELECT
+    p.program_id,
+    p.p_name,
+    p.p_unit,
+    p.total_seats,
+    p.prev_cutmarks,
+    p.deadline,
+    u.u_id,
+    u.u_name AS university_name,
+    u.website,
+    u.location
+FROM Program p
+JOIN University u ON p.u_id = u.u_id
+WHERE p.program_id = ? LIMIT 1
+`
+
+type GetProgramByIDRow struct {
+	ProgramID      int32          `json:"program_id"`
+	PName          string         `json:"p_name"`
+	PUnit          sql.NullString `json:"p_unit"`
+	TotalSeats     int32          `json:"total_seats"`
+	PrevCutmarks   sql.NullString `json:"prev_cutmarks"`
+	Deadline       time.Time      `json:"deadline"`
+	UID            int32          `json:"u_id"`
+	UniversityName string         `json:"university_name"`
+	Website        string         `json:"website"`
+	Location       sql.NullString `json:"location"`
+}
+
+func (q *Queries) GetProgramByID(ctx context.Context, programID int32) (GetProgramByIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getProgramByID, programID)
+	var i GetProgramByIDRow
+	err := row.Scan(
+		&i.ProgramID,
+		&i.PName,
+		&i.PUnit,
+		&i.TotalSeats,
+		&i.PrevCutmarks,
+		&i.Deadline,
+		&i.UID,
+		&i.UniversityName,
+		&i.Website,
+		&i.Location,
+	)
+	return i, err
+}
+
 const getProgramDetails = `-- name: GetProgramDetails :one
 SELECT p.program_id, p.p_name, p.p_unit, p.total_seats, p.prev_cutmarks, p.deadline, p.u_id, u.u_name, u.location
 FROM Program p
@@ -62,6 +159,82 @@ func (q *Queries) GetProgramEligibilityRules(ctx context.Context, programID int3
 	for rows.Next() {
 		var i ProgramEligibilityRule
 		if err := rows.Scan(&i.ProgramID, &i.RuleType, &i.RuleValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listPrograms = `-- name: ListPrograms :many
+SELECT
+    p.program_id,
+    p.p_name,
+    p.p_unit,
+    p.total_seats,
+    p.prev_cutmarks,
+    p.deadline,
+    u.u_id,
+    u.u_name AS university_name,
+    u.location AS university_location
+FROM Program p
+JOIN University u ON p.u_id = u.u_id
+WHERE
+    (p.p_name LIKE CONCAT('%', ?, '%') OR u.u_name LIKE CONCAT('%', ?, '%'))
+    AND (p.p_unit = ? OR ? = '')
+ORDER BY p.program_id DESC
+`
+
+type ListProgramsParams struct {
+	CONCAT   interface{}    `json:"CONCAT"`
+	CONCAT_2 interface{}    `json:"CONCAT_2"`
+	PUnit    sql.NullString `json:"p_unit"`
+	Column4  interface{}    `json:"column_4"`
+}
+
+type ListProgramsRow struct {
+	ProgramID          int32          `json:"program_id"`
+	PName              string         `json:"p_name"`
+	PUnit              sql.NullString `json:"p_unit"`
+	TotalSeats         int32          `json:"total_seats"`
+	PrevCutmarks       sql.NullString `json:"prev_cutmarks"`
+	Deadline           time.Time      `json:"deadline"`
+	UID                int32          `json:"u_id"`
+	UniversityName     string         `json:"university_name"`
+	UniversityLocation sql.NullString `json:"university_location"`
+}
+
+func (q *Queries) ListPrograms(ctx context.Context, arg ListProgramsParams) ([]ListProgramsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listPrograms,
+		arg.CONCAT,
+		arg.CONCAT_2,
+		arg.PUnit,
+		arg.Column4,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProgramsRow
+	for rows.Next() {
+		var i ListProgramsRow
+		if err := rows.Scan(
+			&i.ProgramID,
+			&i.PName,
+			&i.PUnit,
+			&i.TotalSeats,
+			&i.PrevCutmarks,
+			&i.Deadline,
+			&i.UID,
+			&i.UniversityName,
+			&i.UniversityLocation,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
