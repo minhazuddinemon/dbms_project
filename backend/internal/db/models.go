@@ -59,7 +59,7 @@ func (ns NullProgramRequiredFieldsFieldName) Value() (driver.Value, error) {
 	return string(ns.ProgramRequiredFieldsFieldName), nil
 }
 
-type StudentProfileInfoFieldName  string
+type StudentProfileInfoFieldName string
 
 const (
 	StudentProfileInfoFieldNamePRESENTADDRESS   StudentProfileInfoFieldName = "PRESENT_ADDRESS"

@@ -59,3 +59,13 @@ SELECT
 FROM Program p
 JOIN University u ON p.u_id = u.u_id
 LEFT JOIN Program_Eligibility_Rules r ON p.program_id = r.program_id;
+
+-- name: GetStudentProgramRequirements :many
+SELECT
+    prf.field_name,
+    spi.field_value
+FROM Program_Required_Fields prf
+LEFT JOIN Student_Profile_Info spi
+    ON prf.field_name = spi.field_name
+    AND spi.student_id = ?
+WHERE prf.program_id = ?;

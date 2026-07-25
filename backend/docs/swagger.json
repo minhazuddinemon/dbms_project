@@ -1,0 +1,689 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API Server for University Student Admission System",
+        "title": "DBMS Project API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/applications/apply": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Submits a program application for the authenticated student. Checks for missing required profile fields before creation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Applications"
+                ],
+                "summary": "Apply to an academic program",
+                "parameters": [
+                    {
+                        "description": "Program Application Payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler_rest.ApplyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Application submitted successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload or incomplete profile with missing fields",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to submit application or error fetching requirements",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "description": "Authenticates student credentials (email and password) and returns a signed JWT authentication token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login a student",
+                "parameters": [
+                    {
+                        "description": "Student Login Credentials",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler_rest.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login successful with token",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid email or password",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns confirmation and student ID for the currently authenticated student.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get authenticated profile status",
+                "responses": {
+                    "200": {
+                        "description": "Access granted to protected profile",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Could not retrieve user identity",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/program/requirements": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Checks if the authenticated student has fulfilled all required profile fields for a specific program.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Requirements"
+                ],
+                "summary": "Get program requirements status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Program ID",
+                        "name": "program_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Requirements status response",
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler_rest.ProgramRequirementsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid program_id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to fetch requirements",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/programs": {
+            "get": {
+                "description": "Retrieves a list of available academic programs with optional search keywords and unit filter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Programs"
+                ],
+                "summary": "List programs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query for program name or details",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by program unit (e.g. A, B)",
+                        "name": "unit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of programs",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dbms-project_internal_db.ListProgramsRow"
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to fetch programs",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/programs/detail": {
+            "get": {
+                "description": "Retrieves detailed program information for a given program ID parameter.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Programs"
+                ],
+                "summary": "Get program details by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Program ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Program detail",
+                        "schema": {
+                            "$ref": "#/definitions/dbms-project_internal_db.GetProgramByIDRow"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing or invalid program id",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Program not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/programs/eligible": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Evaluates authenticated student's academic performance (GPA, HSC group, subject marks) against program admission requirements.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Applications"
+                ],
+                "summary": "List eligible programs for authenticated student",
+                "responses": {
+                    "200": {
+                        "description": "List of eligible programs",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_handler_rest.EligibleProgram"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to fetch student academics, subject marks, or programs",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/register": {
+            "post": {
+                "description": "Register a new student account with first name, last name, email, password, and date of birth (YYYY-MM-DD).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register a new student",
+                "parameters": [
+                    {
+                        "description": "Student Registration Information",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_handler_rest.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Registration successful",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload or date format",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Failed to create account (email might already exist)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/student/profile": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upserts dynamic key-value profile fields for the authenticated student.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update student profile fields",
+                "parameters": [
+                    {
+                        "description": "Profile fields key-value dictionary (e.g. {'PRESENT_ADDRESS': 'Dhaka'})",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload or failed field update",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "405": {
+                        "description": "Method not allowed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dbms-project_internal_db.GetProgramByIDRow": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "type": "string"
+                },
+                "location": {
+                    "$ref": "#/definitions/sql.NullString"
+                },
+                "p_name": {
+                    "type": "string"
+                },
+                "p_unit": {
+                    "$ref": "#/definitions/sql.NullString"
+                },
+                "prev_cutmarks": {
+                    "$ref": "#/definitions/sql.NullString"
+                },
+                "program_id": {
+                    "type": "integer"
+                },
+                "total_seats": {
+                    "type": "integer"
+                },
+                "u_id": {
+                    "type": "integer"
+                },
+                "university_name": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "dbms-project_internal_db.ListProgramsRow": {
+            "type": "object",
+            "properties": {
+                "deadline": {
+                    "type": "string"
+                },
+                "p_name": {
+                    "type": "string"
+                },
+                "p_unit": {
+                    "$ref": "#/definitions/sql.NullString"
+                },
+                "prev_cutmarks": {
+                    "$ref": "#/definitions/sql.NullString"
+                },
+                "program_id": {
+                    "type": "integer"
+                },
+                "total_seats": {
+                    "type": "integer"
+                },
+                "u_id": {
+                    "type": "integer"
+                },
+                "university_location": {
+                    "$ref": "#/definitions/sql.NullString"
+                },
+                "university_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handler_rest.ApplyRequest": {
+            "type": "object",
+            "properties": {
+                "program_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_handler_rest.EligibleProgram": {
+            "type": "object",
+            "properties": {
+                "program_id": {
+                    "type": "integer"
+                },
+                "program_name": {
+                    "type": "string"
+                },
+                "university_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handler_rest.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handler_rest.ProgramRequirementsResponse": {
+            "type": "object",
+            "properties": {
+                "is_ready_to_apply": {
+                    "type": "boolean"
+                },
+                "missing_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "program_id": {
+                    "type": "integer"
+                },
+                "required_fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_handler_rest.RequiredFieldStatus"
+                    }
+                }
+            }
+        },
+        "internal_handler_rest.RegisterRequest": {
+            "type": "object",
+            "properties": {
+                "dob": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_handler_rest.RequiredFieldStatus": {
+            "type": "object",
+            "properties": {
+                "field_name": {
+                    "type": "string"
+                },
+                "is_provided": {
+                    "type": "boolean"
+                },
+                "value": {
+                    "description": "Null if not filled yet",
+                    "type": "string"
+                }
+            }
+        },
+        "sql.NullString": {
+            "type": "object",
+            "properties": {
+                "string": {
+                    "type": "string"
+                },
+                "valid": {
+                    "description": "Valid is true if String is not NULL",
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer \" followed by your JWT token",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

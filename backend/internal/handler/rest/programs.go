@@ -10,8 +10,17 @@ import (
 	"dbms-project/internal/db"
 )
 
-// HandleListPrograms processes search filters from URL parameters:
-// GET /programs?search=engineering&unit=A
+// HandleListPrograms processes search filters from URL parameters and lists available programs.
+// @Summary List programs
+// @Description Retrieves a list of available academic programs with optional search keywords and unit filter.
+// @Tags Programs
+// @Produce json
+// @Param search query string false "Search query for program name or details"
+// @Param unit query string false "Filter by program unit (e.g. A, B)"
+// @Success 200 {array} db.ListProgramsRow "List of programs"
+// @Failure 405 {string} string "Method not allowed"
+// @Failure 500 {string} string "Failed to fetch programs"
+// @Router /programs [get]
 func (h *Handler) HandleListPrograms(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -45,8 +54,18 @@ func (h *Handler) HandleListPrograms(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(programs)
 }
 
-// HandleGetProgramByID fetches details for a single program
-// GET /programs/detail?id=1
+// HandleGetProgramByID fetches details for a single program by its ID.
+// @Summary Get program details by ID
+// @Description Retrieves detailed program information for a given program ID parameter.
+// @Tags Programs
+// @Produce json
+// @Param id query int true "Program ID"
+// @Success 200 {object} db.GetProgramByIDRow "Program detail"
+// @Failure 400 {string} string "Missing or invalid program id"
+// @Failure 404 {string} string "Program not found"
+// @Failure 405 {string} string "Method not allowed"
+// @Failure 500 {string} string "Internal server error"
+// @Router /programs/detail [get]
 func (h *Handler) HandleGetProgramByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

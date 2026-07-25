@@ -15,13 +15,27 @@ import (
 	"dbms-project/internal/logger"
 	"dbms-project/internal/middleware"
 
+	_ "dbms-project/docs"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
+
+// @title DBMS Project API
+// @version 1.0
+// @description API Server for University Student Admission System
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer " followed by your JWT token
 
 func main() {
 	_ = godotenv.Load("../.env")
@@ -62,6 +76,7 @@ func main() {
 
 	// 4. Set up HTTP Router
 	mux := http.NewServeMux()
+	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	// Health Check Route
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -78,6 +93,7 @@ func main() {
 	mux.HandleFunc("/programs/eligible", middleware.RequireAuth(h.HandleEligiblePrograms))
 	mux.HandleFunc("/applications/apply", middleware.RequireAuth(h.ApplyToProgram))
 	mux.HandleFunc("/student/profile", middleware.RequireAuth(h.HandleUpdateProfile))
+	mux.HandleFunc("/program/requirements", middleware.RequireAuth(h.GetProgramRequirementsStatus))
 
 	// Wrap the entire router with the logger middleware
 	c := cors.New(cors.Options{

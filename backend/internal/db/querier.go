@@ -23,6 +23,7 @@ type Querier interface {
 	GetStudentByEmail(ctx context.Context, email string) (Student, error)
 	GetStudentByID(ctx context.Context, studentID int32) (Student, error)
 	GetStudentProfileFields(ctx context.Context, studentID int32) ([]StudentProfileInfoFieldName, error)
+	GetStudentProgramRequirements(ctx context.Context, arg GetStudentProgramRequirementsParams) ([]GetStudentProgramRequirementsRow, error)
 	GetStudentSubjectMarks(ctx context.Context, arg GetStudentSubjectMarksParams) ([]GetStudentSubjectMarksRow, error)
 	GetStudentTestResults(ctx context.Context, studentID int32) ([]GetStudentTestResultsRow, error)
 	ListPrograms(ctx context.Context, arg ListProgramsParams) ([]ListProgramsRow, error)

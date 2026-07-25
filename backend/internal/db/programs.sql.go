@@ -172,6 +172,50 @@ func (q *Queries) GetProgramEligibilityRules(ctx context.Context, programID int3
 	return items, nil
 }
 
+const getStudentProgramRequirements = `-- name: GetStudentProgramRequirements :many
+SELECT
+    prf.field_name,
+    spi.field_value
+FROM Program_Required_Fields prf
+LEFT JOIN Student_Profile_Info spi
+    ON prf.field_name = spi.field_name
+    AND spi.student_id = ?
+WHERE prf.program_id = ?
+`
+
+type GetStudentProgramRequirementsParams struct {
+	StudentID int32 `json:"student_id"`
+	ProgramID int32 `json:"program_id"`
+}
+
+type GetStudentProgramRequirementsRow struct {
+	FieldName  ProgramRequiredFieldsFieldName `json:"field_name"`
+	FieldValue sql.NullString                 `json:"field_value"`
+}
+
+func (q *Queries) GetStudentProgramRequirements(ctx context.Context, arg GetStudentProgramRequirementsParams) ([]GetStudentProgramRequirementsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentProgramRequirements, arg.StudentID, arg.ProgramID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetStudentProgramRequirementsRow
+	for rows.Next() {
+		var i GetStudentProgramRequirementsRow
+		if err := rows.Scan(&i.FieldName, &i.FieldValue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listPrograms = `-- name: ListPrograms :many
 SELECT
     p.program_id,

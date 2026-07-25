@@ -35,6 +35,19 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+// HandleRegister registers a new student account.
+// @Summary Register a new student
+// @Description Register a new student account with first name, last name, email, password, and date of birth (YYYY-MM-DD).
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body rest.RegisterRequest true "Student Registration Information"
+// @Success 201 {object} map[string]string "Registration successful"
+// @Failure 400 {string} string "Invalid request payload or date format"
+// @Failure 405 {string} string "Method not allowed"
+// @Failure 409 {string} string "Failed to create account (email might already exist)"
+// @Failure 500 {string} string "Internal server error"
+// @Router /register [post]
 func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -78,6 +91,19 @@ func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"message": "Registration successful"}`))
 }
 
+// HandleLogin authenticates a student and returns a JWT token.
+// @Summary Login a student
+// @Description Authenticates student credentials (email and password) and returns a signed JWT authentication token.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body rest.LoginRequest true "Student Login Credentials"
+// @Success 200 {object} map[string]string "Login successful with token"
+// @Failure 400 {string} string "Invalid request payload"
+// @Failure 401 {string} string "Invalid email or password"
+// @Failure 405 {string} string "Method not allowed"
+// @Failure 500 {string} string "Internal server error"
+// @Router /login [post]
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -122,6 +148,16 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// HandleProfile retrieves protected profile access confirmation for authenticated user.
+// @Summary Get authenticated profile status
+// @Description Returns confirmation and student ID for the currently authenticated student.
+// @Tags Profile
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} map[string]any "Access granted to protected profile"
+// @Failure 405 {string} string "Method not allowed"
+// @Failure 500 {string} string "Could not retrieve user identity"
+// @Router /profile [get]
 func (h *Handler) HandleProfile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
