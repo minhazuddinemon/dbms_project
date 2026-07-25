@@ -15,23 +15,7 @@ type EligibleProgram struct {
 	UniversityName string `json:"university_name"`
 }
 
-// HandleEligiblePrograms returns a list of programs the authenticated student is eligible for.
-// @Summary List eligible programs for authenticated student
-// @Description Evaluates authenticated student's academic performance (GPA, HSC group, subject marks) against program admission requirements.
-// @Tags Applications
-// @Security BearerAuth
-// @Produce json
-// @Success 200 {array} rest.EligibleProgram "List of eligible programs"
-// @Failure 401 {string} string "Unauthorized"
-// @Failure 405 {string} string "Method not allowed"
-// @Failure 500 {string} string "Failed to fetch student academics, subject marks, or programs"
-// @Router /programs/eligible [get]
 func (h *Handler) HandleEligiblePrograms(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	studentID, ok := r.Context().Value(middleware.StudentIDKey).(int32)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -158,27 +142,7 @@ type ApplyRequest struct {
 	ProgramID int32 `json:"program_id"`
 }
 
-// ApplyToProgram submits an application to a specified program if required profile fields are present.
-// @Summary Apply to an academic program
-// @Description Submits a program application for the authenticated student. Checks for missing required profile fields before creation.
-// @Tags Applications
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Param request body rest.ApplyRequest true "Program Application Payload"
-// @Success 201 {object} map[string]string "Application submitted successfully"
-// @Failure 400 {object} map[string]any "Invalid request payload or incomplete profile with missing fields"
-// @Failure 401 {string} string "Unauthorized"
-// @Failure 405 {string} string "Method not allowed"
-// @Failure 500 {string} string "Failed to submit application or error fetching requirements"
-// @Router /applications/apply [post]
 func (h *Handler) ApplyToProgram(w http.ResponseWriter, r *http.Request) {
-	// Restrict to POST requests
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	// 1. Get Student ID from JWT Context using your middleware key
 	studentID, ok := r.Context().Value(middleware.StudentIDKey).(int32)
 	if !ok {
@@ -262,11 +226,6 @@ func (h *Handler) ApplyToProgram(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleGetStudentApplications(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	// 1. Authenticate Student
 	studentID, ok := r.Context().Value(middleware.StudentIDKey).(int32)
 	if !ok {

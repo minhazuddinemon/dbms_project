@@ -22,25 +22,7 @@ type ProgramRequirementsResponse struct {
 	MissingFields  []string              `json:"missing_fields"`
 }
 
-// GetProgramRequirementsStatus checks student completion status for a program's required fields.
-// @Summary Get program requirements status
-// @Description Checks if the authenticated student has fulfilled all required profile fields for a specific program.
-// @Tags Requirements
-// @Security BearerAuth
-// @Produce json
-// @Param program_id query int true "Program ID"
-// @Success 200 {object} rest.ProgramRequirementsResponse "Requirements status response"
-// @Failure 400 {string} string "Invalid program_id"
-// @Failure 401 {string} string "Unauthorized"
-// @Failure 405 {string} string "Method not allowed"
-// @Failure 500 {string} string "Failed to fetch requirements"
-// @Router /program/requirements [get]
 func (h *Handler) GetProgramRequirementsStatus(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	// 1. Get Student ID from JWT Context
 	studentID, ok := r.Context().Value(middleware.StudentIDKey).(int32)
 	if !ok {

@@ -1,0 +1,2 @@
+ALTER TABLE University
+ADD COLUMN logo_url VARCHAR(255) NULL AFTER location;

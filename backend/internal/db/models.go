@@ -216,6 +216,7 @@ type University struct {
 	UName    string         `json:"u_name"`
 	Website  string         `json:"website"`
 	Location sql.NullString `json:"location"`
+	LogoUrl  sql.NullString `json:"logo_url"`
 }
 
 type UniversityTransport struct {

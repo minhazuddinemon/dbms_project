@@ -35,20 +35,20 @@ services:
       db:
         condition: service_healthy
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: admission_frontend
-    restart: always
-    ports:
-      - "3000:3000"
-    environment:
-      - PORT=3000
-      - ORIGIN=http://localhost:3000
-      - VITE_API_BASE_URL=http://localhost:8080
-    depends_on:
-      - backend
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: admission_frontend
+  #   restart: always
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - PORT=3000
+  #     - ORIGIN=http://localhost:3000
+  #     - VITE_API_BASE_URL=http://localhost:8080
+  #   depends_on:
+  #     - backend
 
 volumes:
   mariadb_data:

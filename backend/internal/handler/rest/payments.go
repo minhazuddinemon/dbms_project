@@ -16,11 +16,6 @@ type PaymentRequest struct {
 }
 
 func (h *Handler) HandleProcessPayment(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	// 1. Authenticate Student
 	studentID, ok := r.Context().Value(middleware.StudentIDKey).(int32)
 	if !ok {
