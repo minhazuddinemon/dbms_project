@@ -6,8 +6,106 @@ package db
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"fmt"
 	"time"
 )
+
+type ProgramRequiredFieldsFieldName string
+
+const (
+	ProgramRequiredFieldsFieldNamePRESENTADDRESS   ProgramRequiredFieldsFieldName = "PRESENT_ADDRESS"
+	ProgramRequiredFieldsFieldNamePERMANENTADDRESS ProgramRequiredFieldsFieldName = "PERMANENT_ADDRESS"
+	ProgramRequiredFieldsFieldNameFATHERSNAME      ProgramRequiredFieldsFieldName = "FATHERS_NAME"
+	ProgramRequiredFieldsFieldNameMOTHERSNAME      ProgramRequiredFieldsFieldName = "MOTHERS_NAME"
+	ProgramRequiredFieldsFieldNameBLOODGROUP       ProgramRequiredFieldsFieldName = "BLOOD_GROUP"
+	ProgramRequiredFieldsFieldNameQUOTA            ProgramRequiredFieldsFieldName = "QUOTA"
+	ProgramRequiredFieldsFieldNamePHOTOURL         ProgramRequiredFieldsFieldName = "PHOTO_URL"
+	ProgramRequiredFieldsFieldNameSIGNATUREURL     ProgramRequiredFieldsFieldName = "SIGNATURE_URL"
+)
+
+func (e *ProgramRequiredFieldsFieldName) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ProgramRequiredFieldsFieldName(s)
+	case string:
+		*e = ProgramRequiredFieldsFieldName(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ProgramRequiredFieldsFieldName: %T", src)
+	}
+	return nil
+}
+
+type NullProgramRequiredFieldsFieldName struct {
+	ProgramRequiredFieldsFieldName ProgramRequiredFieldsFieldName `json:"program_required_fields_field_name"`
+	Valid                          bool                           `json:"valid"` // Valid is true if ProgramRequiredFieldsFieldName is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullProgramRequiredFieldsFieldName) Scan(value interface{}) error {
+	if value == nil {
+		ns.ProgramRequiredFieldsFieldName, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ProgramRequiredFieldsFieldName.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullProgramRequiredFieldsFieldName) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ProgramRequiredFieldsFieldName), nil
+}
+
+type StudentProfileInfoFieldName  string
+
+const (
+	StudentProfileInfoFieldNamePRESENTADDRESS   StudentProfileInfoFieldName = "PRESENT_ADDRESS"
+	StudentProfileInfoFieldNamePERMANENTADDRESS StudentProfileInfoFieldName = "PERMANENT_ADDRESS"
+	StudentProfileInfoFieldNameFATHERSNAME      StudentProfileInfoFieldName = "FATHERS_NAME"
+	StudentProfileInfoFieldNameMOTHERSNAME      StudentProfileInfoFieldName = "MOTHERS_NAME"
+	StudentProfileInfoFieldNameBLOODGROUP       StudentProfileInfoFieldName = "BLOOD_GROUP"
+	StudentProfileInfoFieldNameQUOTA            StudentProfileInfoFieldName = "QUOTA"
+	StudentProfileInfoFieldNamePHOTOURL         StudentProfileInfoFieldName = "PHOTO_URL"
+	StudentProfileInfoFieldNameSIGNATUREURL     StudentProfileInfoFieldName = "SIGNATURE_URL"
+)
+
+func (e *StudentProfileInfoFieldName) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = StudentProfileInfoFieldName(s)
+	case string:
+		*e = StudentProfileInfoFieldName(s)
+	default:
+		return fmt.Errorf("unsupported scan type for StudentProfileInfoFieldName: %T", src)
+	}
+	return nil
+}
+
+type NullStudentProfileInfoFieldName struct {
+	StudentProfileInfoFieldName StudentProfileInfoFieldName `json:"student_profile_info_field_name"`
+	Valid                       bool                        `json:"valid"` // Valid is true if StudentProfileInfoFieldName is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullStudentProfileInfoFieldName) Scan(value interface{}) error {
+	if value == nil {
+		ns.StudentProfileInfoFieldName, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.StudentProfileInfoFieldName.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullStudentProfileInfoFieldName) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.StudentProfileInfoFieldName), nil
+}
 
 type AdmissionTest struct {
 	TestID       int32          `json:"test_id"`
@@ -69,6 +167,11 @@ type ProgramEligibilityRule struct {
 	RuleValue sql.NullString `json:"rule_value"`
 }
 
+type ProgramRequiredField struct {
+	ProgramID int32                          `json:"program_id"`
+	FieldName ProgramRequiredFieldsFieldName `json:"field_name"`
+}
+
 type Student struct {
 	StudentID int32     `json:"student_id"`
 	FirstName string    `json:"first_name"`
@@ -92,6 +195,12 @@ type StudentAcademic struct {
 type StudentMobile struct {
 	StudentID int32  `json:"student_id"`
 	MobileNo  string `json:"mobile_no"`
+}
+
+type StudentProfileInfo struct {
+	StudentID  int32                       `json:"student_id"`
+	FieldName  StudentProfileInfoFieldName `json:"field_name"`
+	FieldValue string                      `json:"field_value"`
 }
 
 type StudentSubjectMark struct {

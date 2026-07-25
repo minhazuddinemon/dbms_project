@@ -17,3 +17,13 @@ WHERE app_id = ?;
 -- name: RecordPayment :execresult
 INSERT INTO Payment (tx_id, amount, status, method, app_id)
 VALUES (?, ?, ?, ?, ?);
+
+-- name: GetProgramRequiredFields :many
+SELECT field_name
+FROM Program_Required_Fields
+WHERE program_id = ?;
+
+-- name: GetStudentProfileFields :many
+SELECT field_name
+FROM Student_Profile_Info
+WHERE student_id = ?;

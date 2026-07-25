@@ -24,6 +24,35 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 	return q.db.ExecContext(ctx, createApplication, arg.ProgramID, arg.StudentID)
 }
 
+const getProgramRequiredFields = `-- name: GetProgramRequiredFields :many
+SELECT field_name
+FROM Program_Required_Fields
+WHERE program_id = ?
+`
+
+func (q *Queries) GetProgramRequiredFields(ctx context.Context, programID int32) ([]ProgramRequiredFieldsFieldName, error) {
+	rows, err := q.db.QueryContext(ctx, getProgramRequiredFields, programID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ProgramRequiredFieldsFieldName
+	for rows.Next() {
+		var field_name ProgramRequiredFieldsFieldName
+		if err := rows.Scan(&field_name); err != nil {
+			return nil, err
+		}
+		items = append(items, field_name)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getStudentApplications = `-- name: GetStudentApplications :many
 SELECT a.app_id, a.sub_date, a.status, p.p_name, u.u_name
 FROM Application a
@@ -59,6 +88,35 @@ func (q *Queries) GetStudentApplications(ctx context.Context, studentID int32) (
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getStudentProfileFields = `-- name: GetStudentProfileFields :many
+SELECT field_name
+FROM Student_Profile_Info
+WHERE student_id = ?
+`
+
+func (q *Queries) GetStudentProfileFields(ctx context.Context, studentID int32) ([]StudentProfileInfoFieldName, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentProfileFields, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StudentProfileInfoFieldName
+	for rows.Next() {
+		var field_name StudentProfileInfoFieldName
+		if err := rows.Scan(&field_name); err != nil {
+			return nil, err
+		}
+		items = append(items, field_name)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

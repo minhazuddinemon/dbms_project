@@ -22,3 +22,8 @@ WHERE student_id = ?;
 SELECT subject_name, marks, grade
 FROM Student_Subject_Marks
 WHERE student_id = ? AND exam_level = ?;
+
+-- name: UpsertStudentProfileField :exec
+INSERT INTO Student_Profile_Info (student_id, field_name, field_value)
+VALUES (?, ?, ?)
+ON DUPLICATE KEY UPDATE field_value = VALUES(field_value);

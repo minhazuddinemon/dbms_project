@@ -20,6 +20,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -30,7 +31,6 @@ func main() {
 	if dsn == "" {
 		log.Fatal("DB_DSN environment variable is not set")
 	}
-
 	// 1. Connect with retry logic
 	var dbConn *sql.DB
 	var err error
@@ -75,16 +75,41 @@ func main() {
 	mux.HandleFunc("/profile", middleware.RequireAuth(h.HandleProfile))
 	mux.HandleFunc("/programs", h.HandleListPrograms)
 	mux.HandleFunc("/programs/detail", h.HandleGetProgramByID)
-	// Protected Routes (Requires valid JWT)
 	mux.HandleFunc("/programs/eligible", middleware.RequireAuth(h.HandleEligiblePrograms))
+	mux.HandleFunc("/applications/apply", middleware.RequireAuth(h.ApplyToProgram))
+	mux.HandleFunc("/student/profile", middleware.RequireAuth(h.HandleUpdateProfile))
 
 	// Wrap the entire router with the logger middleware
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{
+			"http://localhost:3000", // Allow your local frontend
+			"http://127.0.0.1:3000",
+			// "https://yourproductiondomain.com", // Add this later for deployment
+		},
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+			http.MethodOptions, // Explicitly allow preflight requests
+		},
+		AllowedHeaders: []string{
+			"Accept",
+			"Authorization",
+			"Content-Type",
+			"X-CSRF-Token",
+		},
+		AllowCredentials: true,
+		// Debug: true, // Uncomment this to see CORS logs in terminal if things break
+	})
+
 	loggedMux := logger.RequestLogger(mux)
+	handler := c.Handler(loggedMux)
 
 	// 5. Start HTTP Server
 	port := "8080"
 	fmt.Printf("🚀 Server starting on port %s...\n", port)
-	if err := http.ListenAndServe(":"+port, loggedMux); err != nil {
+	if err := http.ListenAndServe(":"+port, handler); err != nil {
 		log.Fatalf("Server crashed: %v", err)
 	}
 }

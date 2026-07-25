@@ -17,10 +17,12 @@ type Querier interface {
 	GetProgramByID(ctx context.Context, programID int32) (GetProgramByIDRow, error)
 	GetProgramDetails(ctx context.Context, programID int32) (GetProgramDetailsRow, error)
 	GetProgramEligibilityRules(ctx context.Context, programID int32) ([]ProgramEligibilityRule, error)
+	GetProgramRequiredFields(ctx context.Context, programID int32) ([]ProgramRequiredFieldsFieldName, error)
 	GetStudentAcademics(ctx context.Context, studentID int32) ([]StudentAcademic, error)
 	GetStudentApplications(ctx context.Context, studentID int32) ([]GetStudentApplicationsRow, error)
 	GetStudentByEmail(ctx context.Context, email string) (Student, error)
 	GetStudentByID(ctx context.Context, studentID int32) (Student, error)
+	GetStudentProfileFields(ctx context.Context, studentID int32) ([]StudentProfileInfoFieldName, error)
 	GetStudentSubjectMarks(ctx context.Context, arg GetStudentSubjectMarksParams) ([]GetStudentSubjectMarksRow, error)
 	GetStudentTestResults(ctx context.Context, studentID int32) ([]GetStudentTestResultsRow, error)
 	ListPrograms(ctx context.Context, arg ListProgramsParams) ([]ListProgramsRow, error)
@@ -29,6 +31,7 @@ type Querier interface {
 	RecordPayment(ctx context.Context, arg RecordPaymentParams) (sql.Result, error)
 	RecordTestResult(ctx context.Context, arg RecordTestResultParams) error
 	UpdateApplicationStatus(ctx context.Context, arg UpdateApplicationStatusParams) error
+	UpsertStudentProfileField(ctx context.Context, arg UpsertStudentProfileFieldParams) error
 }
 
 var _ Querier = (*Queries)(nil)

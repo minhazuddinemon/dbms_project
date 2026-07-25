@@ -142,3 +142,88 @@ func (h *Handler) HandleEligiblePrograms(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(results)
 }
+
+type ApplyRequest struct {
+	ProgramID int32 `json:"program_id"`
+}
+
+func (h *Handler) ApplyToProgram(w http.ResponseWriter, r *http.Request) {
+	// Restrict to POST requests
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 1. Get Student ID from JWT Context using your middleware key
+	studentID, ok := r.Context().Value(middleware.StudentIDKey).(int32)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req ApplyRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+
+	// 2. Fetch what the program requires (Changed h.DB to h.Queries)
+	requiredFields, err := h.Queries.GetProgramRequiredFields(ctx, req.ProgramID)
+	if err != nil {
+		http.Error(w, "Error fetching program requirements", http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Fetch what the student has already provided (Changed h.DB to h.Queries)
+	studentFields, err := h.Queries.GetStudentProfileFields(ctx, studentID)
+	if err != nil {
+		http.Error(w, "Error fetching student profile", http.StatusInternalServerError)
+		return
+	}
+
+	// 4. Calculate Missing Fields
+	// Convert student fields into a map for fast lookup
+	providedMap := make(map[string]bool)
+	for _, field := range studentFields {
+		providedMap[string(field)] = true
+	}
+
+	var missingFields []string
+	for _, reqField := range requiredFields {
+		if !providedMap[string(reqField)] {
+			missingFields = append(missingFields, string(reqField))
+		}
+	}
+
+	// 5. If fields are missing, reject the application and tell them what to fill out
+	if len(missingFields) > 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":         "incomplete_profile",
+			"message":        "You must provide additional information to apply to this program.",
+			"missing_fields": missingFields,
+		})
+		return
+	}
+
+	// 6. If no fields are missing, insert the application! (Changed h.DB to h.Queries)
+	_, err = h.Queries.CreateApplication(ctx, db.CreateApplicationParams{
+		StudentID: studentID,
+		ProgramID: req.ProgramID,
+	})
+	if err != nil {
+		http.Error(w, "Failed to submit application", http.StatusInternalServerError)
+		return
+	}
+
+	// Success!
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":  "success",
+		"message": "Application submitted successfully! Please proceed to payment.",
+	})
+}

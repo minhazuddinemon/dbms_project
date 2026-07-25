@@ -176,3 +176,20 @@ func (q *Queries) GetStudentSubjectMarks(ctx context.Context, arg GetStudentSubj
 	}
 	return items, nil
 }
+
+const upsertStudentProfileField = `-- name: UpsertStudentProfileField :exec
+INSERT INTO Student_Profile_Info (student_id, field_name, field_value)
+VALUES (?, ?, ?)
+ON DUPLICATE KEY UPDATE field_value = VALUES(field_value)
+`
+
+type UpsertStudentProfileFieldParams struct {
+	StudentID  int32                       `json:"student_id"`
+	FieldName  StudentProfileInfoFieldName `json:"field_name"`
+	FieldValue string                      `json:"field_value"`
+}
+
+func (q *Queries) UpsertStudentProfileField(ctx context.Context, arg UpsertStudentProfileFieldParams) error {
+	_, err := q.db.ExecContext(ctx, upsertStudentProfileField, arg.StudentID, arg.FieldName, arg.FieldValue)
+	return err
+}
