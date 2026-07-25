@@ -235,7 +235,7 @@ func (h *Handler) ApplyToProgram(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 6. If no fields are missing, insert the application! (Changed h.DB to h.Queries)
-	_, err = h.Queries.CreateApplication(ctx, db.CreateApplicationParams{
+	res, err := h.Queries.CreateApplication(ctx, db.CreateApplicationParams{
 		StudentID: studentID,
 		ProgramID: req.ProgramID,
 	})
@@ -244,11 +244,52 @@ func (h *Handler) ApplyToProgram(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract the newly generated auto-increment app_id
+	appID, err := res.LastInsertId()
+	if err != nil {
+		http.Error(w, "Failed to retrieve application ID", http.StatusInternalServerError)
+		return
+	}
+
 	// Success!
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
+	json.NewEncoder(w).Encode(map[string]any{
 		"status":  "success",
 		"message": "Application submitted successfully! Please proceed to payment.",
+		"app_id":  appID, // <-- Returns the real ID!
 	})
+}
+
+func (h *Handler) HandleGetStudentApplications(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 1. Authenticate Student
+	studentID, ok := r.Context().Value(middleware.StudentIDKey).(int32)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	ctx := r.Context()
+
+	// 2. Fetch applications from database
+	applications, err := h.Queries.GetStudentApplications(ctx, studentID)
+	if err != nil {
+		http.Error(w, "Failed to fetch applications", http.StatusInternalServerError)
+		return
+	}
+
+	// Ensure we return an empty JSON array `[]` instead of `null` if no records exist
+	if applications == nil {
+		applications = []db.GetStudentApplicationsRow{}
+	}
+
+	// 3. Return response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(applications)
 }

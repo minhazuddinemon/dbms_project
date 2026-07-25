@@ -3,16 +3,18 @@ INSERT INTO Application (program_id, student_id, status)
 VALUES (?, ?, 'Pending');
 
 -- name: GetStudentApplications :many
-SELECT a.app_id, a.sub_date, a.status, p.p_name, u.u_name
+SELECT
+    a.app_id,
+    a.program_id,
+    a.sub_date,
+    a.status,
+    p.p_name AS program_name,
+    u.u_name AS university_name
 FROM Application a
 JOIN Program p ON a.program_id = p.program_id
 JOIN University u ON p.u_id = u.u_id
-WHERE a.student_id = ?;
-
--- name: UpdateApplicationStatus :exec
-UPDATE Application
-SET status = ?
-WHERE app_id = ?;
+WHERE a.student_id = ?
+ORDER BY a.sub_date DESC;
 
 -- name: RecordPayment :execresult
 INSERT INTO Payment (tx_id, amount, status, method, app_id)

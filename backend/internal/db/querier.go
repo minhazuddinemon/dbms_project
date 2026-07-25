@@ -12,8 +12,10 @@ import (
 type Querier interface {
 	AddStudentAcademic(ctx context.Context, arg AddStudentAcademicParams) error
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (sql.Result, error)
+	CreatePayment(ctx context.Context, arg CreatePaymentParams) (sql.Result, error)
 	CreateStudent(ctx context.Context, arg CreateStudentParams) (sql.Result, error)
 	GetAllProgramsWithRules(ctx context.Context) ([]GetAllProgramsWithRulesRow, error)
+	GetApplicationByID(ctx context.Context, arg GetApplicationByIDParams) (GetApplicationByIDRow, error)
 	GetProgramByID(ctx context.Context, programID int32) (GetProgramByIDRow, error)
 	GetProgramDetails(ctx context.Context, programID int32) (GetProgramDetailsRow, error)
 	GetProgramEligibilityRules(ctx context.Context, programID int32) ([]ProgramEligibilityRule, error)

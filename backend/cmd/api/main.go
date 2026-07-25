@@ -94,6 +94,8 @@ func main() {
 	mux.HandleFunc("/applications/apply", middleware.RequireAuth(h.ApplyToProgram))
 	mux.HandleFunc("/student/profile", middleware.RequireAuth(h.HandleUpdateProfile))
 	mux.HandleFunc("/program/requirements", middleware.RequireAuth(h.GetProgramRequirementsStatus))
+	mux.HandleFunc("/payments/process", middleware.RequireAuth(h.HandleProcessPayment))
+	mux.HandleFunc("/applications", middleware.RequireAuth(h.HandleGetStudentApplications))
 
 	// Wrap the entire router with the logger middleware
 	c := cors.New(cors.Options{

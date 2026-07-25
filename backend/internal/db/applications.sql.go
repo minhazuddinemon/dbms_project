@@ -54,19 +54,27 @@ func (q *Queries) GetProgramRequiredFields(ctx context.Context, programID int32)
 }
 
 const getStudentApplications = `-- name: GetStudentApplications :many
-SELECT a.app_id, a.sub_date, a.status, p.p_name, u.u_name
+SELECT
+    a.app_id,
+    a.program_id,
+    a.sub_date,
+    a.status,
+    p.p_name AS program_name,
+    u.u_name AS university_name
 FROM Application a
 JOIN Program p ON a.program_id = p.program_id
 JOIN University u ON p.u_id = u.u_id
 WHERE a.student_id = ?
+ORDER BY a.sub_date DESC
 `
 
 type GetStudentApplicationsRow struct {
-	AppID   int32        `json:"app_id"`
-	SubDate sql.NullTime `json:"sub_date"`
-	Status  string       `json:"status"`
-	PName   string       `json:"p_name"`
-	UName   string       `json:"u_name"`
+	AppID          int32        `json:"app_id"`
+	ProgramID      int32        `json:"program_id"`
+	SubDate        sql.NullTime `json:"sub_date"`
+	Status         string       `json:"status"`
+	ProgramName    string       `json:"program_name"`
+	UniversityName string       `json:"university_name"`
 }
 
 func (q *Queries) GetStudentApplications(ctx context.Context, studentID int32) ([]GetStudentApplicationsRow, error) {
@@ -80,10 +88,11 @@ func (q *Queries) GetStudentApplications(ctx context.Context, studentID int32) (
 		var i GetStudentApplicationsRow
 		if err := rows.Scan(
 			&i.AppID,
+			&i.ProgramID,
 			&i.SubDate,
 			&i.Status,
-			&i.PName,
-			&i.UName,
+			&i.ProgramName,
+			&i.UniversityName,
 		); err != nil {
 			return nil, err
 		}
@@ -148,20 +157,4 @@ func (q *Queries) RecordPayment(ctx context.Context, arg RecordPaymentParams) (s
 		arg.Method,
 		arg.AppID,
 	)
-}
-
-const updateApplicationStatus = `-- name: UpdateApplicationStatus :exec
-UPDATE Application
-SET status = ?
-WHERE app_id = ?
-`
-
-type UpdateApplicationStatusParams struct {
-	Status string `json:"status"`
-	AppID  int32  `json:"app_id"`
-}
-
-func (q *Queries) UpdateApplicationStatus(ctx context.Context, arg UpdateApplicationStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateApplicationStatus, arg.Status, arg.AppID)
-	return err
 }
