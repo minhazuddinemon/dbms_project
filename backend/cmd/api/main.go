@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	// Note: Replace "dbms_project" with your actual module name found in your go.mod file
 	"dbms-project/internal/db"
 	"dbms-project/internal/handler/rest"
 	"dbms-project/internal/logger"
@@ -58,7 +57,7 @@ func main() {
 
 	// 3. Initialize sqlc queries
 	queries := db.New(dbConn)
-	h := rest.NewHandler(queries)
+	h := rest.NewHandler(queries, dbConn)
 
 	// 4. Set up HTTP Router
 	mux := http.NewServeMux()

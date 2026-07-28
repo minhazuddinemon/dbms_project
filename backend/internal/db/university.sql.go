@@ -20,8 +20,62 @@ func (q *Queries) DeleteUniversity(ctx context.Context, uID int32) error {
 	return err
 }
 
+const deleteUniversityAlbum = `-- name: DeleteUniversityAlbum :exec
+DELETE FROM University_Album
+WHERE u_id = ?
+`
+
+func (q *Queries) DeleteUniversityAlbum(ctx context.Context, uID int32) error {
+	_, err := q.db.ExecContext(ctx, deleteUniversityAlbum, uID)
+	return err
+}
+
+const deleteUniversityDepartments = `-- name: DeleteUniversityDepartments :exec
+DELETE FROM University_Department
+WHERE u_id = ?
+`
+
+func (q *Queries) DeleteUniversityDepartments(ctx context.Context, uID int32) error {
+	_, err := q.db.ExecContext(ctx, deleteUniversityDepartments, uID)
+	return err
+}
+
+const getUniversityAlbum = `-- name: GetUniversityAlbum :many
+SELECT album_id, u_id, picture_title, picture_url
+FROM University_Album
+WHERE u_id = ?
+`
+
+func (q *Queries) GetUniversityAlbum(ctx context.Context, uID int32) ([]UniversityAlbum, error) {
+	rows, err := q.db.QueryContext(ctx, getUniversityAlbum, uID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UniversityAlbum
+	for rows.Next() {
+		var i UniversityAlbum
+		if err := rows.Scan(
+			&i.AlbumID,
+			&i.UID,
+			&i.PictureTitle,
+			&i.PictureUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUniversityByID = `-- name: GetUniversityByID :one
-SELECT u_id, u_name, website, location, logo_url
+SELECT u_id, u_name, website, location, logo_url, university_description, university_history
 FROM University
 WHERE u_id = ?
 `
@@ -35,20 +89,59 @@ func (q *Queries) GetUniversityByID(ctx context.Context, uID int32) (University,
 		&i.Website,
 		&i.Location,
 		&i.LogoUrl,
+		&i.UniversityDescription,
+		&i.UniversityHistory,
 	)
 	return i, err
 }
 
+const getUniversityDepartments = `-- name: GetUniversityDepartments :many
+SELECT dept_id, u_id, dept_name, dept_description, total_seats
+FROM University_Department
+WHERE u_id = ?
+`
+
+func (q *Queries) GetUniversityDepartments(ctx context.Context, uID int32) ([]UniversityDepartment, error) {
+	rows, err := q.db.QueryContext(ctx, getUniversityDepartments, uID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UniversityDepartment
+	for rows.Next() {
+		var i UniversityDepartment
+		if err := rows.Scan(
+			&i.DeptID,
+			&i.UID,
+			&i.DeptName,
+			&i.DeptDescription,
+			&i.TotalSeats,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertUniversity = `-- name: InsertUniversity :execresult
-INSERT INTO University (u_name, website, location, logo_url)
-VALUES (?, ?, ?, ?)
+INSERT INTO University (u_name, website, location, logo_url, university_description, university_history)
+VALUES (?, ?, ?, ?, ?, ?)
 `
 
 type InsertUniversityParams struct {
-	UName    string         `json:"u_name"`
-	Website  string         `json:"website"`
-	Location sql.NullString `json:"location"`
-	LogoUrl  sql.NullString `json:"logo_url"`
+	UName                 string         `json:"u_name"`
+	Website               string         `json:"website"`
+	Location              sql.NullString `json:"location"`
+	LogoUrl               sql.NullString `json:"logo_url"`
+	UniversityDescription sql.NullString `json:"university_description"`
+	UniversityHistory     sql.NullString `json:"university_history"`
 }
 
 func (q *Queries) InsertUniversity(ctx context.Context, arg InsertUniversityParams) (sql.Result, error) {
@@ -57,21 +150,61 @@ func (q *Queries) InsertUniversity(ctx context.Context, arg InsertUniversityPara
 		arg.Website,
 		arg.Location,
 		arg.LogoUrl,
+		arg.UniversityDescription,
+		arg.UniversityHistory,
+	)
+}
+
+const insertUniversityAlbumPicture = `-- name: InsertUniversityAlbumPicture :execresult
+INSERT INTO University_Album (u_id, picture_title, picture_url)
+VALUES (?, ?, ?)
+`
+
+type InsertUniversityAlbumPictureParams struct {
+	UID          int32  `json:"u_id"`
+	PictureTitle string `json:"picture_title"`
+	PictureUrl   string `json:"picture_url"`
+}
+
+func (q *Queries) InsertUniversityAlbumPicture(ctx context.Context, arg InsertUniversityAlbumPictureParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, insertUniversityAlbumPicture, arg.UID, arg.PictureTitle, arg.PictureUrl)
+}
+
+const insertUniversityDepartment = `-- name: InsertUniversityDepartment :execresult
+INSERT INTO University_Department (u_id, dept_name, dept_description, total_seats)
+VALUES (?, ?, ?, ?)
+`
+
+type InsertUniversityDepartmentParams struct {
+	UID             int32          `json:"u_id"`
+	DeptName        string         `json:"dept_name"`
+	DeptDescription sql.NullString `json:"dept_description"`
+	TotalSeats      int32          `json:"total_seats"`
+}
+
+func (q *Queries) InsertUniversityDepartment(ctx context.Context, arg InsertUniversityDepartmentParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, insertUniversityDepartment,
+		arg.UID,
+		arg.DeptName,
+		arg.DeptDescription,
+		arg.TotalSeats,
 	)
 }
 
 const updateUniversity = `-- name: UpdateUniversity :exec
 UPDATE University
-SET u_name = ?, website = ?, location = ?, logo_url = ?
+SET u_name = ?, website = ?, location = ?, logo_url = ?, university_description = ?, university_history = ?
 WHERE u_id = ?
 `
 
 type UpdateUniversityParams struct {
-	UName    string         `json:"u_name"`
-	Website  string         `json:"website"`
-	Location sql.NullString `json:"location"`
-	LogoUrl  sql.NullString `json:"logo_url"`
-	UID      int32          `json:"u_id"`
+	UName                 string         `json:"u_name"`
+	Website               string         `json:"website"`
+	Location              sql.NullString `json:"location"`
+	LogoUrl               sql.NullString `json:"logo_url"`
+	UniversityDescription sql.NullString `json:"university_description"`
+	UniversityHistory     sql.NullString `json:"university_history"`
+	UID                   int32          `json:"u_id"`
 }
 
 func (q *Queries) UpdateUniversity(ctx context.Context, arg UpdateUniversityParams) error {
@@ -80,6 +213,8 @@ func (q *Queries) UpdateUniversity(ctx context.Context, arg UpdateUniversityPara
 		arg.Website,
 		arg.Location,
 		arg.LogoUrl,
+		arg.UniversityDescription,
+		arg.UniversityHistory,
 		arg.UID,
 	)
 	return err

@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { updateStudentProfile } from '$lib/api/student';
 	import { authState } from '$lib/state/auth.svelte';
-	import { User, MapPin, Award, CheckCircle2, AlertCircle, Save, FileText, BookOpen, Shield, Sparkles, FolderShared, Upload, Image, FileCheck, AlertTriangle } from 'lucide-svelte';
+	import { User, MapPin, Award, CheckCircle2, AlertCircle, Save, FileText, BookOpen, Shield, Sparkles, FolderSync, Upload, Image, FileCheck, AlertTriangle } from 'lucide-svelte';
 
 	let presentAddress = $state('Dhaka, Bangladesh');
 	let permanentAddress = $state('Dhaka, Bangladesh');
@@ -132,7 +132,7 @@
 					onclick={() => activeTab = 'documents'}
 					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'documents' ? 'bg-white text-primary shadow-sm border border-outline-variant/30' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
-					<FolderShared class="w-4 h-4" />
+					<FolderSync class="w-4 h-4" />
 					Documents
 				</button>
 			</div>
@@ -323,7 +323,7 @@
 				{#if activeTab === 'documents'}
 					<div class="space-y-6 animate-fade-in-up">
 						<h3 class="text-xl font-extrabold text-on-surface border-b border-outline-variant/30 pb-3 flex items-center gap-2">
-							<FolderShared class="w-5 h-5 text-primary" />
+							<FolderSync class="w-5 h-5 text-primary" />
 							Uploaded Documents
 						</h3>
 

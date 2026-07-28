@@ -1,6 +1,6 @@
 <!-- src/routes/account/+page.svelte -->
 <script lang="ts">
-	import { User, Lock, Bell, Shield, Key, Save, CheckCircle2, Phone, Mail, Calendar, FolderShared, FileCheck, Upload, AlertTriangle, Smartphone } from 'lucide-svelte';
+	import { User, Lock, Bell, Shield, Key, Save, CheckCircle2, Phone, Mail, Calendar, FolderSync, FileCheck, Upload, AlertTriangle, Smartphone } from 'lucide-svelte';
 	import { authState } from '$lib/state/auth.svelte';
 
 	let firstName = $state('Fahad');
@@ -139,7 +139,7 @@
 				<div class="glass-panel p-8 sm:p-10 rounded-[2.5rem] border border-outline-variant/40 bg-white/95 shadow-xl space-y-6">
 					<div class="flex items-center justify-between border-b border-outline-variant/30 pb-4">
 						<h3 class="text-xl font-extrabold text-on-surface flex items-center gap-2">
-							<FolderShared class="w-5 h-5 text-primary" />
+							<FolderSync class="w-5 h-5 text-primary" />
 							Uploaded Verification Documents
 						</h3>
 						<a href="/profile" class="text-xs font-bold text-primary hover:underline">Manage All &rarr;</a>

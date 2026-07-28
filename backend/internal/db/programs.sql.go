@@ -364,7 +364,7 @@ func (q *Queries) ListProgramsByUniversity(ctx context.Context, uID int32) ([]Pr
 }
 
 const listUniversities = `-- name: ListUniversities :many
-SELECT u_id, u_name, website, location, logo_url FROM University
+SELECT u_id, u_name, website, location, logo_url, university_description, university_history FROM University
 `
 
 func (q *Queries) ListUniversities(ctx context.Context) ([]University, error) {
@@ -382,6 +382,8 @@ func (q *Queries) ListUniversities(ctx context.Context) ([]University, error) {
 			&i.Website,
 			&i.Location,
 			&i.LogoUrl,
+			&i.UniversityDescription,
+			&i.UniversityHistory,
 		); err != nil {
 			return nil, err
 		}

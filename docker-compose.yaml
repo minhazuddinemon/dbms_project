@@ -4,10 +4,10 @@ services:
     container_name: admission_db
     restart: always
     environment:
-      MARIADB_USER: admission_user
-      MARIADB_PASSWORD: secretpassword
-      MARIADB_ROOT_PASSWORD: rootsecret
-      MARIADB_DATABASE: admission_db
+      MARIADB_USER: ${DB_USER:-admission_user}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-secretpassword}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+      MARIADB_DATABASE: ${DB_NAME:-admission_db}
     ports:
       - "3307:3306"
     volumes:
@@ -33,25 +33,25 @@ services:
       - JWT_SECRET=jwtsecret
       - ADMIN_EMAIL=admin@gmail.com
       - ADMIN_PASSWORD=12345678
-      - DB_DSN=admission_user:secretpassword@tcp(db:3306)/admission_db?parseTime=true&multiStatements=true
+      - DB_DSN=${DB_DSN:-admission_user:secretpassword@tcp(db:3306)/admission_db?parseTime=true&multiStatements=true}
     depends_on:
       db:
         condition: service_healthy
 
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: admission_frontend
-  #   restart: always
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - PORT=3000
-  #     - VITE_BACKEND_URL=http://backend:8080
-  #     - VITE_API_BASE_URL=/api
-  #   depends_on:
-  #     - backend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: admission_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - VITE_BACKEND_URL=http://backend:8080
+      - VITE_API_BASE_URL=/api
+    depends_on:
+      - backend
 
 volumes:
   mariadb_data:

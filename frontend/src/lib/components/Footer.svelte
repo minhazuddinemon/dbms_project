@@ -12,7 +12,7 @@
 			<!-- Brand Info -->
 			<div class="space-y-5 md:col-span-1">
 				<div class="flex items-center gap-3">
-					<div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-primary to-tertiary-fixed flex items-center justify-center text-white shadow-lg shadow-primary/20">
+					<div class="w-10 h-10 rounded-2xl bg-linear-to-tr from-primary to-tertiary-fixed flex items-center justify-center text-white shadow-lg shadow-primary/20">
 						<GraduationCap class="w-6 h-6" />
 					</div>
 					<span class="text-2xl font-black tracking-tight text-white">UniApp</span>

@@ -17,6 +17,8 @@ type Querier interface {
 	CreateStudent(ctx context.Context, arg CreateStudentParams) (sql.Result, error)
 	DeleteProgram(ctx context.Context, programID int32) error
 	DeleteUniversity(ctx context.Context, uID int32) error
+	DeleteUniversityAlbum(ctx context.Context, uID int32) error
+	DeleteUniversityDepartments(ctx context.Context, uID int32) error
 	GetAllProgramsWithRules(ctx context.Context) ([]GetAllProgramsWithRulesRow, error)
 	GetApplicationByID(ctx context.Context, arg GetApplicationByIDParams) (GetApplicationByIDRow, error)
 	GetProgramByID(ctx context.Context, programID int32) (GetProgramByIDRow, error)
@@ -31,10 +33,14 @@ type Querier interface {
 	GetStudentProgramRequirements(ctx context.Context, arg GetStudentProgramRequirementsParams) ([]GetStudentProgramRequirementsRow, error)
 	GetStudentSubjectMarks(ctx context.Context, arg GetStudentSubjectMarksParams) ([]GetStudentSubjectMarksRow, error)
 	GetStudentTestResults(ctx context.Context, studentID int32) ([]GetStudentTestResultsRow, error)
+	GetUniversityAlbum(ctx context.Context, uID int32) ([]UniversityAlbum, error)
 	GetUniversityApplications(ctx context.Context, uID int32) ([]GetUniversityApplicationsRow, error)
 	GetUniversityByID(ctx context.Context, uID int32) (University, error)
+	GetUniversityDepartments(ctx context.Context, uID int32) ([]UniversityDepartment, error)
 	InsertProgram(ctx context.Context, arg InsertProgramParams) (sql.Result, error)
 	InsertUniversity(ctx context.Context, arg InsertUniversityParams) (sql.Result, error)
+	InsertUniversityAlbumPicture(ctx context.Context, arg InsertUniversityAlbumPictureParams) (sql.Result, error)
+	InsertUniversityDepartment(ctx context.Context, arg InsertUniversityDepartmentParams) (sql.Result, error)
 	ListPrograms(ctx context.Context, arg ListProgramsParams) ([]ListProgramsRow, error)
 	ListProgramsByUniversity(ctx context.Context, uID int32) ([]Program, error)
 	ListUniversities(ctx context.Context) ([]University, error)

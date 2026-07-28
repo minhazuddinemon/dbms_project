@@ -59,6 +59,49 @@ func (ns NullProgramRequiredFieldsFieldName) Value() (driver.Value, error) {
 	return string(ns.ProgramRequiredFieldsFieldName), nil
 }
 
+type StudentMobileOwnerType string
+
+const (
+	StudentMobileOwnerTypeSelf   StudentMobileOwnerType = "self"
+	StudentMobileOwnerTypeMother StudentMobileOwnerType = "mother"
+	StudentMobileOwnerTypeFather StudentMobileOwnerType = "father"
+)
+
+func (e *StudentMobileOwnerType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = StudentMobileOwnerType(s)
+	case string:
+		*e = StudentMobileOwnerType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for StudentMobileOwnerType: %T", src)
+	}
+	return nil
+}
+
+type NullStudentMobileOwnerType struct {
+	StudentMobileOwnerType StudentMobileOwnerType `json:"student_mobile_owner_type"`
+	Valid                  bool                   `json:"valid"` // Valid is true if StudentMobileOwnerType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullStudentMobileOwnerType) Scan(value interface{}) error {
+	if value == nil {
+		ns.StudentMobileOwnerType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.StudentMobileOwnerType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullStudentMobileOwnerType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.StudentMobileOwnerType), nil
+}
+
 type StudentProfileInfoFieldName string
 
 const (
@@ -193,8 +236,9 @@ type StudentAcademic struct {
 }
 
 type StudentMobile struct {
-	StudentID int32  `json:"student_id"`
-	MobileNo  string `json:"mobile_no"`
+	StudentID int32                  `json:"student_id"`
+	MobileNo  string                 `json:"mobile_no"`
+	OwnerType StudentMobileOwnerType `json:"owner_type"`
 }
 
 type StudentProfileInfo struct {
@@ -212,11 +256,28 @@ type StudentSubjectMark struct {
 }
 
 type University struct {
-	UID      int32          `json:"u_id"`
-	UName    string         `json:"u_name"`
-	Website  string         `json:"website"`
-	Location sql.NullString `json:"location"`
-	LogoUrl  sql.NullString `json:"logo_url"`
+	UID                   int32          `json:"u_id"`
+	UName                 string         `json:"u_name"`
+	Website               string         `json:"website"`
+	Location              sql.NullString `json:"location"`
+	LogoUrl               sql.NullString `json:"logo_url"`
+	UniversityDescription sql.NullString `json:"university_description"`
+	UniversityHistory     sql.NullString `json:"university_history"`
+}
+
+type UniversityAlbum struct {
+	AlbumID      int32  `json:"album_id"`
+	UID          int32  `json:"u_id"`
+	PictureTitle string `json:"picture_title"`
+	PictureUrl   string `json:"picture_url"`
+}
+
+type UniversityDepartment struct {
+	DeptID          int32          `json:"dept_id"`
+	UID             int32          `json:"u_id"`
+	DeptName        string         `json:"dept_name"`
+	DeptDescription sql.NullString `json:"dept_description"`
+	TotalSeats      int32          `json:"total_seats"`
 }
 
 type UniversityTransport struct {

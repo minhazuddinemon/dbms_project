@@ -9,11 +9,65 @@ import (
 	"dbms-project/internal/db"
 )
 
+type DepartmentPayload struct {
+	DeptName        string `json:"dept_name"`
+	DeptDescription string `json:"dept_description"`
+	TotalSeats      int32  `json:"total_seats"`
+}
+
+type AlbumPayload struct {
+	PictureTitle string `json:"picture_title"`
+	PictureURL   string `json:"picture_url"`
+}
+
 type UniversityRequest struct {
-	Name     string `json:"name"`
-	Website  string `json:"website"`
-	Location string `json:"location"`
-	LogoURL  string `json:"logo_url"`
+	Name                  string              `json:"name"`
+	Website               string              `json:"website"`
+	Location              string              `json:"location"`
+	LogoURL               string              `json:"logo_url"`
+	UniversityDescription string              `json:"university_description"`
+	UniversityHistory     string              `json:"university_history"`
+	Departments           []DepartmentPayload `json:"departments"`
+	Album                 []AlbumPayload      `json:"album"`
+}
+
+type DepartmentResponse struct {
+	DeptID          int32  `json:"dept_id"`
+	DeptName        string `json:"dept_name"`
+	DeptDescription string `json:"dept_description"`
+	TotalSeats      int32  `json:"total_seats"`
+}
+
+type AlbumResponse struct {
+	AlbumID      int32  `json:"album_id"`
+	PictureTitle string `json:"picture_title"`
+	PictureURL   string `json:"picture_url"`
+}
+
+type UniversityDetailResponse struct {
+	UID         int32                `json:"u_id"`
+	UName       string               `json:"u_name"`
+	Website     string               `json:"website"`
+	Location    string               `json:"location"`
+	LogoURL     string               `json:"logo_url"`
+	Description string               `json:"university_description"`
+	History     string               `json:"university_history"`
+	Departments []DepartmentResponse `json:"departments"`
+	Album       []AlbumResponse      `json:"album"`
+}
+
+func toNullString(s string) sql.NullString {
+	return sql.NullString{
+		String: s,
+		Valid:  s != "",
+	}
+}
+
+func nullStringToString(ns sql.NullString) string {
+	if ns.Valid {
+		return ns.String
+	}
+	return ""
 }
 
 // POST /admin/university
@@ -29,40 +83,73 @@ func (h *Handler) HandleCreateUniversity(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	s1 := req.Location
-	res1 := sql.NullString{
-		String: s1,
+	// Start database transaction
+	tx, err := h.DB.BeginTx(r.Context(), nil)
+	if err != nil {
+		http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
+		return
 	}
-	if s1 != "" {
-		res1.Valid = true
-	}
+	defer tx.Rollback()
 
-	s2 := req.Location
-	res2 := sql.NullString{
-		String: s2,
-	}
-	if s2 != "" {
-		res1.Valid = true
-	}
+	qtx := h.Queries.WithTx(tx)
 
-	res, err := h.Queries.InsertUniversity(r.Context(), db.InsertUniversityParams{
-		UName:    req.Name,
-		Website:  req.Website,
-		Location: res1,
-		LogoUrl:  res2,
+	res, err := qtx.InsertUniversity(r.Context(), db.InsertUniversityParams{
+		UName:                 req.Name,
+		Website:               req.Website,
+		Location:              toNullString(req.Location),
+		LogoUrl:               toNullString(req.LogoURL),
+		UniversityDescription: toNullString(req.UniversityDescription),
+		UniversityHistory:     toNullString(req.UniversityHistory),
 	})
 	if err != nil {
 		http.Error(w, "Failed to create university", http.StatusInternalServerError)
 		return
 	}
 
-	id, _ := res.LastInsertId()
+	id, err := res.LastInsertId()
+	if err != nil {
+		http.Error(w, "Failed to retrieve university ID", http.StatusInternalServerError)
+		return
+	}
+	uID := int32(id)
+
+	// Insert departments
+	for _, dept := range req.Departments {
+		_, err := qtx.InsertUniversityDepartment(r.Context(), db.InsertUniversityDepartmentParams{
+			UID:             uID,
+			DeptName:        dept.DeptName,
+			DeptDescription: toNullString(dept.DeptDescription),
+			TotalSeats:      dept.TotalSeats,
+		})
+		if err != nil {
+			http.Error(w, "Failed to create university department", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Insert album pictures
+	for _, pic := range req.Album {
+		_, err := qtx.InsertUniversityAlbumPicture(r.Context(), db.InsertUniversityAlbumPictureParams{
+			UID:          uID,
+			PictureTitle: pic.PictureTitle,
+			PictureUrl:   pic.PictureURL,
+		})
+		if err != nil {
+			http.Error(w, "Failed to create university album picture", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message": "University created successfully",
-		"u_id":    id,
+		"u_id":    uID,
 	})
 }
 
@@ -81,31 +168,76 @@ func (h *Handler) HandleUpdateUniversity(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	s1 := req.Location
-	res1 := sql.NullString{
-		String: s1,
-	}
-	if s1 != "" {
-		res1.Valid = true
+	if req.Name == "" || req.Website == "" {
+		http.Error(w, "Name and website are required", http.StatusBadRequest)
+		return
 	}
 
-	s2 := req.Location
-	res2 := sql.NullString{
-		String: s2,
+	// Start database transaction
+	tx, err := h.DB.BeginTx(r.Context(), nil)
+	if err != nil {
+		http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
+		return
 	}
-	if s2 != "" {
-		res1.Valid = true
-	}
+	defer tx.Rollback()
 
-	err = h.Queries.UpdateUniversity(r.Context(), db.UpdateUniversityParams{
-		UID:      int32(uID),
-		UName:    req.Name,
-		Website:  req.Website,
-		Location: res1,
-		LogoUrl:  res2,
+	qtx := h.Queries.WithTx(tx)
+
+	err = qtx.UpdateUniversity(r.Context(), db.UpdateUniversityParams{
+		UID:                   int32(uID),
+		UName:                 req.Name,
+		Website:               req.Website,
+		Location:              toNullString(req.Location),
+		LogoUrl:               toNullString(req.LogoURL),
+		UniversityDescription: toNullString(req.UniversityDescription),
+		UniversityHistory:     toNullString(req.UniversityHistory),
 	})
 	if err != nil {
 		http.Error(w, "Failed to update university", http.StatusInternalServerError)
+		return
+	}
+
+	// Update departments: delete all existing, then insert new
+	err = qtx.DeleteUniversityDepartments(r.Context(), int32(uID))
+	if err != nil {
+		http.Error(w, "Failed to clear existing university departments", http.StatusInternalServerError)
+		return
+	}
+
+	for _, dept := range req.Departments {
+		_, err := qtx.InsertUniversityDepartment(r.Context(), db.InsertUniversityDepartmentParams{
+			UID:             int32(uID),
+			DeptName:        dept.DeptName,
+			DeptDescription: toNullString(dept.DeptDescription),
+			TotalSeats:      dept.TotalSeats,
+		})
+		if err != nil {
+			http.Error(w, "Failed to update university departments", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Update album: delete all existing, then insert new
+	err = qtx.DeleteUniversityAlbum(r.Context(), int32(uID))
+	if err != nil {
+		http.Error(w, "Failed to clear existing university album", http.StatusInternalServerError)
+		return
+	}
+
+	for _, pic := range req.Album {
+		_, err := qtx.InsertUniversityAlbumPicture(r.Context(), db.InsertUniversityAlbumPictureParams{
+			UID:          int32(uID),
+			PictureTitle: pic.PictureTitle,
+			PictureUrl:   pic.PictureURL,
+		})
+		if err != nil {
+			http.Error(w, "Failed to update university album", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
 		return
 	}
 
@@ -138,15 +270,61 @@ func (h *Handler) HandleGetUniversityByID(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	university, err := h.Queries.GetUniversityByID(r.Context(), int32(uID))
+	ctx := r.Context()
+	university, err := h.Queries.GetUniversityByID(ctx, int32(uID))
 	if err != nil {
 		http.Error(w, "University not found", http.StatusNotFound)
 		return
 	}
 
+	// Fetch departments
+	depts, err := h.Queries.GetUniversityDepartments(ctx, int32(uID))
+	if err != nil {
+		http.Error(w, "Failed to fetch university departments", http.StatusInternalServerError)
+		return
+	}
+
+	deptResponses := make([]DepartmentResponse, 0, len(depts))
+	for _, d := range depts {
+		deptResponses = append(deptResponses, DepartmentResponse{
+			DeptID:          d.DeptID,
+			DeptName:        d.DeptName,
+			DeptDescription: nullStringToString(d.DeptDescription),
+			TotalSeats:      d.TotalSeats,
+		})
+	}
+
+	// Fetch album
+	albumPics, err := h.Queries.GetUniversityAlbum(ctx, int32(uID))
+	if err != nil {
+		http.Error(w, "Failed to fetch university album", http.StatusInternalServerError)
+		return
+	}
+
+	albumResponses := make([]AlbumResponse, 0, len(albumPics))
+	for _, p := range albumPics {
+		albumResponses = append(albumResponses, AlbumResponse{
+			AlbumID:      p.AlbumID,
+			PictureTitle: p.PictureTitle,
+			PictureURL:   p.PictureUrl,
+		})
+	}
+
+	resp := UniversityDetailResponse{
+		UID:                   university.UID,
+		UName:                 university.UName,
+		Website:               university.Website,
+		Location:              nullStringToString(university.Location),
+		LogoURL:               nullStringToString(university.LogoUrl),
+		Description:           nullStringToString(university.UniversityDescription),
+		History:               nullStringToString(university.UniversityHistory),
+		Departments:           deptResponses,
+		Album:                 albumResponses,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(university)
+	json.NewEncoder(w).Encode(resp)
 }
 
 // DELETE /admin/university?u_id=1

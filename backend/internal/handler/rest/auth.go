@@ -16,10 +16,11 @@ import (
 
 type Handler struct {
 	Queries *db.Queries
+	DB      *sql.DB
 }
 
-func NewHandler(queries *db.Queries) *Handler {
-	return &Handler{Queries: queries}
+func NewHandler(queries *db.Queries, dbConn *sql.DB) *Handler {
+	return &Handler{Queries: queries, DB: dbConn}
 }
 
 type RegisterRequest struct {

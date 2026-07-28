@@ -73,7 +73,7 @@ func (h *Handler) HandleProcessPayment(w http.ResponseWriter, r *http.Request) {
 	// 5. Return Confirmation
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]any{
 		"status":         "success",
 		"message":        "Payment received successfully! Application is now complete.",
 		"application_id": req.ApplicationID,

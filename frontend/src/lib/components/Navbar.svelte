@@ -15,11 +15,11 @@
 		<div class="flex items-center justify-between h-20">
 			<!-- Logo -->
 			<a href="/" class="flex items-center gap-3.5 group">
-				<div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary via-primary-container to-tertiary-fixed-dim flex items-center justify-center text-white shadow-lg shadow-primary/25 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
+				<div class="w-11 h-11 rounded-2xl bg-linear-to-tr from-primary via-primary-container to-tertiary-fixed-dim flex items-center justify-center text-white shadow-lg shadow-primary/25 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
 					<GraduationCap class="w-6 h-6" />
 				</div>
 				<div>
-					<span class="text-2xl font-black bg-gradient-to-r from-on-surface via-primary to-primary-container bg-clip-text text-transparent tracking-tight">UniApp</span>
+					<span class="text-2xl font-black bg-linear-to-r from-on-surface via-primary to-primary-container bg-clip-text text-transparent tracking-tight">UniApp</span>
 					<span class="block text-[11px] font-bold uppercase tracking-widest text-outline -mt-1">Admission Portal</span>
 				</div>
 			</a>
