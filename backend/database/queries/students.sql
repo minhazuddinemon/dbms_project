@@ -27,3 +27,21 @@ WHERE student_id = ? AND exam_level = ?;
 INSERT INTO Student_Profile_Info (student_id, field_name, field_value)
 VALUES (?, ?, ?)
 ON DUPLICATE KEY UPDATE field_value = VALUES(field_value);
+
+-- name: GetStudentMobiles :many
+SELECT student_id, mobile_no, owner_type
+FROM Student_Mobile
+WHERE student_id = ?;
+
+-- name: InsertStudentMobile :execresult
+INSERT INTO Student_Mobile (student_id, mobile_no, owner_type)
+VALUES (?, ?, ?);
+
+-- name: UpdateStudentMobile :execresult
+UPDATE Student_Mobile
+SET mobile_no = ?, owner_type = ?
+WHERE student_id = ? AND mobile_no = ?;
+
+-- name: DeleteStudentMobile :execresult
+DELETE FROM Student_Mobile
+WHERE student_id = ? AND mobile_no = ?;

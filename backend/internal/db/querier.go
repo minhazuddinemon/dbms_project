@@ -16,6 +16,7 @@ type Querier interface {
 	CreatePayment(ctx context.Context, arg CreatePaymentParams) (sql.Result, error)
 	CreateStudent(ctx context.Context, arg CreateStudentParams) (sql.Result, error)
 	DeleteProgram(ctx context.Context, programID int32) error
+	DeleteStudentMobile(ctx context.Context, arg DeleteStudentMobileParams) (sql.Result, error)
 	DeleteUniversity(ctx context.Context, uID int32) error
 	DeleteUniversityAlbum(ctx context.Context, uID int32) error
 	DeleteUniversityDepartments(ctx context.Context, uID int32) error
@@ -29,6 +30,7 @@ type Querier interface {
 	GetStudentApplications(ctx context.Context, studentID int32) ([]GetStudentApplicationsRow, error)
 	GetStudentByEmail(ctx context.Context, email string) (Student, error)
 	GetStudentByID(ctx context.Context, studentID int32) (Student, error)
+	GetStudentMobiles(ctx context.Context, studentID int32) ([]StudentMobile, error)
 	GetStudentProfileFields(ctx context.Context, studentID int32) ([]StudentProfileInfoFieldName, error)
 	GetStudentProgramRequirements(ctx context.Context, arg GetStudentProgramRequirementsParams) ([]GetStudentProgramRequirementsRow, error)
 	GetStudentSubjectMarks(ctx context.Context, arg GetStudentSubjectMarksParams) ([]GetStudentSubjectMarksRow, error)
@@ -37,7 +39,9 @@ type Querier interface {
 	GetUniversityApplications(ctx context.Context, uID int32) ([]GetUniversityApplicationsRow, error)
 	GetUniversityByID(ctx context.Context, uID int32) (University, error)
 	GetUniversityDepartments(ctx context.Context, uID int32) ([]UniversityDepartment, error)
+	InsertAdmissionTest(ctx context.Context, arg InsertAdmissionTestParams) (sql.Result, error)
 	InsertProgram(ctx context.Context, arg InsertProgramParams) (sql.Result, error)
+	InsertStudentMobile(ctx context.Context, arg InsertStudentMobileParams) (sql.Result, error)
 	InsertUniversity(ctx context.Context, arg InsertUniversityParams) (sql.Result, error)
 	InsertUniversityAlbumPicture(ctx context.Context, arg InsertUniversityAlbumPictureParams) (sql.Result, error)
 	InsertUniversityDepartment(ctx context.Context, arg InsertUniversityDepartmentParams) (sql.Result, error)
@@ -46,8 +50,10 @@ type Querier interface {
 	ListUniversities(ctx context.Context) ([]University, error)
 	RecordPayment(ctx context.Context, arg RecordPaymentParams) (sql.Result, error)
 	RecordTestResult(ctx context.Context, arg RecordTestResultParams) error
+	UpdateAdmissionTest(ctx context.Context, arg UpdateAdmissionTestParams) (sql.Result, error)
 	UpdateApplicationStatus(ctx context.Context, arg UpdateApplicationStatusParams) error
 	UpdateProgram(ctx context.Context, arg UpdateProgramParams) error
+	UpdateStudentMobile(ctx context.Context, arg UpdateStudentMobileParams) (sql.Result, error)
 	UpdateUniversity(ctx context.Context, arg UpdateUniversityParams) error
 	UpsertStudentProfileField(ctx context.Context, arg UpsertStudentProfileFieldParams) error
 }

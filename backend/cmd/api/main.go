@@ -79,6 +79,10 @@ func main() {
 	mux.HandleFunc("GET /profile", middleware.RequireAuth(h.HandleProfile))
 	mux.HandleFunc("PUT /student/profile", middleware.RequireAuth(h.HandleUpdateProfile))
 	mux.HandleFunc("POST /student/profile", middleware.RequireAuth(h.HandleUpdateProfile))
+	mux.HandleFunc("GET /student/mobile", middleware.RequireAuth(h.HandleGetStudentMobiles))
+	mux.HandleFunc("POST /student/mobile", middleware.RequireAuth(h.HandleAddStudentMobile))
+	mux.HandleFunc("PUT /student/mobile", middleware.RequireAuth(h.HandleUpdateStudentMobile))
+	mux.HandleFunc("DELETE /student/mobile", middleware.RequireAuth(h.HandleDeleteStudentMobile))
 	mux.HandleFunc("GET /programs/eligible", middleware.RequireAuth(h.HandleEligiblePrograms))
 	mux.HandleFunc("POST /applications/apply", middleware.RequireAuth(h.ApplyToProgram))
 	mux.HandleFunc("GET /applications", middleware.RequireAuth(h.HandleGetStudentApplications))
@@ -104,6 +108,8 @@ func main() {
 	mux.HandleFunc("POST /admin/program", middleware.RequireAdmin(h.HandleCreateProgram))
 	mux.HandleFunc("PUT /admin/program", middleware.RequireAdmin(h.HandleUpdateProgram))
 	mux.HandleFunc("DELETE /admin/program", middleware.RequireAdmin(h.HandleDeleteProgram))
+	mux.HandleFunc("POST /admin/admission-test", middleware.RequireAdmin(h.HandleCreateAdmissionTest))
+	mux.HandleFunc("PUT /admin/admission-test", middleware.RequireAdmin(h.HandleUpdateAdmissionTest))
 
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{

@@ -62,6 +62,20 @@ func (q *Queries) CreateStudent(ctx context.Context, arg CreateStudentParams) (s
 	)
 }
 
+const deleteStudentMobile = `-- name: DeleteStudentMobile :execresult
+DELETE FROM Student_Mobile
+WHERE student_id = ? AND mobile_no = ?
+`
+
+type DeleteStudentMobileParams struct {
+	StudentID int32  `json:"student_id"`
+	MobileNo  string `json:"mobile_no"`
+}
+
+func (q *Queries) DeleteStudentMobile(ctx context.Context, arg DeleteStudentMobileParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, deleteStudentMobile, arg.StudentID, arg.MobileNo)
+}
+
 const getStudentAcademics = `-- name: GetStudentAcademics :many
 SELECT student_id, exam_level, year, roll_no, reg_no, gpa, board, edu_group FROM Student_Academics
 WHERE student_id = ?
@@ -137,6 +151,35 @@ func (q *Queries) GetStudentByID(ctx context.Context, studentID int32) (Student,
 	return i, err
 }
 
+const getStudentMobiles = `-- name: GetStudentMobiles :many
+SELECT student_id, mobile_no, owner_type
+FROM Student_Mobile
+WHERE student_id = ?
+`
+
+func (q *Queries) GetStudentMobiles(ctx context.Context, studentID int32) ([]StudentMobile, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentMobiles, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []StudentMobile
+	for rows.Next() {
+		var i StudentMobile
+		if err := rows.Scan(&i.StudentID, &i.MobileNo, &i.OwnerType); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getStudentSubjectMarks = `-- name: GetStudentSubjectMarks :many
 SELECT subject_name, marks, grade
 FROM Student_Subject_Marks
@@ -175,6 +218,43 @@ func (q *Queries) GetStudentSubjectMarks(ctx context.Context, arg GetStudentSubj
 		return nil, err
 	}
 	return items, nil
+}
+
+const insertStudentMobile = `-- name: InsertStudentMobile :execresult
+INSERT INTO Student_Mobile (student_id, mobile_no, owner_type)
+VALUES (?, ?, ?)
+`
+
+type InsertStudentMobileParams struct {
+	StudentID int32                  `json:"student_id"`
+	MobileNo  string                 `json:"mobile_no"`
+	OwnerType StudentMobileOwnerType `json:"owner_type"`
+}
+
+func (q *Queries) InsertStudentMobile(ctx context.Context, arg InsertStudentMobileParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, insertStudentMobile, arg.StudentID, arg.MobileNo, arg.OwnerType)
+}
+
+const updateStudentMobile = `-- name: UpdateStudentMobile :execresult
+UPDATE Student_Mobile
+SET mobile_no = ?, owner_type = ?
+WHERE student_id = ? AND mobile_no = ?
+`
+
+type UpdateStudentMobileParams struct {
+	MobileNo   string                 `json:"mobile_no"`
+	OwnerType  StudentMobileOwnerType `json:"owner_type"`
+	StudentID  int32                  `json:"student_id"`
+	MobileNo_2 string                 `json:"mobile_no_2"`
+}
+
+func (q *Queries) UpdateStudentMobile(ctx context.Context, arg UpdateStudentMobileParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, updateStudentMobile,
+		arg.MobileNo,
+		arg.OwnerType,
+		arg.StudentID,
+		arg.MobileNo_2,
+	)
 }
 
 const upsertStudentProfileField = `-- name: UpsertStudentProfileField :exec

@@ -78,3 +78,52 @@ func (q *Queries) GetUniversityApplications(ctx context.Context, uID int32) ([]G
 	}
 	return items, nil
 }
+
+const insertAdmissionTest = `-- name: InsertAdmissionTest :execresult
+INSERT INTO Admission_Test (exam_unit, exam_center, exam_date, prereq_test_id, program_id)
+VALUES (?, ?, ?, ?, ?)
+`
+
+type InsertAdmissionTestParams struct {
+	ExamUnit     sql.NullString `json:"exam_unit"`
+	ExamCenter   sql.NullString `json:"exam_center"`
+	ExamDate     sql.NullTime   `json:"exam_date"`
+	PrereqTestID sql.NullInt32  `json:"prereq_test_id"`
+	ProgramID    sql.NullInt32  `json:"program_id"`
+}
+
+func (q *Queries) InsertAdmissionTest(ctx context.Context, arg InsertAdmissionTestParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, insertAdmissionTest,
+		arg.ExamUnit,
+		arg.ExamCenter,
+		arg.ExamDate,
+		arg.PrereqTestID,
+		arg.ProgramID,
+	)
+}
+
+const updateAdmissionTest = `-- name: UpdateAdmissionTest :execresult
+UPDATE Admission_Test
+SET exam_unit = ?, exam_center = ?, exam_date = ?, prereq_test_id = ?, program_id = ?
+WHERE test_id = ?
+`
+
+type UpdateAdmissionTestParams struct {
+	ExamUnit     sql.NullString `json:"exam_unit"`
+	ExamCenter   sql.NullString `json:"exam_center"`
+	ExamDate     sql.NullTime   `json:"exam_date"`
+	PrereqTestID sql.NullInt32  `json:"prereq_test_id"`
+	ProgramID    sql.NullInt32  `json:"program_id"`
+	TestID       int32          `json:"test_id"`
+}
+
+func (q *Queries) UpdateAdmissionTest(ctx context.Context, arg UpdateAdmissionTestParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, updateAdmissionTest,
+		arg.ExamUnit,
+		arg.ExamCenter,
+		arg.ExamDate,
+		arg.PrereqTestID,
+		arg.ProgramID,
+		arg.TestID,
+	)
+}

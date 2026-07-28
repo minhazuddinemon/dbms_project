@@ -155,6 +155,8 @@ type AdmissionTest struct {
 	ExamUnit     sql.NullString `json:"exam_unit"`
 	ExamCenter   sql.NullString `json:"exam_center"`
 	PrereqTestID sql.NullInt32  `json:"prereq_test_id"`
+	ExamDate     sql.NullTime   `json:"exam_date"`
+	ProgramID    sql.NullInt32  `json:"program_id"`
 }
 
 type Application struct {

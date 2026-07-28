@@ -15,3 +15,12 @@ ORDER BY a.sub_date DESC;
 UPDATE Application
 SET status = ?
 WHERE app_id = ?;
+
+-- name: InsertAdmissionTest :execresult
+INSERT INTO Admission_Test (exam_unit, exam_center, exam_date, prereq_test_id, program_id)
+VALUES (?, ?, ?, ?, ?);
+
+-- name: UpdateAdmissionTest :execresult
+UPDATE Admission_Test
+SET exam_unit = ?, exam_center = ?, exam_date = ?, prereq_test_id = ?, program_id = ?
+WHERE test_id = ?;
