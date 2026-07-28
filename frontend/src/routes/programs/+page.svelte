@@ -1,12 +1,14 @@
 <!-- src/routes/programs/+page.svelte -->
 <script lang="ts">
 	import { fetchPrograms } from '$lib/api/programs';
-	import type { Program } from '$lib/types/models';
-	import { Search, Building2, Calendar, Users, Filter, ArrowRight, Award, Sparkles } from 'lucide-svelte';
+	import { fetchUniversities } from '$lib/api/university';
+	import type { Program, University } from '$lib/types/models';
+	import { Search, Building2, Calendar, Users, Filter, ArrowRight, Award, Sparkles, MapPin } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 
 	let programs = $state<Program[]>([]);
+	let universities = $state<University[]>([]);
 	let search = $state(page.url.searchParams.get('search') || '');
 	let selectedUnit = $state('');
 	let isLoading = $state(true);
@@ -14,12 +16,30 @@
 	async function loadPrograms() {
 		isLoading = true;
 		try {
-			programs = await fetchPrograms(search, selectedUnit);
+			const [pList, uList] = await Promise.all([
+				fetchPrograms(search, selectedUnit),
+				universities.length > 0 ? Promise.resolve(universities) : fetchUniversities().catch(() => [])
+			]);
+			programs = pList || [];
+			universities = uList || [];
 		} catch (err) {
 			console.error('Failed to load programs:', err);
 		} finally {
 			isLoading = false;
 		}
+	}
+
+	function getUniLogo(prog: Program): string | null {
+		if (prog.logo_url) return prog.logo_url;
+		if (prog.university_logo) return prog.university_logo;
+		let found = universities.find((u) => u.u_id === prog.u_id);
+		if (found?.logo_url) return found.logo_url;
+		const nameToMatch = prog.university_name || prog.u_name;
+		if (nameToMatch) {
+			found = universities.find((u) => u.u_name.toLowerCase() === nameToMatch.toLowerCase() || nameToMatch.toLowerCase().includes(u.u_name.toLowerCase()));
+			if (found?.logo_url) return found.logo_url;
+		}
+		return null;
 	}
 
 	onMount(() => {
@@ -112,34 +132,56 @@
 				{#each programs as program}
 					<div class="glass-panel rounded-[2rem] border border-outline-variant/40 p-7 shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col justify-between space-y-6 bg-white/90 card-hover">
 						<div class="space-y-4">
-							<div class="flex items-start justify-between gap-2">
-								<span class="px-3 py-1 rounded-lg bg-primary-fixed text-on-primary-fixed text-xs font-extrabold uppercase">
+							<!-- Header with Logo and Unit -->
+							<div class="flex items-center justify-between gap-3 border-b border-outline-variant/20 pb-3">
+								<div class="flex items-center gap-3">
+									{#if getUniLogo(program)}
+										<img
+											src={getUniLogo(program)}
+											alt={program.university_name || program.u_name}
+											class="w-10 h-10 rounded-xl object-contain p-1 border border-outline-variant/30 bg-white shrink-0"
+										/>
+									{:else}
+										<div class="w-10 h-10 rounded-xl bg-primary-fixed text-primary flex items-center justify-center font-black text-lg shrink-0">
+											{(program.university_name || program.u_name || 'U').charAt(0)}
+										</div>
+									{/if}
+									<div>
+										<span class="block text-xs font-black text-primary uppercase leading-tight truncate">
+											{program.university_name || program.u_name || 'Public University'}
+										</span>
+										{#if program.university_location || program.location}
+											<span class="text-[11px] font-semibold text-on-surface-variant flex items-center gap-1">
+												<MapPin class="w-3 h-3 text-tertiary shrink-0" />
+												{program.university_location || program.location}
+											</span>
+										{/if}
+									</div>
+								</div>
+
+								<span class="px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed text-xs font-extrabold uppercase shrink-0">
 									Unit {program.p_unit || 'A'}
 								</span>
-								{#if program.prev_cutmarks}
-									<span class="px-3 py-1 rounded-lg bg-tertiary-fixed/40 text-tertiary text-xs font-bold flex items-center gap-1">
-										<Award class="w-3.5 h-3.5" />
-										Cutmark: {program.prev_cutmarks}
-									</span>
-								{/if}
 							</div>
 
 							<h3 class="text-2xl font-extrabold text-on-surface leading-tight">
 								{program.p_name}
 							</h3>
 
-							<div class="space-y-2.5 text-sm text-on-surface-variant pt-1">
-								<p class="flex items-center gap-2">
-									<Building2 class="w-4 h-4 text-primary shrink-0" />
-									<span class="font-bold text-on-surface">{program.u_name || 'Public University'}</span>
-								</p>
+							<div class="space-y-2 text-sm text-on-surface-variant pt-1">
+								{#if program.prev_cutmarks}
+									<p class="flex items-center gap-2">
+										<Award class="w-4 h-4 text-tertiary shrink-0" />
+										<span>Previous Cutmark: <strong class="text-primary font-bold">{program.prev_cutmarks}</strong></span>
+									</p>
+								{/if}
 								<p class="flex items-center gap-2">
 									<Users class="w-4 h-4 text-outline shrink-0" />
-									<span>Total Seats: <strong class="text-on-surface">{program.total_seats}</strong></span>
+									<span>Total Seats: <strong class="text-on-surface font-bold">{program.total_seats}</strong></span>
 								</p>
 								<p class="flex items-center gap-2">
 									<Calendar class="w-4 h-4 text-outline shrink-0" />
-									<span>Deadline: <strong class="text-on-surface">{program.deadline}</strong></span>
+									<span>Deadline: <strong class="text-on-surface font-mono font-bold">{program.deadline ? program.deadline.split('T')[0] : 'N/A'}</strong></span>
 								</p>
 							</div>
 						</div>

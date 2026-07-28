@@ -1,6 +1,6 @@
 <!-- src/lib/components/Footer.svelte -->
 <script lang="ts">
-	import { GraduationCap, Heart, ArrowUpRight, ShieldCheck, Mail, Phone } from 'lucide-svelte';
+	import { GraduationCap, ArrowUpRight, ShieldCheck, Mail, ShieldAlert } from 'lucide-svelte';
 </script>
 
 <footer class="bg-on-surface text-surface-container-lowest border-t border-outline/20 mt-auto relative overflow-hidden">
@@ -31,6 +31,12 @@
 				<h4 class="text-white font-extrabold text-sm mb-5 uppercase tracking-wider">Navigation</h4>
 				<ul class="space-y-3 text-sm text-surface-variant">
 					<li>
+						<a href="/universities" class="hover:text-tertiary-fixed transition-colors flex items-center gap-1 group">
+							<span>Universities</span>
+							<ArrowUpRight class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+						</a>
+					</li>
+					<li>
 						<a href="/programs" class="hover:text-tertiary-fixed transition-colors flex items-center gap-1 group">
 							<span>Browse Programs</span>
 							<ArrowUpRight class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -43,12 +49,6 @@
 						</a>
 					</li>
 					<li>
-						<a href="/routes-finder" class="hover:text-tertiary-fixed transition-colors flex items-center gap-1 group">
-							<span>Transport Route Tracker</span>
-							<ArrowUpRight class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-						</a>
-					</li>
-					<li>
 						<a href="/dashboard" class="hover:text-tertiary-fixed transition-colors flex items-center gap-1 group">
 							<span>Student Dashboard</span>
 							<ArrowUpRight class="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -57,22 +57,27 @@
 				</ul>
 			</div>
 
-			<!-- Account & Services -->
+			<!-- Account & Portal -->
 			<div>
-				<h4 class="text-white font-extrabold text-sm mb-5 uppercase tracking-wider">Student Portal</h4>
+				<h4 class="text-white font-extrabold text-sm mb-5 uppercase tracking-wider">Student & Admin</h4>
 				<ul class="space-y-3 text-sm text-surface-variant">
-					<li><a href="/login" class="hover:text-tertiary-fixed transition-colors">Sign In</a></li>
+					<li><a href="/login" class="hover:text-tertiary-fixed transition-colors">Student Sign In</a></li>
 					<li><a href="/register" class="hover:text-tertiary-fixed transition-colors">Register Account</a></li>
-					<li><a href="/profile" class="hover:text-tertiary-fixed transition-colors">Academic Profile & Marks</a></li>
-					<li><a href="/helpdesk" class="hover:text-tertiary-fixed transition-colors">Helpdesk Ticket Support</a></li>
+					<li><a href="/profile" class="hover:text-tertiary-fixed transition-colors">Student Profile & Mobile</a></li>
+					<li>
+						<a href="/admin" class="hover:text-amber-400 transition-colors flex items-center gap-1.5 text-amber-300 font-semibold">
+							<ShieldAlert class="w-4 h-4" />
+							<span>Admin Portal</span>
+						</a>
+					</li>
 				</ul>
 			</div>
 
-			<!-- Helpdesk Box -->
+			<!-- Support Box -->
 			<div>
 				<h4 class="text-white font-extrabold text-sm mb-5 uppercase tracking-wider">Support & Help</h4>
 				<p class="text-sm text-surface-variant mb-4 leading-relaxed">
-					Need help with minimum cutmarks, eligibility rules, or application fee payment?
+					Need help with cutmarks, eligibility rules, profile requirements, or payment processing?
 				</p>
 				<a href="/helpdesk" class="inline-flex items-center gap-2 px-5 py-2.5 bg-surface-container/10 hover:bg-surface-container/20 text-xs font-bold text-tertiary-fixed rounded-xl border border-tertiary-fixed/30 transition-all">
 					<Mail class="w-4 h-4" />

@@ -34,8 +34,12 @@ export interface Program {
 	deadline: string;
 	u_id: number;
 	u_name?: string;
+	university_name?: string;
 	location?: string;
+	university_location?: string;
 	website?: string;
+	logo_url?: string;
+	university_logo?: string;
 }
 
 export interface EligibleProgram {
@@ -64,19 +68,51 @@ export type RequiredProfileField =
 	| 'PHOTO_URL'
 	| 'SIGNATURE_URL';
 
+export interface DepartmentPayload {
+	dept_name: string;
+	dept_description?: string;
+	total_seats: number;
+}
+
+export interface AlbumPayload {
+	picture_title: string;
+	picture_url: string;
+}
+
+export interface DepartmentResponse {
+	dept_id: number;
+	dept_name: string;
+	dept_description: string;
+	total_seats: number;
+}
+
+export interface AlbumResponse {
+	album_id: number;
+	picture_title: string;
+	picture_url: string;
+}
+
 export interface University {
 	u_id: number;
 	u_name: string;
 	website: string;
 	location?: string;
 	logo_url?: string;
+	university_description?: string;
+	university_history?: string;
+	departments?: DepartmentResponse[];
+	album?: AlbumResponse[];
 }
 
 export interface UniversityPayload {
 	name: string;
 	website: string;
-	location: string;
-	logo_url: string;
+	location?: string;
+	logo_url?: string;
+	university_description?: string;
+	university_history?: string;
+	departments?: DepartmentPayload[];
+	album?: AlbumPayload[];
 }
 
 export interface ProgramPayload {
@@ -131,4 +167,94 @@ export interface PaymentResponse {
 export interface AdminLoginResponse {
 	token: string;
 	role: string;
+}
+
+export type StudentMobileOwnerType = 'self' | 'mother' | 'father';
+
+export interface StudentMobile {
+	student_id: number;
+	mobile_no: string;
+	owner_type: StudentMobileOwnerType;
+}
+
+export interface StudentMobileRequest {
+	mobile_no: string;
+	owner_type: StudentMobileOwnerType;
+}
+
+export interface UpdateStudentMobileRequest {
+	current_mobile_no: string;
+	mobile_no: string;
+	owner_type: StudentMobileOwnerType;
+}
+
+export interface AdmissionTestPayload {
+	exam_unit?: string;
+	exam_center?: string;
+	exam_date: string; // YYYY-MM-DD
+	prereq_test_id?: number | null;
+	program_id: number;
+}
+
+export interface StudentAcademicRequest {
+	exam_level: string; // 'SSC', 'HSC'
+	year: number;
+	roll_no: string;
+	reg_no: string;
+	gpa: string;
+	board: string;
+	edu_group: string; // 'Science', 'Humanities', 'Business'
+}
+
+export interface SubjectMarkItem {
+	subject_name: string;
+	marks: string;
+	grade?: string;
+}
+
+export interface StudentSubjectMarksRequest {
+	exam_level: string;
+	subjects: SubjectMarkItem[];
+}
+
+export interface StudentNotification {
+	notif_id: number;
+	student_id: number;
+	message: string;
+	created_at: string;
+}
+
+export interface UniversityTransport {
+	u_id: number;
+	transport_route: string;
+	est_travel_time: string;
+}
+
+export interface UniversityTransportRequest {
+	u_id: number;
+	transport_route: string;
+	est_travel_time: string;
+}
+
+export interface ProgramEligibilityRule {
+	program_id: number;
+	rule_type: string;
+	rule_value: string;
+}
+
+export interface ProgramEligibilityRuleRequest {
+	program_id: number;
+	rule_type: string;
+	rule_value: string;
+}
+
+export interface StudentTestResultItem {
+	student_id: number;
+	marks: string;
+	merit_position: number;
+}
+
+export interface PublishTestResultsRequest {
+	test_id: number;
+	results: StudentTestResultItem[];
 }

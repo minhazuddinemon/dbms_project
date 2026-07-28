@@ -1,25 +1,74 @@
 <!-- src/routes/+page.svelte -->
 <script lang="ts">
 	import { fetchStats, fetchFeatures, fetchTestimonials } from '$lib/api/landing';
+	import { fetchPrograms } from '$lib/api/programs';
+	import { fetchUniversities } from '$lib/api/university';
 	import type { Stat, Feature, Testimonial } from '$lib/types/landing';
+	import type { Program, University } from '$lib/types/models';
 	import { authState } from '$lib/state/auth.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { Sparkles, ArrowRight, Search, Award, MapPin, ShieldCheck, CheckCircle2, ChevronRight, Star, GraduationCap, Users, Target, Clock, Quote } from 'lucide-svelte';
+	import {
+		Sparkles,
+		ArrowRight,
+		Search,
+		Award,
+		MapPin,
+		ShieldCheck,
+		CheckCircle2,
+		BookOpen,
+		Building2,
+		GraduationCap,
+		Users,
+		Target,
+		Clock,
+		Quote,
+		Globe,
+		ExternalLink
+	} from 'lucide-svelte';
 
 	let stats = $state<Stat[]>([]);
 	let features = $state<Feature[]>([]);
 	let testimonials = $state<Testimonial[]>([]);
 	let searchKeyword = $state('');
 
+	// Showcase Tab State
+	let activeTab = $state<'programs' | 'universities'>('programs');
+	let programsList = $state<Program[]>([]);
+	let universitiesList = $state<University[]>([]);
+	let isShowcaseLoading = $state(true);
+
+	function getUniLogo(prog: Program): string | null {
+		if (prog.logo_url) return prog.logo_url;
+		if (prog.university_logo) return prog.university_logo;
+		let found = universitiesList.find((u) => u.u_id === prog.u_id);
+		if (found?.logo_url) return found.logo_url;
+		const nameToMatch = prog.university_name || prog.u_name;
+		if (nameToMatch) {
+			found = universitiesList.find((u) => u.u_name.toLowerCase() === nameToMatch.toLowerCase() || nameToMatch.toLowerCase().includes(u.u_name.toLowerCase()));
+			if (found?.logo_url) return found.logo_url;
+		}
+		return null;
+	}
+
 	onMount(async () => {
 		try {
-			const [s, f, t] = await Promise.all([fetchStats(), fetchFeatures(), fetchTestimonials()]);
+			const [s, f, t, pData, uData] = await Promise.all([
+				fetchStats(),
+				fetchFeatures(),
+				fetchTestimonials(),
+				fetchPrograms().catch(() => []),
+				fetchUniversities().catch(() => [])
+			]);
 			stats = s;
 			features = f;
 			testimonials = t;
+			programsList = pData || [];
+			universitiesList = uData || [];
 		} catch (err) {
 			console.error('Error fetching landing data:', err);
+		} finally {
+			isShowcaseLoading = false;
 		}
 
 		// Scroll reveal observer
@@ -79,20 +128,22 @@
 		</p>
 
 		<div class="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto">
-			<a
-				href="/eligible"
-				class="bg-primary text-white text-base font-bold px-8 py-3.5 rounded-2xl hover:bg-primary-container hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2.5 shadow-lg shadow-primary/25"
+			<button
+				type="button"
+				onclick={() => { activeTab = 'programs'; document.getElementById('showcase')?.scrollIntoView({ behavior: 'smooth' }); }}
+				class="bg-primary text-white text-base font-bold px-8 py-3.5 rounded-2xl hover:bg-primary-container hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2.5 shadow-lg shadow-primary/25 cursor-pointer"
 			>
-				<span>Check Eligibility Now</span>
-				<ArrowRight class="w-5 h-5" />
-			</a>
-			<a
-				href="/routes-finder"
-				class="glass-panel text-primary text-base font-bold px-8 py-3.5 rounded-2xl hover:bg-surface-container-low transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2 border border-outline-variant/40"
+				<Search class="w-5 h-5" />
+				<span>Brose Programs</span>
+			</button>
+			<button
+				type="button"
+				onclick={() => { activeTab = 'universities'; document.getElementById('showcase')?.scrollIntoView({ behavior: 'smooth' }); }}
+				class="glass-panel text-primary text-base font-bold px-8 py-3.5 rounded-2xl hover:bg-surface-container-low transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2 border border-outline-variant/40 cursor-pointer"
 			>
-				<MapPin class="w-5 h-5 text-tertiary" />
-				<span>Explore Routes</span>
-			</a>
+				<Building2 class="w-5 h-5 text-tertiary" />
+				<span>Explore Universities</span>
+			</button>
 		</div>
 
 		<!-- Hero Search Input Box -->
@@ -104,15 +155,244 @@
 				placeholder="Search universities, programs, or units (e.g. Computer Science, Unit A)..."
 				class="w-full bg-transparent border-none text-base text-on-surface placeholder:text-outline p-3 focus:outline-none focus:ring-0"
 			/>
-			<button type="submit" class="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-container transition-all shrink-0">
+			<button type="submit" class="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-container transition-all shrink-0 cursor-pointer">
 				Search
 			</button>
 		</form>
 	</div>
 </section>
 
-<!-- Mesh Background Wrapper for Stats & Features -->
+<!-- Mesh Background Wrapper for Stats, Showcase & Features -->
 <div class="bg-mesh relative z-10 w-full min-h-screen">
+	<!-- Interactive Showcase Section: Active Programs & Explore Universities -->
+	<section id="showcase" class="py-12 px-6 max-w-7xl mx-auto reveal">
+		<div class="glass-panel p-8 sm:p-12 rounded-[2.5rem] border border-outline-variant/40 bg-white/95 shadow-2xl space-y-8">
+			<!-- Section Header & Tab Controls -->
+			<div class="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-outline-variant/30 pb-6">
+				<div class="text-center md:text-left space-y-1">
+					<h2 class="text-3xl sm:text-4xl font-black text-on-surface">Explore Admissions</h2>
+					<p class="text-on-surface-variant text-sm font-semibold">Switch between active degree programs and top public universities across Bangladesh.</p>
+				</div>
+
+				<!-- Tab Switcher -->
+				<div class="inline-flex p-1.5 rounded-2xl bg-surface-container-low border border-outline-variant/30 shadow-inner shrink-0">
+					<button
+						type="button"
+						onclick={() => activeTab = 'programs'}
+						class="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer {activeTab === 'programs' ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-[1.02]' : 'text-on-surface-variant hover:text-on-surface'}"
+					>
+						<BookOpen class="w-4.5 h-4.5" />
+						<span>Active Programs</span>
+						<span class="px-2 py-0.5 rounded-full text-xs font-black {activeTab === 'programs' ? 'bg-white/20 text-white' : 'bg-surface-container text-primary'}">{programsList.length}</span>
+					</button>
+					<button
+						type="button"
+						onclick={() => activeTab = 'universities'}
+						class="px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2.5 cursor-pointer {activeTab === 'universities' ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-[1.02]' : 'text-on-surface-variant hover:text-on-surface'}"
+					>
+						<Building2 class="w-4.5 h-4.5" />
+						<span>Explore Universities</span>
+						<span class="px-2 py-0.5 rounded-full text-xs font-black {activeTab === 'universities' ? 'bg-white/20 text-white' : 'bg-surface-container text-primary'}">{universitiesList.length}</span>
+					</button>
+				</div>
+			</div>
+
+			<!-- Tab 1: Active Programs View -->
+			{#if activeTab === 'programs'}
+				{#if isShowcaseLoading}
+					<div class="py-12 text-center text-on-surface-variant">
+						<div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+						<p class="font-bold text-sm">Loading active admission circulars...</p>
+					</div>
+				{:else if programsList.length === 0}
+					<div class="text-center py-12 text-on-surface-variant space-y-2">
+						<BookOpen class="w-12 h-12 text-outline mx-auto" />
+						<p class="font-extrabold text-base text-on-surface">No active programs available.</p>
+					</div>
+				{:else}
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+						{#each programsList.slice(0, 6) as prog}
+							<div class="glass-panel p-6 rounded-[2.5rem] border border-outline-variant/40 bg-white/95 shadow-md hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between space-y-5 group">
+								<div class="space-y-4">
+									<!-- University Header with Logo -->
+									<div class="flex items-center gap-3.5 border-b border-outline-variant/20 pb-3.5">
+										{#if getUniLogo(prog)}
+											<img
+												src={getUniLogo(prog)}
+												alt={prog.university_name || prog.u_name}
+												class="w-12 h-12 rounded-2xl object-contain p-1 border border-outline-variant/30 bg-white shadow-xs shrink-0"
+											/>
+										{:else}
+											<div class="w-12 h-12 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center font-black text-xl shrink-0 shadow-xs">
+												{(prog.university_name || prog.u_name || 'U').charAt(0)}
+											</div>
+										{/if}
+
+										<div class="flex-1 min-w-0">
+											<h5 class="text-xs font-black uppercase text-primary tracking-wider truncate">
+												{prog.university_name || prog.u_name || 'Public University'}
+											</h5>
+											{#if prog.university_location || prog.location}
+												<p class="text-[11px] font-semibold text-on-surface-variant flex items-center gap-1 truncate mt-0.5">
+													<MapPin class="w-3 h-3 text-tertiary shrink-0" />
+													{prog.university_location || prog.location}
+												</p>
+											{/if}
+										</div>
+
+										<span class="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed text-[11px] font-extrabold uppercase shrink-0">
+											Unit {prog.p_unit || 'A'}
+										</span>
+									</div>
+
+									<!-- Program Details -->
+									<div class="space-y-1">
+										<div class="flex items-center justify-between">
+											<span class="text-[10px] font-mono font-bold text-outline uppercase tracking-wider">Circular #{prog.program_id}</span>
+											<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Verified Program</span>
+										</div>
+										<h4 class="text-xl font-black text-on-surface group-hover:text-primary transition-colors leading-tight">{prog.p_name}</h4>
+									</div>
+
+									<!-- Key Parameters Grid -->
+									<div class="grid grid-cols-3 gap-2 text-xs font-semibold pt-1">
+										<div class="bg-surface-container-low/80 p-2.5 rounded-2xl border border-outline-variant/20 text-center">
+											<span class="block text-[10px] uppercase font-bold text-outline">Total Seats</span>
+											<span class="font-black text-on-surface text-sm">{prog.total_seats}</span>
+										</div>
+										<div class="bg-surface-container-low/80 p-2.5 rounded-2xl border border-outline-variant/20 text-center">
+											<span class="block text-[10px] uppercase font-bold text-outline">Prev Cutmark</span>
+											<span class="font-black text-primary text-sm">{prog.prev_cutmarks || 'N/A'}</span>
+										</div>
+										<div class="bg-surface-container-low/80 p-2.5 rounded-2xl border border-outline-variant/20 text-center">
+											<span class="block text-[10px] uppercase font-bold text-outline">Deadline</span>
+											<span class="font-extrabold text-on-surface font-mono text-[11px] block mt-0.5">{prog.deadline ? prog.deadline.split('T')[0] : 'TBA'}</span>
+										</div>
+									</div>
+								</div>
+
+								<a
+									href={`/apply/${prog.program_id}`}
+									class="w-full py-3.5 px-4 rounded-2xl font-bold text-xs text-white bg-primary hover:bg-primary-container shadow-md transition-all flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-primary/25 cursor-pointer"
+								>
+									<span>Apply Now</span>
+									<ArrowRight class="w-4 h-4" />
+								</a>
+							</div>
+						{/each}
+					</div>
+
+					{#if programsList.length > 6}
+						<div class="text-center pt-4">
+							<a href="/programs" class="inline-flex items-center gap-2 text-sm font-extrabold text-primary hover:underline">
+								View All {programsList.length} Active Programs
+								<ArrowRight class="w-4 h-4" />
+							</a>
+						</div>
+					{/if}
+				{/if}
+			{/if}
+
+			<!-- Tab 2: Explore Universities View -->
+			{#if activeTab === 'universities'}
+				{#if isShowcaseLoading}
+					<div class="py-12 text-center text-on-surface-variant">
+						<div class="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+						<p class="font-bold text-sm">Loading public universities...</p>
+					</div>
+				{:else if universitiesList.length === 0}
+					<div class="text-center py-12 text-on-surface-variant space-y-2">
+						<Building2 class="w-12 h-12 text-outline mx-auto" />
+						<p class="font-extrabold text-base text-on-surface">No universities listed.</p>
+					</div>
+				{:else}
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+						{#each universitiesList.slice(0, 6) as uni}
+							<div class="glass-panel p-6 rounded-[2.5rem] border border-outline-variant/40 bg-white/95 shadow-md hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between space-y-5 group">
+								<div class="space-y-4">
+									<!-- Header with Logo, Name, Location & Official Website Link -->
+									<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-outline-variant/20 pb-3.5">
+										<div class="flex items-center gap-3.5">
+											{#if uni.logo_url}
+												<img src={uni.logo_url} alt={uni.u_name} class="w-12 h-12 rounded-2xl object-contain p-1 border border-outline-variant/30 shadow-sm bg-white shrink-0" />
+											{:else}
+												<div class="w-12 h-12 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center font-black text-xl shrink-0">
+													{uni.u_name.charAt(0)}
+												</div>
+											{/if}
+											<div>
+												<h4 class="text-xl font-black text-on-surface group-hover:text-primary transition-colors leading-tight">{uni.u_name}</h4>
+												{#if uni.location}
+													<p class="text-xs font-bold text-on-surface-variant flex items-center gap-1 mt-0.5">
+														<MapPin class="w-3.5 h-3.5 text-tertiary shrink-0" />
+														{uni.location}
+													</p>
+												{/if}
+											</div>
+										</div>
+
+										{#if uni.website}
+											<a
+												href={uni.website}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-fixed/50 hover:bg-primary-fixed text-primary text-[11px] font-extrabold transition-all border border-primary/20 self-start sm:self-auto shadow-xs hover:shadow-sm shrink-0"
+												title="Visit Official University Website"
+											>
+												<Globe class="w-3.5 h-3.5 text-primary shrink-0" />
+												<span>Official Website</span>
+												<ExternalLink class="w-3 h-3 text-primary/80 shrink-0" />
+											</a>
+										{/if}
+									</div>
+
+									<!-- Both Description & History -->
+									<div class="space-y-2.5">
+										{#if uni.university_description}
+											<div class="space-y-0.5">
+												<p class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
+													{uni.university_description}
+												</p>
+											</div>
+										{/if}
+
+										{#if uni.university_history}
+											<div class="space-y-0.5">
+												<span class="text-[10px] font-mono font-bold uppercase tracking-wider text-outline">History</span>
+												<p class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
+													{uni.university_history}
+												</p>
+											</div>
+										{/if}
+									</div>
+								</div>
+
+								<div class="pt-2 border-t border-outline-variant/20">
+									<a
+										href={`/universities/${uni.u_id}`}
+										class="w-full py-3.5 px-4 rounded-2xl font-extrabold text-xs text-white bg-primary hover:bg-primary-container shadow-md shadow-primary/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 group-hover:shadow-primary/25"
+									>
+										<span>View University Details</span>
+										<ArrowRight class="w-4 h-4" />
+									</a>
+								</div>
+							</div>
+						{/each}
+					</div>
+
+					{#if universitiesList.length > 6}
+						<div class="text-center pt-4">
+							<a href="/universities" class="inline-flex items-center gap-2 text-sm font-extrabold text-primary hover:underline">
+								Explore All {universitiesList.length} Public Universities
+								<ArrowRight class="w-4 h-4" />
+							</a>
+						</div>
+					{/if}
+				{/if}
+			{/if}
+		</div>
+	</section>
+
 	<!-- Stats Section -->
 	<section class="py-12 px-6 md:px-10 max-w-7xl mx-auto reveal">
 		<div class="bg-white/90 backdrop-blur-2xl rounded-[2.5rem] p-8 sm:p-12 shadow-2xl shadow-primary/5 border border-outline-variant/30">

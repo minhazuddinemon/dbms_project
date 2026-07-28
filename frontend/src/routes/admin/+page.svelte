@@ -10,20 +10,56 @@
 		deleteUniversity,
 		createProgram,
 		updateProgram,
-		deleteProgram
+		deleteProgram,
+		createAdmissionTest,
+		updateAdmissionTest,
+		publishAdmissionTestResults,
+		fetchProgramEligibilityRules,
+		saveProgramEligibilityRule,
+		deleteProgramEligibilityRule,
+		createUniversityTransport,
+		updateUniversityTransport,
+		deleteUniversityTransport
 	} from '$lib/api/admin';
-	import { fetchUniversities } from '$lib/api/university';
+	import { fetchUniversities, fetchUniversityTransport } from '$lib/api/university';
 	import { fetchPrograms } from '$lib/api/programs';
-	import type { University, Program, StudentApplication } from '$lib/types/models';
-	import { Shield, Building2, BookOpen, FileCheck, LogOut, Plus, Trash2, Edit3, CheckCircle2, XCircle, AlertCircle } from 'lucide-svelte';
+	import { authState } from '$lib/state/auth.svelte';
+	import { getAdminToken } from '$lib/api/client';
+	import { toastState } from '$lib/state/toast.svelte';
+	import type {
+		University,
+		Program,
+		StudentApplication,
+		ProgramEligibilityRule,
+		UniversityTransport
+	} from '$lib/types/models';
+	import {
+		Shield,
+		Building2,
+		BookOpen,
+		FileCheck,
+		LogOut,
+		Plus,
+		Trash2,
+		Edit3,
+		CheckCircle2,
+		XCircle,
+		AlertCircle,
+		Bus,
+		Award,
+		Send,
+		Clock,
+		Image as ImageIcon,
+		Users,
+		X
+	} from 'lucide-svelte';
 
-	let isAdminLoggedIn = $state(false);
+	let isAdminLoggedIn = $state(!!getAdminToken());
 	let adminEmail = $state('admin@system.com');
 	let adminPassword = $state('admin123secret');
 
-	let activeTab = $state<'universities' | 'programs' | 'applications'>('universities');
+	let activeTab = $state<'universities' | 'programs' | 'applications' | 'eligibility' | 'transport' | 'publish' | 'admissiontests'>('universities');
 	let isLoading = $state(false);
-	let statusMessage = $state<string | null>(null);
 	let errorMessage = $state<string | null>(null);
 
 	// Data
@@ -32,15 +68,100 @@
 	let applications = $state<StudentApplication[]>([]);
 	let selectedUniversityID = $state<number>(1);
 
-	// University Modal / Form State
+	// Eligibility Rules
+	let selectedProgramID = $state<number>(1);
+	let eligibilityRules = $state<ProgramEligibilityRule[]>([]);
+	let newRuleType = $state('MIN_HSC_PHYSICS');
+	let newRuleValue = $state('80.00');
+
+	// Transport Routes
+	let transportUniversityID = $state<number>(1);
+	let transportRoutes = $state<UniversityTransport[]>([]);
+	let newRouteName = $state('');
+	let newRouteTime = $state('45 mins');
+	let editingRouteName = $state<string | null>(null);
+
+	// Admission Test Results Publish Batch
+	let testIDToPublish = $state<number>(1);
+	let publishResultsList = $state<{ student_id: number; marks: string; merit_position: number }[]>([
+		{ student_id: 1, marks: '85.50', merit_position: 1 }
+	]);
+
+	function addPublishRow() {
+		const nextPos = publishResultsList.length + 1;
+		publishResultsList = [...publishResultsList, { student_id: nextPos, marks: '80.00', merit_position: nextPos }];
+	}
+
+	function removePublishRow(idx: number) {
+		if (publishResultsList.length <= 1) return;
+		publishResultsList = publishResultsList.filter((_, i) => i !== idx);
+	}
+
+	// Admission Test Management
+	let atExamUnit = $state('A');
+	let atExamCenter = $state('');
+	let atExamDate = $state('2026-11-15');
+	let atPrereqTestId = $state<number | null>(null);
+	let atProgramId = $state<number>(1);
+	let editingTestId = $state<number | null>(null);
+
+	async function handleCreateAdmissionTest(e: Event) {
+		e.preventDefault();
+		isLoading = true;
+		try {
+			const payload = {
+				exam_unit: atExamUnit,
+				exam_center: atExamCenter,
+				exam_date: atExamDate,
+				prereq_test_id: atPrereqTestId || null,
+				program_id: Number(atProgramId)
+			};
+			if (editingTestId) {
+				await updateAdmissionTest(editingTestId, payload);
+				editingTestId = null;
+			} else {
+				await createAdmissionTest(payload);
+			}
+			atExamUnit = 'A';
+			atExamCenter = '';
+			atExamDate = '2026-11-15';
+			atPrereqTestId = null;
+		} catch (err: any) {
+			toastState.error(err?.message || 'Failed to save admission test.');
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	// University Modal State (Supports Departments, History, Description & Campus Album)
 	let showUniModal = $state(false);
 	let editingUniId = $state<number | null>(null);
 	let uniName = $state('');
 	let uniWebsite = $state('');
 	let uniLocation = $state('');
 	let uniLogoUrl = $state('');
+	let uniDescription = $state('');
+	let uniHistory = $state('');
+	let uniDepartments = $state<{ dept_name: string; dept_description: string; total_seats: number }[]>([]);
+	let uniAlbum = $state<{ picture_title: string; picture_url: string }[]>([]);
 
-	// Program Modal / Form State
+	function addDepartmentRow() {
+		uniDepartments = [...uniDepartments, { dept_name: '', dept_description: '', total_seats: 60 }];
+	}
+
+	function removeDepartmentRow(idx: number) {
+		uniDepartments = uniDepartments.filter((_, i) => i !== idx);
+	}
+
+	function addAlbumRow() {
+		uniAlbum = [...uniAlbum, { picture_title: '', picture_url: '' }];
+	}
+
+	function removeAlbumRow(idx: number) {
+		uniAlbum = uniAlbum.filter((_, i) => i !== idx);
+	}
+
+	// Program Modal State
 	let showProgModal = $state(false);
 	let editingProgId = $state<number | null>(null);
 	let progName = $state('');
@@ -57,6 +178,7 @@
 		try {
 			const res = await adminLogin({ email: adminEmail, password: adminPassword });
 			if (res.token) {
+				authState.setAdmin(res.token);
 				isAdminLoggedIn = true;
 				await loadAllData();
 			}
@@ -68,11 +190,19 @@
 	}
 
 	function handleAdminLogout() {
+		authState.logout();
 		isAdminLoggedIn = false;
 		universities = [];
 		programs = [];
 		applications = [];
 	}
+
+	onMount(() => {
+		if (getAdminToken()) {
+			isAdminLoggedIn = true;
+			loadAllData();
+		}
+	});
 
 	async function loadAllData() {
 		isLoading = true;
@@ -83,7 +213,15 @@
 			programs = pList || [];
 			if (universities.length > 0) {
 				selectedUniversityID = universities[0].u_id;
-				await loadApplications(selectedUniversityID);
+				transportUniversityID = universities[0].u_id;
+				await Promise.all([
+					loadApplications(selectedUniversityID),
+					loadTransport(transportUniversityID)
+				]);
+			}
+			if (programs.length > 0) {
+				selectedProgramID = programs[0].program_id;
+				await loadEligibilityRules(selectedProgramID);
 			}
 		} catch (err: any) {
 			console.error(err);
@@ -100,6 +238,22 @@
 		}
 	}
 
+	async function loadEligibilityRules(pId: number) {
+		try {
+			eligibilityRules = await fetchProgramEligibilityRules(pId);
+		} catch (err: any) {
+			eligibilityRules = [];
+		}
+	}
+
+	async function loadTransport(uId: number) {
+		try {
+			transportRoutes = await fetchUniversityTransport(uId);
+		} catch (err: any) {
+			transportRoutes = [];
+		}
+	}
+
 	// University Actions
 	function openCreateUniModal() {
 		editingUniId = null;
@@ -107,6 +261,10 @@
 		uniWebsite = '';
 		uniLocation = '';
 		uniLogoUrl = '';
+		uniDescription = '';
+		uniHistory = '';
+		uniDepartments = [{ dept_name: 'CSE', dept_description: 'Computer Science and Engineering', total_seats: 120 }];
+		uniAlbum = [];
 		showUniModal = true;
 	}
 
@@ -116,27 +274,36 @@
 		uniWebsite = u.website;
 		uniLocation = u.location || '';
 		uniLogoUrl = u.logo_url || '';
+		uniDescription = u.university_description || '';
+		uniHistory = u.university_history || '';
+		uniDepartments = u.departments ? u.departments.map(d => ({ dept_name: d.dept_name, dept_description: d.dept_description, total_seats: d.total_seats })) : [];
+		uniAlbum = u.album ? u.album.map(a => ({ picture_title: a.picture_title, picture_url: a.picture_url })) : [];
 		showUniModal = true;
 	}
 
 	async function handleSaveUniversity(e: Event) {
 		e.preventDefault();
 		isLoading = true;
-		statusMessage = null;
-		errorMessage = null;
 		try {
-			const payload = { name: uniName, website: uniWebsite, location: uniLocation, logo_url: uniLogoUrl };
+			const payload = {
+				name: uniName,
+				website: uniWebsite,
+				location: uniLocation,
+				logo_url: uniLogoUrl,
+				university_description: uniDescription,
+				university_history: uniHistory,
+				departments: uniDepartments.filter(d => d.dept_name.trim() !== ''),
+				album: uniAlbum.filter(a => a.picture_title.trim() !== '' && a.picture_url.trim() !== '')
+			};
 			if (editingUniId) {
 				await updateUniversity(editingUniId, payload);
-				statusMessage = 'University updated successfully!';
 			} else {
 				await createUniversity(payload);
-				statusMessage = 'University created successfully!';
 			}
 			showUniModal = false;
 			await loadAllData();
 		} catch (err: any) {
-			errorMessage = err?.message || 'Failed to save university.';
+			toastState.error(err?.message || 'Failed to save university.');
 		} finally {
 			isLoading = false;
 		}
@@ -147,10 +314,9 @@
 		isLoading = true;
 		try {
 			await deleteUniversity(uId);
-			statusMessage = 'University deleted successfully!';
 			await loadAllData();
 		} catch (err: any) {
-			errorMessage = err?.message || 'Failed to delete university.';
+			toastState.error(err?.message || 'Failed to delete university.');
 		} finally {
 			isLoading = false;
 		}
@@ -182,8 +348,6 @@
 	async function handleSaveProgram(e: Event) {
 		e.preventDefault();
 		isLoading = true;
-		statusMessage = null;
-		errorMessage = null;
 		try {
 			const payload = {
 				p_name: progName,
@@ -195,15 +359,13 @@
 			};
 			if (editingProgId) {
 				await updateProgram(editingProgId, payload);
-				statusMessage = 'Program updated successfully!';
 			} else {
 				await createProgram(payload);
-				statusMessage = 'Program created successfully!';
 			}
 			showProgModal = false;
 			await loadAllData();
 		} catch (err: any) {
-			errorMessage = err?.message || 'Failed to save program.';
+			toastState.error(err?.message || 'Failed to save program.');
 		} finally {
 			isLoading = false;
 		}
@@ -214,10 +376,101 @@
 		isLoading = true;
 		try {
 			await deleteProgram(pId);
-			statusMessage = 'Program deleted successfully!';
 			await loadAllData();
 		} catch (err: any) {
-			errorMessage = err?.message || 'Failed to delete program.';
+			toastState.error(err?.message || 'Failed to delete program.');
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	// Eligibility Rule Actions
+	async function handleAddEligibilityRule(e: Event) {
+		e.preventDefault();
+		isLoading = true;
+		try {
+			await saveProgramEligibilityRule({
+				program_id: selectedProgramID,
+				rule_type: newRuleType,
+				rule_value: newRuleValue
+			});
+			await loadEligibilityRules(selectedProgramID);
+		} catch (err: any) {
+			toastState.error(err?.message || 'Failed to save eligibility rule.');
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	async function handleDeleteRule(ruleType: string) {
+		try {
+			await deleteProgramEligibilityRule(selectedProgramID, ruleType);
+			await loadEligibilityRules(selectedProgramID);
+		} catch (err: any) {
+			toastState.error(err?.message || 'Failed to delete eligibility rule.');
+		}
+	}
+
+	// Transport Actions
+	function startEditTransport(r: UniversityTransport) {
+		editingRouteName = r.transport_route;
+		newRouteName = r.transport_route;
+		newRouteTime = r.est_travel_time;
+	}
+
+	async function handleSaveTransport(e: Event) {
+		e.preventDefault();
+		if (!newRouteName.trim()) return;
+		isLoading = true;
+		try {
+			if (editingRouteName) {
+				await updateUniversityTransport({
+					u_id: transportUniversityID,
+					transport_route: newRouteName,
+					est_travel_time: newRouteTime
+				});
+				editingRouteName = null;
+			} else {
+				await createUniversityTransport({
+					u_id: transportUniversityID,
+					transport_route: newRouteName,
+					est_travel_time: newRouteTime
+				});
+			}
+			newRouteName = '';
+			await loadTransport(transportUniversityID);
+		} catch (err: any) {
+			toastState.error(err?.message || 'Failed to save transport route.');
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	async function handleDeleteTransportRoute(routeStr: string) {
+		try {
+			await deleteUniversityTransport(transportUniversityID, routeStr);
+			await loadTransport(transportUniversityID);
+		} catch (err: any) {
+			toastState.error(err?.message || 'Failed to delete transport route.');
+		}
+	}
+
+	// Publish Exam Results Batch
+	async function handlePublishResults(e: Event) {
+		e.preventDefault();
+		if (publishResultsList.length === 0) return;
+		isLoading = true;
+		try {
+			await publishAdmissionTestResults({
+				test_id: Number(testIDToPublish),
+				results: publishResultsList.map((r) => ({
+					student_id: Number(r.student_id),
+					marks: String(r.marks),
+					merit_position: Number(r.merit_position)
+				}))
+			});
+		} catch (err: any) {
+			toastState.error(err?.message || 'Failed to publish exam results.');
 		} finally {
 			isLoading = false;
 		}
@@ -226,14 +479,11 @@
 	// Application Status Update
 	async function handleUpdateStatus(appId: number, status: string) {
 		isLoading = true;
-		statusMessage = null;
-		errorMessage = null;
 		try {
 			await updateApplicationStatus(appId, status);
-			statusMessage = `Application #${appId} updated to ${status}`;
 			await loadApplications(selectedUniversityID);
 		} catch (err: any) {
-			errorMessage = err?.message || 'Failed to update application status.';
+			toastState.error(err?.message || 'Failed to update application status.');
 		} finally {
 			isLoading = false;
 		}
@@ -303,10 +553,10 @@
 				<div class="relative z-10 max-w-2xl space-y-2">
 					<div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 border border-white/20 text-tertiary-fixed text-xs font-bold uppercase tracking-wider backdrop-blur-md">
 						<Shield class="w-4 h-4" />
-						Admin Mode Active
+						Admin Control Panel
 					</div>
-					<h1 class="text-3xl sm:text-4xl font-black text-white">University & Program Management</h1>
-					<p class="text-slate-100 text-sm">Manage university records, admission programs, cutmarks, and student application approvals.</p>
+					<h1 class="text-3xl sm:text-4xl font-black text-white">University & Academic System Admin</h1>
+					<p class="text-slate-100 text-sm">Manage universities, departments, album photos, programs, cutoff rules, transport routes, and publish test results.</p>
 				</div>
 
 				<button
@@ -318,66 +568,88 @@
 				</button>
 			</div>
 
-			{#if statusMessage}
-				<div class="p-4 rounded-2xl bg-tertiary-fixed/30 border border-tertiary/40 flex items-center gap-3 text-on-tertiary-fixed-variant text-sm">
-					<CheckCircle2 class="w-5 h-5 text-tertiary shrink-0" />
-					<span class="font-bold">{statusMessage}</span>
-				</div>
-			{/if}
-
-			{#if errorMessage}
-				<div class="p-4 rounded-2xl bg-error-container/60 border border-error/30 flex items-center gap-3 text-on-error-container text-sm">
-					<AlertCircle class="w-5 h-5 text-error shrink-0" />
-					<span>{errorMessage}</span>
-				</div>
-			{/if}
-
 			<!-- Navigation Tabs -->
-			<div class="flex items-center gap-2 bg-white/80 p-2 rounded-2xl border border-outline-variant/30 shadow-sm">
+			<div class="flex items-center gap-2 bg-white/80 p-2 rounded-2xl border border-outline-variant/30 shadow-sm overflow-x-auto">
 				<button
 					onclick={() => activeTab = 'universities'}
-					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 {activeTab === 'universities' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
+					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'universities' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
-					<Building2 class="w-4 h-4" />
-					Universities ({universities.length})
+					<Building2 class="w-4 h-4" /> Universities & Depts
 				</button>
 				<button
 					onclick={() => activeTab = 'programs'}
-					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 {activeTab === 'programs' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
+					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'programs' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
-					<BookOpen class="w-4 h-4" />
-					Programs ({programs.length})
+					<BookOpen class="w-4 h-4" /> Programs
+				</button>
+				<button
+					onclick={() => activeTab = 'eligibility'}
+					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'eligibility' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
+				>
+					<Award class="w-4 h-4" /> Cutoff Rules
+				</button>
+				<button
+					onclick={() => activeTab = 'transport'}
+					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'transport' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
+				>
+					<Bus class="w-4 h-4" /> Transport Routes
+				</button>
+				<button
+					onclick={() => activeTab = 'admissiontests'}
+					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'admissiontests' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
+				>
+					<Clock class="w-4 h-4" /> Admission Tests
+				</button>
+				<button
+					onclick={() => activeTab = 'publish'}
+					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'publish' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
+				>
+					<Send class="w-4 h-4" /> Publish Results
 				</button>
 				<button
 					onclick={() => activeTab = 'applications'}
-					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 {activeTab === 'applications' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
+					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'applications' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
-					<FileCheck class="w-4 h-4" />
-					Applications Review
+					<FileCheck class="w-4 h-4" /> Applications
 				</button>
 			</div>
 
-			<!-- Tab 1: Universities Management -->
+			<!-- Tab 1: Universities & Departments Management -->
 			{#if activeTab === 'universities'}
 				<div class="space-y-6">
 					<div class="flex items-center justify-between">
-						<h3 class="text-xl font-extrabold text-on-surface">Registered Universities</h3>
+						<div>
+							<h3 class="text-xl font-extrabold text-on-surface">Registered Universities</h3>
+							<p class="text-xs text-on-surface-variant">Manage university profiles, departments, total seat allocations, and campus photo albums.</p>
+						</div>
 						<button
 							onclick={openCreateUniModal}
 							class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-container shadow-md flex items-center gap-2"
 						>
-							<Plus class="w-4 h-4" />
-							Add University
+							<Plus class="w-4 h-4" /> Add University
 						</button>
 					</div>
 
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{#each universities as u}
 							<div class="glass-panel p-6 rounded-[2rem] border border-outline-variant/40 bg-white/95 shadow-md flex flex-col justify-between space-y-4">
-								<div class="space-y-2">
-									<div class="flex items-center justify-between">
-										<span class="text-xs font-mono font-bold text-outline">ID #{u.u_id}</span>
-										<div class="flex gap-2">
+								<div class="space-y-3">
+									<div class="flex items-start justify-between gap-3">
+										<div class="flex items-center gap-3">
+											{#if u.logo_url}
+												<img src={u.logo_url} alt={u.u_name} class="w-12 h-12 rounded-2xl object-cover border shrink-0" />
+											{:else}
+												<div class="w-12 h-12 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center font-black text-xl shrink-0">
+													{u.u_name.charAt(0)}
+												</div>
+											{/if}
+											<div>
+												<h4 class="text-lg font-extrabold text-on-surface leading-tight">{u.u_name}</h4>
+												<p class="text-xs font-semibold text-on-surface-variant">{u.location || 'Location Not Specified'}</p>
+											</div>
+										</div>
+
+										<div class="flex gap-1 shrink-0">
 											<button onclick={() => openEditUniModal(u)} class="p-1.5 rounded-lg text-primary hover:bg-primary-fixed/40 transition-colors">
 												<Edit3 class="w-4 h-4" />
 											</button>
@@ -386,9 +658,20 @@
 											</button>
 										</div>
 									</div>
-									<h4 class="text-xl font-bold text-on-surface">{u.u_name}</h4>
-									<p class="text-xs text-on-surface-variant">{u.location || 'Location Not Specified'}</p>
-									<a href={u.website} target="_blank" class="text-xs font-semibold text-primary hover:underline block truncate">{u.website}</a>
+
+									{#if u.website}
+										<a href={u.website} target="_blank" class="text-xs font-semibold text-primary hover:underline block truncate">{u.website}</a>
+									{/if}
+
+									{#if u.university_description}
+										<p class="text-xs text-on-surface-variant line-clamp-2">{u.university_description}</p>
+									{/if}
+
+									<!-- Departments & Album Summary -->
+									<div class="pt-2 border-t border-outline-variant/30 flex items-center justify-between text-xs text-on-surface-variant font-semibold">
+										<span>{u.departments ? u.departments.length : 0} Departments</span>
+										<span>{u.album ? u.album.length : 0} Photos</span>
+									</div>
 								</div>
 							</div>
 						{/each}
@@ -400,13 +683,15 @@
 			{#if activeTab === 'programs'}
 				<div class="space-y-6">
 					<div class="flex items-center justify-between">
-						<h3 class="text-xl font-extrabold text-on-surface">Admission Programs</h3>
+						<div>
+							<h3 class="text-xl font-extrabold text-on-surface">Admission Programs</h3>
+							<p class="text-xs text-on-surface-variant">Manage academic degree programs, unit allocations, seat capacities, and cutmarks.</p>
+						</div>
 						<button
 							onclick={openCreateProgModal}
 							class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-primary hover:bg-primary-container shadow-md flex items-center gap-2"
 						>
-							<Plus class="w-4 h-4" />
-							Add Program
+							<Plus class="w-4 h-4" /> Add Program
 						</button>
 					</div>
 
@@ -425,12 +710,9 @@
 											</button>
 										</div>
 									</div>
-									<h4 class="text-lg font-bold text-on-surface">{p.p_name}</h4>
-									<div class="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
-										<span class="bg-primary-fixed/50 text-on-primary-fixed px-2 py-0.5 rounded">Unit {p.p_unit || 'A'}</span>
-										<span>{p.total_seats} Seats</span>
-										<span>Cutmark: {p.prev_cutmarks}</span>
-									</div>
+									<h4 class="text-xl font-bold text-on-surface">{p.p_name}</h4>
+									<p class="text-xs font-semibold text-primary">Unit {p.p_unit || 'A'} | Seats: {p.total_seats}</p>
+									<p class="text-xs text-on-surface-variant">Prev Cutmark: {p.prev_cutmarks || '80.0'}</p>
 								</div>
 							</div>
 						{/each}
@@ -438,7 +720,246 @@
 				</div>
 			{/if}
 
-			<!-- Tab 3: Applications Review -->
+			<!-- Tab 3: Eligibility Rules -->
+			{#if activeTab === 'eligibility'}
+				<div class="glass-panel p-8 rounded-[2.5rem] border border-outline-variant/40 bg-white/95 shadow-xl space-y-6 max-w-2xl mx-auto">
+					<h3 class="text-xl font-extrabold text-on-surface border-b border-outline-variant/30 pb-3 flex items-center gap-2">
+						<Award class="w-5 h-5 text-primary" />
+						Program Eligibility Rules
+					</h3>
+
+					<div class="space-y-1.5">
+						<label for="selectProgRule" class="block text-xs font-bold uppercase text-on-surface-variant">Select Program</label>
+						<select
+							id="selectProgRule"
+							bind:value={selectedProgramID}
+							onchange={() => loadEligibilityRules(selectedProgramID)}
+							class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 text-sm bg-white font-bold text-on-surface"
+						>
+							{#each programs as p}
+								<option value={p.program_id}>{p.p_name} (Unit {p.p_unit || 'A'})</option>
+							{/each}
+						</select>
+					</div>
+
+					<form onsubmit={handleAddEligibilityRule} class="flex flex-col sm:flex-row gap-3 items-end bg-surface-container-low/50 p-4 rounded-2xl border border-outline-variant/30">
+						<div class="space-y-1 flex-1 w-full">
+							<label for="ruleType" class="block text-xs font-bold uppercase text-on-surface-variant">Rule Type</label>
+							<select id="ruleType" bind:value={newRuleType} class="w-full px-3.5 py-2.5 rounded-xl border text-xs bg-white font-bold">
+								<option value="MIN_HSC_PHYSICS">MIN_HSC_PHYSICS</option>
+								<option value="MIN_HSC_MATH">MIN_HSC_MATH</option>
+								<option value="MIN_HSC_CHEMISTRY">MIN_HSC_CHEMISTRY</option>
+								<option value="MIN_HSC_GPA">MIN_HSC_GPA</option>
+								<option value="MIN_SSC_GPA">MIN_SSC_GPA</option>
+							</select>
+						</div>
+
+						<div class="space-y-1 w-full sm:w-36">
+							<label for="ruleVal" class="block text-xs font-bold uppercase text-on-surface-variant">Value</label>
+							<input id="ruleVal" type="text" bind:value={newRuleValue} placeholder="80.00" required class="w-full px-3.5 py-2.5 rounded-xl border text-xs bg-white font-bold" />
+						</div>
+
+						<button type="submit" class="px-5 py-2.5 rounded-xl font-bold text-white bg-primary text-xs shadow-md flex items-center gap-1 shrink-0">
+							<Plus class="w-3.5 h-3.5" /> Save Rule
+						</button>
+					</form>
+
+					<div class="space-y-3">
+						<h4 class="text-xs font-extrabold uppercase tracking-wider text-on-surface-variant">Active Program Rules</h4>
+						{#if eligibilityRules.length === 0}
+							<p class="text-xs text-on-surface-variant text-center py-4">No eligibility rules configured for this program.</p>
+						{:else}
+							{#each eligibilityRules as r}
+								<div class="flex items-center justify-between p-3.5 rounded-xl border border-outline-variant/30 bg-white">
+									<span class="text-xs font-bold text-on-surface font-mono">{r.rule_type}</span>
+									<div class="flex items-center gap-3">
+										<span class="text-xs font-bold text-primary px-2.5 py-0.5 rounded-md bg-primary-fixed">{typeof r.rule_value === 'object' ? r.rule_value.String : r.rule_value}</span>
+										<button onclick={() => handleDeleteRule(r.rule_type)} class="text-error hover:bg-error-container/40 p-1.5 rounded-lg transition-colors">
+											<Trash2 class="w-4 h-4" />
+										</button>
+									</div>
+								</div>
+							{/each}
+						{/if}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Tab 4: Transport Routes -->
+			{#if activeTab === 'transport'}
+				<div class="glass-panel p-8 rounded-[2.5rem] border border-outline-variant/40 bg-white/95 shadow-xl space-y-6 max-w-2xl mx-auto">
+					<h3 class="text-xl font-extrabold text-on-surface border-b border-outline-variant/30 pb-3 flex items-center gap-2">
+						<Bus class="w-5 h-5 text-primary" />
+						University Transport Routes
+					</h3>
+
+					<div class="space-y-1.5">
+						<label for="selectUniTrans" class="block text-xs font-bold uppercase text-on-surface-variant">Select University</label>
+						<select
+							id="selectUniTrans"
+							bind:value={transportUniversityID}
+							onchange={() => loadTransport(transportUniversityID)}
+							class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 text-sm bg-white font-bold text-on-surface"
+						>
+							{#each universities as u}
+								<option value={u.u_id}>{u.u_name}</option>
+							{/each}
+						</select>
+					</div>
+
+					<form onsubmit={handleSaveTransport} class="flex flex-col sm:flex-row gap-3 items-end bg-surface-container-low/50 p-4 rounded-2xl border border-outline-variant/30">
+						<div class="space-y-1 flex-1 w-full">
+							<label for="rName" class="block text-xs font-bold uppercase text-on-surface-variant">Transport Route</label>
+							<input id="rName" type="text" bind:value={newRouteName} placeholder="e.g. Route A (Mirpur to Campus)" required class="w-full px-3.5 py-2.5 rounded-xl border text-xs bg-white font-bold" />
+						</div>
+
+						<div class="space-y-1 w-full sm:w-36">
+							<label for="rTime" class="block text-xs font-bold uppercase text-on-surface-variant">Est. Travel Time</label>
+							<input id="rTime" type="text" bind:value={newRouteTime} placeholder="45 mins" required class="w-full px-3.5 py-2.5 rounded-xl border text-xs bg-white font-bold" />
+						</div>
+
+						<div class="flex gap-2 shrink-0">
+							{#if editingRouteName}
+								<button type="button" onclick={() => { editingRouteName = null; newRouteName = ''; }} class="px-3 py-2.5 rounded-xl font-bold border text-xs">Cancel</button>
+							{/if}
+							<button type="submit" class="px-5 py-2.5 rounded-xl font-bold text-white bg-primary text-xs shadow-md flex items-center gap-1">
+								<Plus class="w-3.5 h-3.5" /> {editingRouteName ? 'Save' : 'Add'}
+							</button>
+						</div>
+					</form>
+
+					<div class="space-y-3">
+						<h4 class="text-xs font-extrabold uppercase tracking-wider text-on-surface-variant">Campus Routes List</h4>
+						{#if transportRoutes.length === 0}
+							<p class="text-xs text-on-surface-variant text-center py-4">No transport routes added for this university.</p>
+						{:else}
+							{#each transportRoutes as tr}
+								<div class="flex items-center justify-between p-3.5 rounded-xl border border-outline-variant/30 bg-white">
+									<div>
+										<p class="text-xs font-bold text-on-surface">{tr.transport_route}</p>
+										<p class="text-[10px] font-semibold text-primary">Time: {tr.est_travel_time}</p>
+									</div>
+									<div class="flex gap-1">
+										<button onclick={() => startEditTransport(tr)} class="text-primary hover:bg-primary-fixed/40 p-1.5 rounded-lg transition-colors">
+											<Edit3 class="w-4 h-4" />
+										</button>
+										<button onclick={() => handleDeleteTransportRoute(tr.transport_route)} class="text-error hover:bg-error-container/40 p-1.5 rounded-lg transition-colors">
+											<Trash2 class="w-4 h-4" />
+										</button>
+									</div>
+								</div>
+							{/each}
+						{/if}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Tab 5: Admission Tests Management -->
+			{#if activeTab === 'admissiontests'}
+				<div class="glass-panel p-8 rounded-[2.5rem] border border-outline-variant/40 bg-white/95 shadow-xl space-y-6 max-w-2xl mx-auto">
+					<h3 class="text-xl font-extrabold text-on-surface border-b border-outline-variant/30 pb-3 flex items-center gap-2">
+						<Clock class="w-5 h-5 text-primary" />
+						{editingTestId ? `Edit Admission Test #${editingTestId}` : 'Create Admission Test'}
+					</h3>
+
+					<form onsubmit={handleCreateAdmissionTest} class="space-y-4">
+						<div class="grid grid-cols-2 gap-4">
+							<div>
+								<label for="atUnit" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Exam Unit</label>
+								<input id="atUnit" type="text" bind:value={atExamUnit} placeholder="A" class="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 text-sm bg-white" />
+							</div>
+							<div>
+								<label for="atDate" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Exam Date (YYYY-MM-DD)</label>
+								<input id="atDate" type="date" bind:value={atExamDate} required class="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 text-sm bg-white" />
+							</div>
+						</div>
+
+						<div>
+							<label for="atCenter" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Exam Center</label>
+							<input id="atCenter" type="text" bind:value={atExamCenter} placeholder="Dhaka" class="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 text-sm bg-white" />
+						</div>
+
+						<div>
+							<label for="atProgId" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Program</label>
+							<select id="atProgId" bind:value={atProgramId} class="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 text-sm bg-white font-semibold">
+								{#each programs as p}
+									<option value={p.program_id}>{p.p_name} (ID #{p.program_id})</option>
+								{/each}
+							</select>
+						</div>
+
+						<div>
+							<label for="atPrereq" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Prerequisite Test ID (optional)</label>
+							<input id="atPrereq" type="number" bind:value={atPrereqTestId} placeholder="Leave blank if none" class="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 text-sm bg-white" />
+						</div>
+
+						<div class="flex gap-3 pt-2">
+							{#if editingTestId}
+								<button type="button" onclick={() => editingTestId = null} class="flex-1 py-2.5 px-4 rounded-xl font-semibold border border-outline-variant text-sm hover:bg-surface-container transition-all">Cancel Edit</button>
+							{/if}
+							<button type="submit" disabled={isLoading} class="flex-1 py-3 px-6 rounded-xl font-bold text-white bg-primary text-sm shadow-md hover:bg-primary-container disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+								<Clock class="w-4 h-4" />
+								{editingTestId ? 'Update Admission Test' : 'Create Admission Test'}
+							</button>
+						</div>
+					</form>
+				</div>
+			{/if}
+
+			<!-- Tab 6: Publish Results (Batch Supported) -->
+			{#if activeTab === 'publish'}
+				<div class="glass-panel p-8 rounded-[2.5rem] border border-outline-variant/40 bg-white/95 shadow-xl space-y-6 max-w-2xl mx-auto">
+					<h3 class="text-xl font-extrabold text-on-surface border-b border-outline-variant/30 pb-3 flex items-center gap-2">
+						<Send class="w-5 h-5 text-primary" />
+						Publish Admission Test Results
+					</h3>
+
+					<form onsubmit={handlePublishResults} class="space-y-5">
+						<div>
+							<label for="pubTestId" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Admission Test ID</label>
+							<input id="pubTestId" type="number" bind:value={testIDToPublish} required class="w-full px-4 py-2.5 rounded-xl border border-outline-variant/50 text-sm bg-white" />
+						</div>
+
+						<div class="space-y-3">
+							<div class="flex items-center justify-between">
+								<h4 class="text-xs font-extrabold uppercase tracking-wider text-on-surface">Batch Student Results ({publishResultsList.length})</h4>
+								<button type="button" onclick={addPublishRow} class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+									<Plus class="w-3.5 h-3.5" /> Add Student Row
+								</button>
+							</div>
+
+							{#each publishResultsList as row, idx}
+								<div class="flex items-center gap-3 p-3.5 rounded-2xl border border-outline-variant/30 bg-surface-container-low/50">
+									<div class="w-24 space-y-0.5">
+										<label for={`sId_${idx}`} class="block text-[10px] font-bold uppercase text-on-surface-variant">Student ID</label>
+										<input id={`sId_${idx}`} type="number" bind:value={row.student_id} required class="w-full px-3 py-1.5 rounded-lg border text-xs bg-white" />
+									</div>
+
+									<div class="flex-1 space-y-0.5">
+										<label for={`sMarks_${idx}`} class="block text-[10px] font-bold uppercase text-on-surface-variant">Marks</label>
+										<input id={`sMarks_${idx}`} type="text" bind:value={row.marks} required class="w-full px-3 py-1.5 rounded-lg border text-xs bg-white" />
+									</div>
+
+									<div class="w-28 space-y-0.5">
+										<label for={`sMerit_${idx}`} class="block text-[10px] font-bold uppercase text-on-surface-variant">Merit Rank</label>
+										<input id={`sMerit_${idx}`} type="number" bind:value={row.merit_position} required class="w-full px-3 py-1.5 rounded-lg border text-xs bg-white" />
+									</div>
+
+									<button type="button" onclick={() => removePublishRow(idx)} class="p-2 rounded-lg text-error hover:bg-error-container/40 shrink-0 mt-3">
+										<Trash2 class="w-4 h-4" />
+									</button>
+								</div>
+							{/each}
+						</div>
+
+						<button type="submit" disabled={isLoading} class="w-full py-3.5 px-6 rounded-xl font-bold text-white bg-primary text-sm shadow-md hover:bg-primary-container disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+							<Send class="w-4 h-4" /> Publish Results & Notify Students
+						</button>
+					</form>
+				</div>
+			{/if}
+
+			<!-- Tab 7: Applications Review -->
 			{#if activeTab === 'applications'}
 				<div class="space-y-6">
 					<div class="flex items-center justify-between">
@@ -472,7 +993,7 @@
 													{app.status}
 												</span>
 											</div>
-											<p class="text-xs text-on-surface-variant mt-1">Student ID: {app.student_id} | Email: {app.email || 'N/A'}</p>
+											<p class="text-xs text-on-surface-variant mt-1">Student ID: {app.student_id} | Program ID: {app.program_id}</p>
 										</div>
 										<div class="flex gap-2">
 											<button
@@ -499,31 +1020,106 @@
 	</div>
 </div>
 
-<!-- University Modal -->
+<!-- Comprehensive University Modal (Includes Departments & Album Photos) -->
 {#if showUniModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-		<div class="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-outline-variant/40 space-y-4">
-			<h3 class="text-xl font-bold text-on-surface">{editingUniId ? 'Edit University' : 'Create University'}</h3>
-			<form onsubmit={handleSaveUniversity} class="space-y-3">
-				<div>
-					<label for="uName" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">University Name</label>
-					<input id="uName" type="text" bind:value={uniName} required class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 text-sm" />
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
+		<div class="max-w-2xl w-full bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-outline-variant/40 space-y-6 my-8">
+			<div class="flex items-center justify-between border-b pb-3">
+				<h3 class="text-xl font-extrabold text-on-surface">{editingUniId ? 'Edit University' : 'Create University'}</h3>
+				<button onclick={() => showUniModal = false} class="p-2 rounded-xl hover:bg-surface-container transition-colors">
+					<X class="w-5 h-5 text-outline" />
+				</button>
+			</div>
+
+			<form onsubmit={handleSaveUniversity} class="space-y-5">
+				<!-- Basic Details -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<div>
+						<label for="uName" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">University Name</label>
+						<input id="uName" type="text" bind:value={uniName} required class="w-full px-3.5 py-2.5 rounded-xl border text-sm" />
+					</div>
+					<div>
+						<label for="uWeb" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Website URL</label>
+						<input id="uWeb" type="text" bind:value={uniWebsite} required class="w-full px-3.5 py-2.5 rounded-xl border text-sm" />
+					</div>
+					<div>
+						<label for="uLoc" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Location</label>
+						<input id="uLoc" type="text" bind:value={uniLocation} class="w-full px-3.5 py-2.5 rounded-xl border text-sm" />
+					</div>
+					<div>
+						<label for="uLogo" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Logo URL</label>
+						<input id="uLogo" type="text" bind:value={uniLogoUrl} class="w-full px-3.5 py-2.5 rounded-xl border text-sm" />
+					</div>
 				</div>
-				<div>
-					<label for="uWeb" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Website URL</label>
-					<input id="uWeb" type="text" bind:value={uniWebsite} required class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 text-sm" />
+
+				<!-- Description & History -->
+				<div class="space-y-4">
+					<div>
+						<label for="uDesc" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">University Description</label>
+						<textarea id="uDesc" bind:value={uniDescription} rows="2" placeholder="Brief overview of the university..." class="w-full px-3.5 py-2.5 rounded-xl border text-sm"></textarea>
+					</div>
+					<div>
+						<label for="uHist" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">University History</label>
+						<textarea id="uHist" bind:value={uniHistory} rows="2" placeholder="Background and history..." class="w-full px-3.5 py-2.5 rounded-xl border text-sm"></textarea>
+					</div>
 				</div>
-				<div>
-					<label for="uLoc" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Location</label>
-					<input id="uLoc" type="text" bind:value={uniLocation} class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 text-sm" />
+
+				<!-- Departments Builder -->
+				<div class="space-y-3 p-4 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30">
+					<div class="flex items-center justify-between">
+						<h4 class="text-xs font-extrabold uppercase tracking-wider text-on-surface flex items-center gap-2">
+							<Users class="w-4 h-4 text-primary" />
+							Departments ({uniDepartments.length})
+						</h4>
+						<button type="button" onclick={addDepartmentRow} class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+							<Plus class="w-3.5 h-3.5" /> Add Department
+						</button>
+					</div>
+
+					{#each uniDepartments as d, idx}
+						<div class="flex items-start gap-2 p-3 rounded-xl border border-outline-variant/30 bg-white">
+							<div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
+								<input type="text" bind:value={d.dept_name} placeholder="Dept Name (e.g. CSE)" class="px-3 py-1.5 rounded-lg border text-xs" />
+								<input type="text" bind:value={d.dept_description} placeholder="Description" class="px-3 py-1.5 rounded-lg border text-xs" />
+								<input type="number" bind:value={d.total_seats} placeholder="Seats" class="px-3 py-1.5 rounded-lg border text-xs" />
+							</div>
+							<button type="button" onclick={() => removeDepartmentRow(idx)} class="p-1.5 text-error hover:bg-error-container/40 rounded-lg">
+								<Trash2 class="w-4 h-4" />
+							</button>
+						</div>
+					{/each}
 				</div>
-				<div>
-					<label for="uLogo" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Logo URL</label>
-					<input id="uLogo" type="text" bind:value={uniLogoUrl} class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 text-sm" />
+
+				<!-- Campus Album Builder -->
+				<div class="space-y-3 p-4 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30">
+					<div class="flex items-center justify-between">
+						<h4 class="text-xs font-extrabold uppercase tracking-wider text-on-surface flex items-center gap-2">
+							<ImageIcon class="w-4 h-4 text-primary" />
+							Campus Album Photos ({uniAlbum.length})
+						</h4>
+						<button type="button" onclick={addAlbumRow} class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+							<Plus class="w-3.5 h-3.5" /> Add Photo
+						</button>
+					</div>
+
+					{#each uniAlbum as a, idx}
+						<div class="flex items-center gap-2 p-3 rounded-xl border border-outline-variant/30 bg-white">
+							<div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+								<input type="text" bind:value={a.picture_title} placeholder="Picture Title" class="px-3 py-1.5 rounded-lg border text-xs" />
+								<input type="text" bind:value={a.picture_url} placeholder="Photo URL (https://...)" class="px-3 py-1.5 rounded-lg border text-xs" />
+							</div>
+							<button type="button" onclick={() => removeAlbumRow(idx)} class="p-1.5 text-error hover:bg-error-container/40 rounded-lg">
+								<Trash2 class="w-4 h-4" />
+							</button>
+						</div>
+					{/each}
 				</div>
+
 				<div class="flex gap-3 pt-2">
-					<button type="button" onclick={() => showUniModal = false} class="flex-1 py-2.5 px-4 rounded-xl font-semibold border text-sm">Cancel</button>
-					<button type="submit" class="flex-1 py-2.5 px-4 rounded-xl font-bold text-white bg-primary text-sm">Save</button>
+					<button type="button" onclick={() => showUniModal = false} class="flex-1 py-3 px-4 rounded-xl font-semibold border text-sm">Cancel</button>
+					<button type="submit" disabled={isLoading} class="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-primary text-sm shadow-md">
+						{isLoading ? 'Saving...' : 'Save University'}
+					</button>
 				</div>
 			</form>
 		</div>
@@ -570,7 +1166,9 @@
 				</div>
 				<div class="flex gap-3 pt-2">
 					<button type="button" onclick={() => showProgModal = false} class="flex-1 py-2.5 px-4 rounded-xl font-semibold border text-sm">Cancel</button>
-					<button type="submit" class="flex-1 py-2.5 px-4 rounded-xl font-bold text-white bg-primary text-sm">Save</button>
+					<button type="submit" disabled={isLoading} class="flex-1 py-2.5 px-4 rounded-xl font-bold text-white bg-primary text-sm shadow-md">
+						{isLoading ? 'Saving...' : 'Save Program'}
+					</button>
 				</div>
 			</form>
 		</div>

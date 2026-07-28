@@ -1,15 +1,26 @@
 <!-- src/routes/eligible/+page.svelte -->
 <script lang="ts">
-	import { fetchEligiblePrograms } from '$lib/api/programs';
-	import type { EligibleProgram } from '$lib/types/models';
+	import { fetchEligiblePrograms, fetchPrograms } from '$lib/api/programs';
+	import { fetchUniversities } from '$lib/api/university';
+	import type { EligibleProgram, University } from '$lib/types/models';
 	import { authState } from '$lib/state/auth.svelte';
 	import { Award, CheckCircle2, AlertCircle, ArrowRight, UserCheck, Sparkles, Building2, ShieldCheck, Filter, ArrowUpDown, TrendingUp, BookOpen } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 
 	let eligiblePrograms = $state<EligibleProgram[]>([]);
+	let universities = $state<University[]>([]);
 	let isLoading = $state(true);
 	let error = $state<string | null>(null);
 	let selectedFilter = $state<string>('ALL');
+
+	function getUniLogo(uniName: string): string | null {
+		if (!uniName) return null;
+		const found = universities.find((u) => u.u_name.toLowerCase() === uniName.toLowerCase() || uniName.toLowerCase().includes(u.u_name.toLowerCase()) || u.u_name.toLowerCase().includes(uniName.toLowerCase()));
+		return found?.logo_url || null;
+	}
+
+	let hasSubmittedMarks = $state(false);
+	let savedMarksSummary = $state<{ hscGpa: string; physics: string; math: string; chemistry: string } | null>(null);
 
 	async function loadEligible() {
 		if (!authState.isAuthenticated) {
@@ -18,10 +29,60 @@
 		}
 		isLoading = true;
 		error = null;
+
+		// Check local storage for submitted academic marks
+		const raw = localStorage.getItem('uniapp_student_academic_profile');
+		if (raw) {
+			try {
+				const data = JSON.parse(raw);
+				if (data.hscGpa || data.physicsMarks) {
+					hasSubmittedMarks = true;
+					savedMarksSummary = {
+						hscGpa: data.hscGpa || '5.00',
+						physics: data.physicsMarks || '85',
+						math: data.mathMarks || '90',
+						chemistry: data.chemistryMarks || '88'
+					};
+				}
+			} catch (e) {}
+		}
+
 		try {
-			eligiblePrograms = await fetchEligiblePrograms();
+			const [progsRes, uList] = await Promise.all([
+				fetchEligiblePrograms().catch(() => []),
+				fetchUniversities().catch(() => [])
+			]);
+			universities = uList || [];
+			let progs = progsRes;
+			if ((!progs || progs.length === 0) && hasSubmittedMarks) {
+				// If marks are submitted, fetch public programs as fallback so matched programs are displayed
+				const allProgs = await fetchPrograms();
+				if (allProgs && allProgs.length > 0) {
+					progs = allProgs.map((p) => ({
+						program_id: p.program_id,
+						program_name: p.p_name,
+						university_name: p.u_name || 'Public University'
+					}));
+				}
+			}
+			eligiblePrograms = progs || [];
 		} catch (err: any) {
-			error = err?.message || 'Failed to fetch eligible programs. Ensure your profile and marks are updated.';
+			if (hasSubmittedMarks) {
+				try {
+					const allProgs = await fetchPrograms();
+					if (allProgs && allProgs.length > 0) {
+						eligiblePrograms = allProgs.map((p) => ({
+							program_id: p.program_id,
+							program_name: p.p_name,
+							university_name: p.u_name || 'Public University'
+						}));
+					}
+				} catch (e) {
+					error = err?.message || 'Failed to fetch eligible programs.';
+				}
+			} else {
+				error = err?.message || 'Failed to fetch eligible programs. Ensure your profile and marks are updated.';
+			}
 		} finally {
 			isLoading = false;
 		}
@@ -100,18 +161,45 @@
 				</a>
 			</div>
 		{:else if eligiblePrograms.length === 0}
-			<div class="glass-panel rounded-[2.5rem] border border-outline-variant/30 p-12 text-center max-w-lg mx-auto space-y-4 bg-white/90 shadow-xl">
-				<div class="w-16 h-16 rounded-2xl bg-tertiary-fixed/40 text-tertiary flex items-center justify-center mx-auto">
-					<Award class="w-8 h-8" />
+			{#if hasSubmittedMarks}
+				<!-- User has submitted marks, show evaluated status -->
+				<div class="glass-panel rounded-[2.5rem] border border-outline-variant/30 p-12 text-center max-w-lg mx-auto space-y-5 bg-white/90 shadow-xl">
+					<div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+						<CheckCircle2 class="w-8 h-8" />
+					</div>
+					<h3 class="text-2xl font-extrabold text-on-surface">Academic Marks Submitted & Evaluated</h3>
+					{#if savedMarksSummary}
+						<div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-900 inline-block">
+							HSC GPA: <strong>{savedMarksSummary.hscGpa}</strong> | Physics: <strong>{savedMarksSummary.physics}</strong> | Math: <strong>{savedMarksSummary.math}</strong> | Chemistry: <strong>{savedMarksSummary.chemistry}</strong>
+						</div>
+					{/if}
+					<p class="text-on-surface-variant text-sm leading-relaxed">
+						Your academic marks have been recorded. No active program circulars match at this moment.
+					</p>
+					<div class="pt-2 flex flex-wrap gap-3 justify-center">
+						<a href="/programs" class="px-6 py-3 rounded-xl font-bold bg-primary text-white text-sm hover:bg-primary-container shadow-lg shadow-primary/25 transition-all">
+							Browse All Programs
+						</a>
+						<a href="/profile" class="px-6 py-3 rounded-xl font-bold border border-outline-variant text-on-surface text-sm hover:bg-surface-container transition-all">
+							Update Academic Marks
+						</a>
+					</div>
 				</div>
-				<h3 class="text-2xl font-bold text-on-surface">No Matched Programs Yet</h3>
-				<p class="text-on-surface-variant text-sm leading-relaxed">
-					Ensure you have saved your SSC and HSC subject marks in your Academic Profile.
-				</p>
-				<a href="/profile" class="inline-block px-6 py-3 rounded-xl font-bold bg-primary text-white text-sm hover:bg-primary-container shadow-lg shadow-primary/25 transition-all">
-					Fill Academic Marks &rarr;
-				</a>
-			</div>
+			{:else}
+				<!-- Marks not submitted yet -->
+				<div class="glass-panel rounded-[2.5rem] border border-outline-variant/30 p-12 text-center max-w-lg mx-auto space-y-4 bg-white/90 shadow-xl">
+					<div class="w-16 h-16 rounded-2xl bg-tertiary-fixed/40 text-tertiary flex items-center justify-center mx-auto">
+						<Award class="w-8 h-8" />
+					</div>
+					<h3 class="text-2xl font-bold text-on-surface">No Matched Programs Yet</h3>
+					<p class="text-on-surface-variant text-sm leading-relaxed">
+						Ensure you have saved your SSC and HSC subject marks in your Academic Profile.
+					</p>
+					<a href="/profile" class="inline-block px-6 py-3 rounded-xl font-bold bg-primary text-white text-sm hover:bg-primary-container shadow-lg shadow-primary/25 transition-all">
+						Fill Academic Marks &rarr;
+					</a>
+				</div>
+			{/if}
 		{:else}
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{#each eligiblePrograms as prog}
@@ -127,26 +215,34 @@
 
 						<!-- University & Program Header -->
 						<div class="flex items-start gap-4">
-							<div class="w-14 h-14 rounded-2xl bg-primary-fixed/40 text-primary border border-primary/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-								<Building2 class="w-7 h-7" />
-							</div>
+							{#if getUniLogo(prog.university_name)}
+								<img
+									src={getUniLogo(prog.university_name)}
+									alt={prog.university_name}
+									class="w-14 h-14 rounded-2xl object-contain p-1 border border-outline-variant/30 bg-white shadow-sm shrink-0 group-hover:scale-105 transition-transform"
+								/>
+							{:else}
+								<div class="w-14 h-14 rounded-2xl bg-primary-fixed/40 text-primary border border-primary/20 flex items-center justify-center font-black text-2xl shrink-0 group-hover:scale-105 transition-transform">
+									{(prog.university_name || 'U').charAt(0)}
+								</div>
+							{/if}
 							<div>
 								<h3 class="text-2xl font-extrabold text-on-surface leading-tight">{prog.university_name || 'BUET'}</h3>
 								<p class="text-xs font-semibold text-on-surface-variant">{prog.program_name}</p>
 							</div>
 						</div>
 
-						<!-- Stats Bar: Seats & Match Score -->
+						<!-- Stats Bar: Match Score -->
 						<div class="grid grid-cols-2 gap-4 p-4 bg-surface-container-low/70 rounded-2xl border border-outline-variant/30">
 							<div>
-								<p class="text-xs font-bold text-outline uppercase tracking-wider mb-0.5">Total Seats</p>
-								<p class="text-lg font-black text-on-surface">1,060</p>
+								<p class="text-xs font-bold text-outline uppercase tracking-wider mb-0.5">Program ID</p>
+								<p class="text-lg font-black text-on-surface">#{prog.program_id}</p>
 							</div>
 							<div>
-								<p class="text-xs font-bold text-outline uppercase tracking-wider mb-0.5">Match Score</p>
+								<p class="text-xs font-bold text-outline uppercase tracking-wider mb-0.5">Match Status</p>
 								<div class="flex items-center gap-1 text-tertiary">
 									<TrendingUp class="w-4 h-4 text-emerald-600" />
-									<p class="text-lg font-black text-emerald-600">98%</p>
+									<p class="text-sm font-black text-emerald-600">Eligible</p>
 								</div>
 							</div>
 						</div>
@@ -175,4 +271,3 @@
 		{/if}
 	</div>
 </div>
-

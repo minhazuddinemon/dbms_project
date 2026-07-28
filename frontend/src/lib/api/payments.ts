@@ -6,6 +6,7 @@ import type { PaymentRequest, PaymentResponse } from '$lib/types/models';
 export async function processPayment(payload: PaymentRequest): Promise<PaymentResponse> {
 	return apiFetch<PaymentResponse>('/payments/process', {
 		method: 'POST',
-		body: JSON.stringify(payload)
+		body: JSON.stringify(payload),
+		showSuccessToast: 'Payment processed successfully!'
 	});
 }

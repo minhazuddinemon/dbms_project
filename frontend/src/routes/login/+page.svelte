@@ -23,7 +23,19 @@
 		errorMessage = null;
 		const success = await authState.login({ email, password });
 		if (success) {
-			goto('/profile');
+			if (authState.isAdmin) {
+				goto('/admin');
+				return;
+			}
+			const isProfileCreated =
+				localStorage.getItem('uniapp_profile_created') === 'true' ||
+				localStorage.getItem('uniapp_student_academic_profile') !== null;
+
+			if (isProfileCreated) {
+				goto('/dashboard');
+			} else {
+				goto('/profile');
+			}
 		} else {
 			errorMessage = authState.error || 'Invalid email or password. Please check your credentials.';
 		}

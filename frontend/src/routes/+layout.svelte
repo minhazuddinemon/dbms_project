@@ -3,6 +3,7 @@
 	import './layout.css';
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Footer from '$lib/components/Footer.svelte';
+	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import { authState } from '$lib/state/auth.svelte';
 	import { onMount } from 'svelte';
 
@@ -16,6 +17,8 @@
 <svelte:head>
 	<title>UniApp - University Admission Portal</title>
 </svelte:head>
+
+<ToastContainer />
 
 <div class="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans antialiased">
 	<Navbar />
