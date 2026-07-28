@@ -83,6 +83,9 @@ func main() {
 	mux.HandleFunc("POST /student/mobile", middleware.RequireAuth(h.HandleAddStudentMobile))
 	mux.HandleFunc("PUT /student/mobile", middleware.RequireAuth(h.HandleUpdateStudentMobile))
 	mux.HandleFunc("DELETE /student/mobile", middleware.RequireAuth(h.HandleDeleteStudentMobile))
+	mux.HandleFunc("POST /student/academic", middleware.RequireAuth(h.HandleAddStudentAcademic))
+	mux.HandleFunc("POST /student/subject-marks", middleware.RequireAuth(h.HandleAddStudentSubjectMarks))
+	mux.HandleFunc("GET /student/notifications", middleware.RequireAuth(h.HandleGetStudentNotifications))
 	mux.HandleFunc("GET /programs/eligible", middleware.RequireAuth(h.HandleEligiblePrograms))
 	mux.HandleFunc("POST /applications/apply", middleware.RequireAuth(h.ApplyToProgram))
 	mux.HandleFunc("GET /applications", middleware.RequireAuth(h.HandleGetStudentApplications))
@@ -99,6 +102,7 @@ func main() {
 	// Public University Routes (For Frontend)
 	mux.HandleFunc("GET /universities", h.HandleListUniversities)
 	mux.HandleFunc("GET /universities/detail", h.HandleGetUniversityByID)
+	mux.HandleFunc("GET /universities/transport", h.HandleGetUniversityTransportRoutes)
 
 	// Protected Admin-Only University Routes
 	mux.HandleFunc("POST /admin/university", middleware.RequireAdmin(h.HandleCreateUniversity))
@@ -108,8 +112,15 @@ func main() {
 	mux.HandleFunc("POST /admin/program", middleware.RequireAdmin(h.HandleCreateProgram))
 	mux.HandleFunc("PUT /admin/program", middleware.RequireAdmin(h.HandleUpdateProgram))
 	mux.HandleFunc("DELETE /admin/program", middleware.RequireAdmin(h.HandleDeleteProgram))
+	mux.HandleFunc("GET /admin/program/eligibility-rules", middleware.RequireAdmin(h.HandleGetProgramEligibilityRules))
+	mux.HandleFunc("POST /admin/program/eligibility-rules", middleware.RequireAdmin(h.HandleUpsertProgramEligibilityRule))
+	mux.HandleFunc("DELETE /admin/program/eligibility-rules", middleware.RequireAdmin(h.HandleDeleteProgramEligibilityRule))
 	mux.HandleFunc("POST /admin/admission-test", middleware.RequireAdmin(h.HandleCreateAdmissionTest))
 	mux.HandleFunc("PUT /admin/admission-test", middleware.RequireAdmin(h.HandleUpdateAdmissionTest))
+	mux.HandleFunc("POST /admin/admission-test/publish", middleware.RequireAdmin(h.HandlePublishAdmissionTestResults))
+	mux.HandleFunc("POST /admin/universities/transport", middleware.RequireAdmin(h.HandleCreateUniversityTransportRoute))
+	mux.HandleFunc("PUT /admin/universities/transport", middleware.RequireAdmin(h.HandleUpdateUniversityTransportRoute))
+	mux.HandleFunc("DELETE /admin/universities/transport", middleware.RequireAdmin(h.HandleDeleteUniversityTransportRoute))
 
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{

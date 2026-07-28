@@ -111,6 +111,109 @@ func (h *Handler) HandleUpdateAdmissionTest(w http.ResponseWriter, r *http.Reque
 	})
 }
 
+type PublishResultRow struct {
+	StudentID     int32  `json:"student_id"`
+	Marks         string `json:"marks"`
+	MeritPosition int32  `json:"merit_position"`
+}
+
+type PublishResultsPayload struct {
+	TestID  int32              `json:"test_id"`
+	Results []PublishResultRow `json:"results"`
+}
+
+func (h *Handler) HandlePublishAdmissionTestResults(w http.ResponseWriter, r *http.Request) {
+	var req PublishResultsPayload
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	if req.TestID <= 0 {
+		http.Error(w, "test_id is required", http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+
+	// 1. Fetch test details to include exam details in notification
+	test, err := h.Queries.GetAdmissionTestByID(ctx, req.TestID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Admission test not found", http.StatusNotFound)
+		} else {
+			http.Error(w, "Failed to fetch admission test: "+err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// 2. Start a transaction to insert results and notify students atomically
+	tx, err := h.DB.BeginTx(ctx, nil)
+	if err != nil {
+		http.Error(w, "Failed to start database transaction", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	qtx := h.Queries.WithTx(tx)
+
+	for _, result := range req.Results {
+		if result.StudentID <= 0 {
+			http.Error(w, "student_id must be valid for all results", http.StatusBadRequest)
+			return
+		}
+
+		marksVal, err := strconv.ParseFloat(result.Marks, 64)
+		if err != nil || marksVal < 0 {
+			http.Error(w, "Marks must be a valid non-negative number", http.StatusBadRequest)
+			return
+		}
+
+		// Record result
+		err = qtx.RecordTestResult(ctx, db.RecordTestResultParams{
+			StudentID:     result.StudentID,
+			TestID:        req.TestID,
+			Marks:         sql.NullString{String: result.Marks, Valid: true},
+			MeritPosition: sql.NullInt32{Int32: result.MeritPosition, Valid: result.MeritPosition > 0},
+		})
+		if err != nil {
+			http.Error(w, "Failed to record result for student: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Congratulate student via notification
+		msg := "Congratulations! Your admission test results for Unit "
+		if test.ExamUnit.Valid {
+			msg += test.ExamUnit.String
+		}
+		msg += " have been published. You obtained marks: " + result.Marks
+		if result.MeritPosition > 0 {
+			msg += " with Merit Position: " + strconv.Itoa(int(result.MeritPosition))
+		}
+		msg += "."
+
+		_, err = qtx.CreateNotification(ctx, db.CreateNotificationParams{
+			StudentID: result.StudentID,
+			Message:   msg,
+		})
+		if err != nil {
+			http.Error(w, "Failed to create notification for student: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit results transaction", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Admission test results published and students notified successfully",
+	})
+}
+
 func buildAdmissionTestParams(req AdmissionTestPayload) (db.InsertAdmissionTestParams, error) {
 	examDateStr := strings.TrimSpace(req.ExamDate)
 	if examDateStr == "" {

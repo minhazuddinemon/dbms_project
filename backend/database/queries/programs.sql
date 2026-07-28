@@ -82,3 +82,12 @@ WHERE program_id = ?;
 -- name: DeleteProgram :exec
 DELETE FROM Program
 WHERE program_id = ?;
+
+-- name: UpsertProgramEligibilityRule :exec
+INSERT INTO Program_Eligibility_Rules (program_id, rule_type, rule_value)
+VALUES (?, ?, ?)
+ON DUPLICATE KEY UPDATE rule_value = VALUES(rule_value);
+
+-- name: DeleteProgramEligibilityRule :exec
+DELETE FROM Program_Eligibility_Rules
+WHERE program_id = ? AND rule_type = ?;

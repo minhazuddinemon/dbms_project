@@ -42,3 +42,20 @@ SELECT album_id, u_id, picture_title, picture_url
 FROM University_Album
 WHERE u_id = ?;
 
+-- name: GetUniversityTransportRoutes :many
+SELECT u_id, transport_route, est_travel_time
+FROM University_Transport
+WHERE u_id = ?;
+
+-- name: InsertUniversityTransportRoute :execresult
+INSERT INTO University_Transport (u_id, transport_route, est_travel_time)
+VALUES (?, ?, ?);
+
+-- name: UpdateUniversityTransportRoute :exec
+UPDATE University_Transport
+SET est_travel_time = ?
+WHERE u_id = ? AND transport_route = ?;
+
+-- name: DeleteUniversityTransportRoute :exec
+DELETE FROM University_Transport
+WHERE u_id = ? AND transport_route = ?;

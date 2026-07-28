@@ -10,10 +10,69 @@ import (
 	"database/sql"
 )
 
+const getAdmissionTestByID = `-- name: GetAdmissionTestByID :one
+SELECT test_id, exam_unit, exam_center, exam_date, prereq_test_id, program_id
+FROM Admission_Test
+WHERE test_id = ? LIMIT 1
+`
+
+type GetAdmissionTestByIDRow struct {
+	TestID       int32          `json:"test_id"`
+	ExamUnit     sql.NullString `json:"exam_unit"`
+	ExamCenter   sql.NullString `json:"exam_center"`
+	ExamDate     sql.NullTime   `json:"exam_date"`
+	PrereqTestID sql.NullInt32  `json:"prereq_test_id"`
+	ProgramID    sql.NullInt32  `json:"program_id"`
+}
+
+func (q *Queries) GetAdmissionTestByID(ctx context.Context, testID int32) (GetAdmissionTestByIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getAdmissionTestByID, testID)
+	var i GetAdmissionTestByIDRow
+	err := row.Scan(
+		&i.TestID,
+		&i.ExamUnit,
+		&i.ExamCenter,
+		&i.ExamDate,
+		&i.PrereqTestID,
+		&i.ProgramID,
+	)
+	return i, err
+}
+
+const getAdmissionTestByProgramID = `-- name: GetAdmissionTestByProgramID :one
+SELECT test_id, exam_unit, exam_center, exam_date, prereq_test_id, program_id
+FROM Admission_Test
+WHERE program_id = ? LIMIT 1
+`
+
+type GetAdmissionTestByProgramIDRow struct {
+	TestID       int32          `json:"test_id"`
+	ExamUnit     sql.NullString `json:"exam_unit"`
+	ExamCenter   sql.NullString `json:"exam_center"`
+	ExamDate     sql.NullTime   `json:"exam_date"`
+	PrereqTestID sql.NullInt32  `json:"prereq_test_id"`
+	ProgramID    sql.NullInt32  `json:"program_id"`
+}
+
+func (q *Queries) GetAdmissionTestByProgramID(ctx context.Context, programID sql.NullInt32) (GetAdmissionTestByProgramIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getAdmissionTestByProgramID, programID)
+	var i GetAdmissionTestByProgramIDRow
+	err := row.Scan(
+		&i.TestID,
+		&i.ExamUnit,
+		&i.ExamCenter,
+		&i.ExamDate,
+		&i.PrereqTestID,
+		&i.ProgramID,
+	)
+	return i, err
+}
+
 const getStudentTestResults = `-- name: GetStudentTestResults :many
-SELECT g.marks, g.merit_position, t.exam_unit, u.u_name
+SELECT g.marks, g.merit_position, t.exam_unit, u.u_name, p.p_name AS program_name
 FROM Gives g
 JOIN Admission_Test t ON g.test_id = t.test_id
+LEFT JOIN Program p ON t.program_id = p.program_id
 JOIN Conducts c ON t.test_id = c.test_id
 JOIN University u ON c.u_id = u.u_id
 WHERE g.student_id = ?
@@ -24,6 +83,7 @@ type GetStudentTestResultsRow struct {
 	MeritPosition sql.NullInt32  `json:"merit_position"`
 	ExamUnit      sql.NullString `json:"exam_unit"`
 	UName         string         `json:"u_name"`
+	ProgramName   sql.NullString `json:"program_name"`
 }
 
 func (q *Queries) GetStudentTestResults(ctx context.Context, studentID int32) ([]GetStudentTestResultsRow, error) {
@@ -40,6 +100,7 @@ func (q *Queries) GetStudentTestResults(ctx context.Context, studentID int32) ([
 			&i.MeritPosition,
 			&i.ExamUnit,
 			&i.UName,
+			&i.ProgramName,
 		); err != nil {
 			return nil, err
 		}
@@ -57,6 +118,7 @@ func (q *Queries) GetStudentTestResults(ctx context.Context, studentID int32) ([
 const recordTestResult = `-- name: RecordTestResult :exec
 INSERT INTO Gives (student_id, test_id, marks, merit_position)
 VALUES (?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE marks = VALUES(marks), merit_position = VALUES(merit_position)
 `
 
 type RecordTestResultParams struct {

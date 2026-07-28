@@ -764,6 +764,111 @@ Records a payment for an existing application owned by the logged-in student and
 
 ---
 
+---
+
+## 2.7 Student academics & subject marks
+
+### POST `/student/academic`
+
+Saves or updates the student's academic record (e.g. SSC, HSC) including their GPA and education group.
+
+- **Auth required**: Yes (student token)
+
+#### Request body
+
+```json
+{
+  "exam_level": "HSC",
+  "year": 2022,
+  "roll_no": "123456",
+  "reg_no": "789012",
+  "gpa": "5.00",
+  "board": "Dhaka",
+  "edu_group": "Science"
+}
+```
+
+#### Response `200 OK`
+
+```json
+{
+  "message": "Academic records saved successfully"
+}
+```
+
+#### Possible errors
+
+- `400 Bad Request` — invalid GPA or missing required fields
+- `401 Unauthorized`
+- `500 Internal Server Error`
+
+---
+
+### POST `/student/subject-marks`
+
+Saves or updates individual subject grades and marks (Physics, Mathematics, etc.) for a specific exam level (e.g., HSC) to check eligibility criteria.
+
+- **Auth required**: Yes (student token)
+
+#### Request body
+
+```json
+{
+  "exam_level": "HSC",
+  "subjects": [
+    {
+      "subject_name": "Physics",
+      "marks": "92.50",
+      "grade": "A+"
+    },
+    {
+      "subject_name": "Mathematics",
+      "marks": "95.00",
+      "grade": "A+"
+    }
+  ]
+}
+```
+
+#### Response `200 OK`
+
+```json
+{
+  "message": "Subject marks saved successfully"
+}
+```
+
+#### Possible errors
+
+- `400 Bad Request`
+- `401 Unauthorized`
+- `500 Internal Server Error`
+
+---
+
+## 2.8 Student notifications
+
+### GET `/student/notifications`
+
+Fetches notifications for the logged-in student, including updates on application success, exam holding dates, and published admission test results.
+
+- **Auth required**: Yes (student token)
+
+#### Response `200 OK`
+
+```json
+[
+  {
+    "notif_id": 1,
+    "student_id": 1,
+    "message": "Congratulations! Your admission test results for Unit A have been published. You obtained marks: 85.50 with Merit Position: 1.",
+    "created_at": "2026-07-28T20:30:00Z"
+  }
+]
+```
+
+---
+
 # 3. Admin endpoints
 
 ## 3.1 Admin login
@@ -1239,6 +1344,216 @@ PUT /admin/admission-test?test_id=7
 
 ---
 
+---
+
+## 3.6 Admin eligibility rules management
+
+### GET `/admin/program/eligibility-rules`
+
+Fetches all eligibility rules configured for a program.
+
+- **Auth required**: Yes (admin token)
+
+#### Query parameters
+
+- `program_id` _(required)_
+
+#### Response `200 OK`
+
+```json
+[
+  {
+    "program_id": 3,
+    "rule_type": "MIN_HSC_PHYSICS",
+    "rule_value": {
+      "String": "80.00",
+      "Valid": true
+    }
+  }
+]
+```
+
+---
+
+### POST `/admin/program/eligibility-rules`
+
+Creates or updates an eligibility rule for a program.
+
+- **Auth required**: Yes (admin token)
+
+#### Request body
+
+```json
+{
+  "program_id": 3,
+  "rule_type": "MIN_HSC_PHYSICS",
+  "rule_value": "80.00"
+}
+```
+
+#### Response `200 OK`
+
+```json
+{
+  "message": "Eligibility rule saved successfully"
+}
+```
+
+---
+
+### DELETE `/admin/program/eligibility-rules`
+
+Deletes an eligibility rule of a program.
+
+- **Auth required**: Yes (admin token)
+
+#### Query parameters
+
+- `program_id` _(required)_
+- `rule_type` _(required)_
+
+#### Response `200 OK`
+
+```json
+{
+  "message": "Eligibility rule deleted successfully"
+}
+```
+
+---
+
+## 3.7 Admin university transport routes management
+
+### GET `/universities/transport`
+
+Lists transport routes and estimated travel times for a university.
+
+- **Auth required**: No _(Public)_
+
+#### Query parameters
+
+- `u_id` _(required)_
+
+#### Response `200 OK`
+
+```json
+[
+  {
+    "u_id": 1,
+    "transport_route": "Route A (Mirpur to Campus)",
+    "est_travel_time": "45 mins"
+  }
+]
+```
+
+---
+
+### POST `/admin/universities/transport`
+
+Creates a new transport route for a university.
+
+- **Auth required**: Yes (admin token)
+
+#### Request body
+
+```json
+{
+  "u_id": 1,
+  "transport_route": "Route A (Mirpur to Campus)",
+  "est_travel_time": "45 mins"
+}
+```
+
+#### Response `201 Created`
+
+```json
+{
+  "message": "Transport route created successfully"
+}
+```
+
+---
+
+### PUT `/admin/universities/transport`
+
+Updates estimated travel time of a transport route for a university.
+
+- **Auth required**: Yes (admin token)
+
+#### Request body
+
+```json
+{
+  "u_id": 1,
+  "transport_route": "Route A (Mirpur to Campus)",
+  "est_travel_time": "50 mins"
+}
+```
+
+#### Response `200 OK`
+
+```json
+{
+  "message": "Transport route updated successfully"
+}
+```
+
+---
+
+### DELETE `/admin/universities/transport`
+
+Deletes a transport route of a university.
+
+- **Auth required**: Yes (admin token)
+
+#### Query parameters
+
+- `u_id` _(required)_
+- `transport_route` _(required)_
+
+#### Response `200 OK`
+
+```json
+{
+  "message": "Transport route deleted successfully"
+}
+```
+
+---
+
+## 3.8 Admin publish exam results
+
+### POST `/admin/admission-test/publish`
+
+Publishes exam marks and merit positions for an admission test unit and notifies/congratulates the students.
+
+- **Auth required**: Yes (admin token)
+
+#### Request body
+
+```json
+{
+  "test_id": 5,
+  "results": [
+    {
+      "student_id": 1,
+      "marks": "85.50",
+      "merit_position": 1
+    }
+  ]
+}
+```
+
+#### Response `200 OK`
+
+```json
+{
+  "message": "Admission test results published and students notified successfully"
+}
+```
+
+---
+
 # 4. Route summary
 
 ## Public
@@ -1250,6 +1565,7 @@ PUT /admin/admission-test?test_id=7
 - `GET /programs/detail`
 - `GET /universities`
 - `GET /universities/detail`
+- `GET /universities/transport`
 - `POST /admin/login`
 
 ## Student protected
@@ -1261,6 +1577,9 @@ PUT /admin/admission-test?test_id=7
 - `POST /student/mobile`
 - `PUT /student/mobile`
 - `DELETE /student/mobile`
+- `POST /student/academic`
+- `POST /student/subject-marks`
+- `GET /student/notifications`
 - `GET /programs/eligible`
 - `POST /applications/apply`
 - `GET /applications`
@@ -1278,5 +1597,12 @@ PUT /admin/admission-test?test_id=7
 - `POST /admin/program`
 - `PUT /admin/program`
 - `DELETE /admin/program`
+- `GET /admin/program/eligibility-rules`
+- `POST /admin/program/eligibility-rules`
+- `DELETE /admin/program/eligibility-rules`
 - `POST /admin/admission-test`
 - `PUT /admin/admission-test`
+- `POST /admin/admission-test/publish`
+- `POST /admin/universities/transport`
+- `PUT /admin/universities/transport`
+- `DELETE /admin/universities/transport`

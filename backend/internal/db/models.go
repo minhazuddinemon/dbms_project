@@ -197,13 +197,14 @@ type Payment struct {
 }
 
 type Program struct {
-	ProgramID    int32          `json:"program_id"`
-	PName        string         `json:"p_name"`
-	PUnit        sql.NullString `json:"p_unit"`
-	TotalSeats   int32          `json:"total_seats"`
-	PrevCutmarks sql.NullString `json:"prev_cutmarks"`
-	Deadline     time.Time      `json:"deadline"`
-	UID          int32          `json:"u_id"`
+	ProgramID      int32          `json:"program_id"`
+	PName          string         `json:"p_name"`
+	PUnit          sql.NullString `json:"p_unit"`
+	TotalSeats     int32          `json:"total_seats"`
+	PrevCutmarks   sql.NullString `json:"prev_cutmarks"`
+	Deadline       time.Time      `json:"deadline"`
+	UID            int32          `json:"u_id"`
+	ApplicationFee string         `json:"application_fee"`
 }
 
 type ProgramEligibilityRule struct {

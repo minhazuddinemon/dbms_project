@@ -21,6 +21,21 @@ func (q *Queries) DeleteProgram(ctx context.Context, programID int32) error {
 	return err
 }
 
+const deleteProgramEligibilityRule = `-- name: DeleteProgramEligibilityRule :exec
+DELETE FROM Program_Eligibility_Rules
+WHERE program_id = ? AND rule_type = ?
+`
+
+type DeleteProgramEligibilityRuleParams struct {
+	ProgramID int32  `json:"program_id"`
+	RuleType  string `json:"rule_type"`
+}
+
+func (q *Queries) DeleteProgramEligibilityRule(ctx context.Context, arg DeleteProgramEligibilityRuleParams) error {
+	_, err := q.db.ExecContext(ctx, deleteProgramEligibilityRule, arg.ProgramID, arg.RuleType)
+	return err
+}
+
 const getAllProgramsWithRules = `-- name: GetAllProgramsWithRules :many
 SELECT
     p.program_id,
@@ -119,22 +134,23 @@ func (q *Queries) GetProgramByID(ctx context.Context, programID int32) (GetProgr
 }
 
 const getProgramDetails = `-- name: GetProgramDetails :one
-SELECT p.program_id, p.p_name, p.p_unit, p.total_seats, p.prev_cutmarks, p.deadline, p.u_id, u.u_name, u.location
+SELECT p.program_id, p.p_name, p.p_unit, p.total_seats, p.prev_cutmarks, p.deadline, p.u_id, p.application_fee, u.u_name, u.location
 FROM Program p
 JOIN University u ON p.u_id = u.u_id
 WHERE p.program_id = ? LIMIT 1
 `
 
 type GetProgramDetailsRow struct {
-	ProgramID    int32          `json:"program_id"`
-	PName        string         `json:"p_name"`
-	PUnit        sql.NullString `json:"p_unit"`
-	TotalSeats   int32          `json:"total_seats"`
-	PrevCutmarks sql.NullString `json:"prev_cutmarks"`
-	Deadline     time.Time      `json:"deadline"`
-	UID          int32          `json:"u_id"`
-	UName        string         `json:"u_name"`
-	Location     sql.NullString `json:"location"`
+	ProgramID      int32          `json:"program_id"`
+	PName          string         `json:"p_name"`
+	PUnit          sql.NullString `json:"p_unit"`
+	TotalSeats     int32          `json:"total_seats"`
+	PrevCutmarks   sql.NullString `json:"prev_cutmarks"`
+	Deadline       time.Time      `json:"deadline"`
+	UID            int32          `json:"u_id"`
+	ApplicationFee string         `json:"application_fee"`
+	UName          string         `json:"u_name"`
+	Location       sql.NullString `json:"location"`
 }
 
 func (q *Queries) GetProgramDetails(ctx context.Context, programID int32) (GetProgramDetailsRow, error) {
@@ -148,6 +164,7 @@ func (q *Queries) GetProgramDetails(ctx context.Context, programID int32) (GetPr
 		&i.PrevCutmarks,
 		&i.Deadline,
 		&i.UID,
+		&i.ApplicationFee,
 		&i.UName,
 		&i.Location,
 	)
@@ -328,7 +345,7 @@ func (q *Queries) ListPrograms(ctx context.Context, arg ListProgramsParams) ([]L
 }
 
 const listProgramsByUniversity = `-- name: ListProgramsByUniversity :many
-SELECT program_id, p_name, p_unit, total_seats, prev_cutmarks, deadline, u_id FROM Program
+SELECT program_id, p_name, p_unit, total_seats, prev_cutmarks, deadline, u_id, application_fee FROM Program
 WHERE u_id = ?
 `
 
@@ -349,6 +366,7 @@ func (q *Queries) ListProgramsByUniversity(ctx context.Context, uID int32) ([]Pr
 			&i.PrevCutmarks,
 			&i.Deadline,
 			&i.UID,
+			&i.ApplicationFee,
 		); err != nil {
 			return nil, err
 		}
@@ -424,5 +442,22 @@ func (q *Queries) UpdateProgram(ctx context.Context, arg UpdateProgramParams) er
 		arg.UID,
 		arg.ProgramID,
 	)
+	return err
+}
+
+const upsertProgramEligibilityRule = `-- name: UpsertProgramEligibilityRule :exec
+INSERT INTO Program_Eligibility_Rules (program_id, rule_type, rule_value)
+VALUES (?, ?, ?)
+ON DUPLICATE KEY UPDATE rule_value = VALUES(rule_value)
+`
+
+type UpsertProgramEligibilityRuleParams struct {
+	ProgramID int32          `json:"program_id"`
+	RuleType  string         `json:"rule_type"`
+	RuleValue sql.NullString `json:"rule_value"`
+}
+
+func (q *Queries) UpsertProgramEligibilityRule(ctx context.Context, arg UpsertProgramEligibilityRuleParams) error {
+	_, err := q.db.ExecContext(ctx, upsertProgramEligibilityRule, arg.ProgramID, arg.RuleType, arg.RuleValue)
 	return err
 }

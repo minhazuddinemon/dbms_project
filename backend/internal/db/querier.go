@@ -13,13 +13,18 @@ type Querier interface {
 	AddStudentAcademic(ctx context.Context, arg AddStudentAcademicParams) error
 	AdminUpdateApplicationStatus(ctx context.Context, arg AdminUpdateApplicationStatusParams) error
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (sql.Result, error)
+	CreateNotification(ctx context.Context, arg CreateNotificationParams) (sql.Result, error)
 	CreatePayment(ctx context.Context, arg CreatePaymentParams) (sql.Result, error)
 	CreateStudent(ctx context.Context, arg CreateStudentParams) (sql.Result, error)
 	DeleteProgram(ctx context.Context, programID int32) error
+	DeleteProgramEligibilityRule(ctx context.Context, arg DeleteProgramEligibilityRuleParams) error
 	DeleteStudentMobile(ctx context.Context, arg DeleteStudentMobileParams) (sql.Result, error)
 	DeleteUniversity(ctx context.Context, uID int32) error
 	DeleteUniversityAlbum(ctx context.Context, uID int32) error
 	DeleteUniversityDepartments(ctx context.Context, uID int32) error
+	DeleteUniversityTransportRoute(ctx context.Context, arg DeleteUniversityTransportRouteParams) error
+	GetAdmissionTestByID(ctx context.Context, testID int32) (GetAdmissionTestByIDRow, error)
+	GetAdmissionTestByProgramID(ctx context.Context, programID sql.NullInt32) (GetAdmissionTestByProgramIDRow, error)
 	GetAllProgramsWithRules(ctx context.Context) ([]GetAllProgramsWithRulesRow, error)
 	GetApplicationByID(ctx context.Context, arg GetApplicationByIDParams) (GetApplicationByIDRow, error)
 	GetProgramByID(ctx context.Context, programID int32) (GetProgramByIDRow, error)
@@ -31,6 +36,7 @@ type Querier interface {
 	GetStudentByEmail(ctx context.Context, email string) (Student, error)
 	GetStudentByID(ctx context.Context, studentID int32) (Student, error)
 	GetStudentMobiles(ctx context.Context, studentID int32) ([]StudentMobile, error)
+	GetStudentNotifications(ctx context.Context, studentID int32) ([]Notification, error)
 	GetStudentProfileFields(ctx context.Context, studentID int32) ([]StudentProfileInfoFieldName, error)
 	GetStudentProgramRequirements(ctx context.Context, arg GetStudentProgramRequirementsParams) ([]GetStudentProgramRequirementsRow, error)
 	GetStudentSubjectMarks(ctx context.Context, arg GetStudentSubjectMarksParams) ([]GetStudentSubjectMarksRow, error)
@@ -39,12 +45,14 @@ type Querier interface {
 	GetUniversityApplications(ctx context.Context, uID int32) ([]GetUniversityApplicationsRow, error)
 	GetUniversityByID(ctx context.Context, uID int32) (University, error)
 	GetUniversityDepartments(ctx context.Context, uID int32) ([]UniversityDepartment, error)
+	GetUniversityTransportRoutes(ctx context.Context, uID int32) ([]UniversityTransport, error)
 	InsertAdmissionTest(ctx context.Context, arg InsertAdmissionTestParams) (sql.Result, error)
 	InsertProgram(ctx context.Context, arg InsertProgramParams) (sql.Result, error)
 	InsertStudentMobile(ctx context.Context, arg InsertStudentMobileParams) (sql.Result, error)
 	InsertUniversity(ctx context.Context, arg InsertUniversityParams) (sql.Result, error)
 	InsertUniversityAlbumPicture(ctx context.Context, arg InsertUniversityAlbumPictureParams) (sql.Result, error)
 	InsertUniversityDepartment(ctx context.Context, arg InsertUniversityDepartmentParams) (sql.Result, error)
+	InsertUniversityTransportRoute(ctx context.Context, arg InsertUniversityTransportRouteParams) (sql.Result, error)
 	ListPrograms(ctx context.Context, arg ListProgramsParams) ([]ListProgramsRow, error)
 	ListProgramsByUniversity(ctx context.Context, uID int32) ([]Program, error)
 	ListUniversities(ctx context.Context) ([]University, error)
@@ -55,7 +63,10 @@ type Querier interface {
 	UpdateProgram(ctx context.Context, arg UpdateProgramParams) error
 	UpdateStudentMobile(ctx context.Context, arg UpdateStudentMobileParams) (sql.Result, error)
 	UpdateUniversity(ctx context.Context, arg UpdateUniversityParams) error
+	UpdateUniversityTransportRoute(ctx context.Context, arg UpdateUniversityTransportRouteParams) error
+	UpsertProgramEligibilityRule(ctx context.Context, arg UpsertProgramEligibilityRuleParams) error
 	UpsertStudentProfileField(ctx context.Context, arg UpsertStudentProfileFieldParams) error
+	UpsertStudentSubjectMark(ctx context.Context, arg UpsertStudentSubjectMarkParams) error
 }
 
 var _ Querier = (*Queries)(nil)

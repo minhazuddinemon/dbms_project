@@ -40,6 +40,21 @@ func (q *Queries) DeleteUniversityDepartments(ctx context.Context, uID int32) er
 	return err
 }
 
+const deleteUniversityTransportRoute = `-- name: DeleteUniversityTransportRoute :exec
+DELETE FROM University_Transport
+WHERE u_id = ? AND transport_route = ?
+`
+
+type DeleteUniversityTransportRouteParams struct {
+	UID            int32  `json:"u_id"`
+	TransportRoute string `json:"transport_route"`
+}
+
+func (q *Queries) DeleteUniversityTransportRoute(ctx context.Context, arg DeleteUniversityTransportRouteParams) error {
+	_, err := q.db.ExecContext(ctx, deleteUniversityTransportRoute, arg.UID, arg.TransportRoute)
+	return err
+}
+
 const getUniversityAlbum = `-- name: GetUniversityAlbum :many
 SELECT album_id, u_id, picture_title, picture_url
 FROM University_Album
@@ -130,6 +145,35 @@ func (q *Queries) GetUniversityDepartments(ctx context.Context, uID int32) ([]Un
 	return items, nil
 }
 
+const getUniversityTransportRoutes = `-- name: GetUniversityTransportRoutes :many
+SELECT u_id, transport_route, est_travel_time
+FROM University_Transport
+WHERE u_id = ?
+`
+
+func (q *Queries) GetUniversityTransportRoutes(ctx context.Context, uID int32) ([]UniversityTransport, error) {
+	rows, err := q.db.QueryContext(ctx, getUniversityTransportRoutes, uID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UniversityTransport
+	for rows.Next() {
+		var i UniversityTransport
+		if err := rows.Scan(&i.UID, &i.TransportRoute, &i.EstTravelTime); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertUniversity = `-- name: InsertUniversity :execresult
 INSERT INTO University (u_name, website, location, logo_url, university_description, university_history)
 VALUES (?, ?, ?, ?, ?, ?)
@@ -191,6 +235,21 @@ func (q *Queries) InsertUniversityDepartment(ctx context.Context, arg InsertUniv
 	)
 }
 
+const insertUniversityTransportRoute = `-- name: InsertUniversityTransportRoute :execresult
+INSERT INTO University_Transport (u_id, transport_route, est_travel_time)
+VALUES (?, ?, ?)
+`
+
+type InsertUniversityTransportRouteParams struct {
+	UID            int32  `json:"u_id"`
+	TransportRoute string `json:"transport_route"`
+	EstTravelTime  string `json:"est_travel_time"`
+}
+
+func (q *Queries) InsertUniversityTransportRoute(ctx context.Context, arg InsertUniversityTransportRouteParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, insertUniversityTransportRoute, arg.UID, arg.TransportRoute, arg.EstTravelTime)
+}
+
 const updateUniversity = `-- name: UpdateUniversity :exec
 UPDATE University
 SET u_name = ?, website = ?, location = ?, logo_url = ?, university_description = ?, university_history = ?
@@ -217,5 +276,22 @@ func (q *Queries) UpdateUniversity(ctx context.Context, arg UpdateUniversityPara
 		arg.UniversityHistory,
 		arg.UID,
 	)
+	return err
+}
+
+const updateUniversityTransportRoute = `-- name: UpdateUniversityTransportRoute :exec
+UPDATE University_Transport
+SET est_travel_time = ?
+WHERE u_id = ? AND transport_route = ?
+`
+
+type UpdateUniversityTransportRouteParams struct {
+	EstTravelTime  string `json:"est_travel_time"`
+	UID            int32  `json:"u_id"`
+	TransportRoute string `json:"transport_route"`
+}
+
+func (q *Queries) UpdateUniversityTransportRoute(ctx context.Context, arg UpdateUniversityTransportRouteParams) error {
+	_, err := q.db.ExecContext(ctx, updateUniversityTransportRoute, arg.EstTravelTime, arg.UID, arg.TransportRoute)
 	return err
 }

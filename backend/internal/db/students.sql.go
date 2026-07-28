@@ -12,8 +12,9 @@ import (
 )
 
 const addStudentAcademic = `-- name: AddStudentAcademic :exec
-INSERT INTO Student_Academics (student_id, exam_level, year, roll_no, reg_no, gpa, board)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+INSERT INTO Student_Academics (student_id, exam_level, year, roll_no, reg_no, gpa, board, edu_group)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE year = VALUES(year), roll_no = VALUES(roll_no), reg_no = VALUES(reg_no), gpa = VALUES(gpa), board = VALUES(board), edu_group = VALUES(edu_group)
 `
 
 type AddStudentAcademicParams struct {
@@ -24,6 +25,7 @@ type AddStudentAcademicParams struct {
 	RegNo     string `json:"reg_no"`
 	Gpa       string `json:"gpa"`
 	Board     string `json:"board"`
+	EduGroup  string `json:"edu_group"`
 }
 
 func (q *Queries) AddStudentAcademic(ctx context.Context, arg AddStudentAcademicParams) error {
@@ -35,8 +37,23 @@ func (q *Queries) AddStudentAcademic(ctx context.Context, arg AddStudentAcademic
 		arg.RegNo,
 		arg.Gpa,
 		arg.Board,
+		arg.EduGroup,
 	)
 	return err
+}
+
+const createNotification = `-- name: CreateNotification :execresult
+INSERT INTO Notification (student_id, message)
+VALUES (?, ?)
+`
+
+type CreateNotificationParams struct {
+	StudentID int32  `json:"student_id"`
+	Message   string `json:"message"`
+}
+
+func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, createNotification, arg.StudentID, arg.Message)
 }
 
 const createStudent = `-- name: CreateStudent :execresult
@@ -180,6 +197,41 @@ func (q *Queries) GetStudentMobiles(ctx context.Context, studentID int32) ([]Stu
 	return items, nil
 }
 
+const getStudentNotifications = `-- name: GetStudentNotifications :many
+SELECT notif_id, student_id, message, created_at
+FROM Notification
+WHERE student_id = ?
+ORDER BY created_at DESC
+`
+
+func (q *Queries) GetStudentNotifications(ctx context.Context, studentID int32) ([]Notification, error) {
+	rows, err := q.db.QueryContext(ctx, getStudentNotifications, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Notification
+	for rows.Next() {
+		var i Notification
+		if err := rows.Scan(
+			&i.NotifID,
+			&i.StudentID,
+			&i.Message,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getStudentSubjectMarks = `-- name: GetStudentSubjectMarks :many
 SELECT subject_name, marks, grade
 FROM Student_Subject_Marks
@@ -271,5 +323,30 @@ type UpsertStudentProfileFieldParams struct {
 
 func (q *Queries) UpsertStudentProfileField(ctx context.Context, arg UpsertStudentProfileFieldParams) error {
 	_, err := q.db.ExecContext(ctx, upsertStudentProfileField, arg.StudentID, arg.FieldName, arg.FieldValue)
+	return err
+}
+
+const upsertStudentSubjectMark = `-- name: UpsertStudentSubjectMark :exec
+INSERT INTO Student_Subject_Marks (student_id, exam_level, subject_name, marks, grade)
+VALUES (?, ?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE marks = VALUES(marks), grade = VALUES(grade)
+`
+
+type UpsertStudentSubjectMarkParams struct {
+	StudentID   int32          `json:"student_id"`
+	ExamLevel   string         `json:"exam_level"`
+	SubjectName string         `json:"subject_name"`
+	Marks       string         `json:"marks"`
+	Grade       sql.NullString `json:"grade"`
+}
+
+func (q *Queries) UpsertStudentSubjectMark(ctx context.Context, arg UpsertStudentSubjectMarkParams) error {
+	_, err := q.db.ExecContext(ctx, upsertStudentSubjectMark,
+		arg.StudentID,
+		arg.ExamLevel,
+		arg.SubjectName,
+		arg.Marks,
+		arg.Grade,
+	)
 	return err
 }

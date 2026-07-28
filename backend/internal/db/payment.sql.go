@@ -32,9 +32,10 @@ func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (s
 }
 
 const getApplicationByID = `-- name: GetApplicationByID :one
-SELECT app_id, student_id, program_id, status
-FROM Application
-WHERE app_id = ? AND student_id = ?
+SELECT a.app_id, a.student_id, a.program_id, a.status, p.application_fee, p.p_name AS program_name
+FROM Application a
+JOIN Program p ON a.program_id = p.program_id
+WHERE a.app_id = ? AND a.student_id = ?
 `
 
 type GetApplicationByIDParams struct {
@@ -43,10 +44,12 @@ type GetApplicationByIDParams struct {
 }
 
 type GetApplicationByIDRow struct {
-	AppID     int32  `json:"app_id"`
-	StudentID int32  `json:"student_id"`
-	ProgramID int32  `json:"program_id"`
-	Status    string `json:"status"`
+	AppID          int32  `json:"app_id"`
+	StudentID      int32  `json:"student_id"`
+	ProgramID      int32  `json:"program_id"`
+	Status         string `json:"status"`
+	ApplicationFee string `json:"application_fee"`
+	ProgramName    string `json:"program_name"`
 }
 
 func (q *Queries) GetApplicationByID(ctx context.Context, arg GetApplicationByIDParams) (GetApplicationByIDRow, error) {
@@ -57,6 +60,8 @@ func (q *Queries) GetApplicationByID(ctx context.Context, arg GetApplicationByID
 		&i.StudentID,
 		&i.ProgramID,
 		&i.Status,
+		&i.ApplicationFee,
+		&i.ProgramName,
 	)
 	return i, err
 }

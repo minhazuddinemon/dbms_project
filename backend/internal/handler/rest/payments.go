@@ -1,8 +1,11 @@
 package rest
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
+	"os"
+	"strconv"
 
 	"dbms-project/internal/db"
 	"dbms-project/internal/middleware"
@@ -33,7 +36,7 @@ func (h *Handler) HandleProcessPayment(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Verify Application exists and belongs to this student
 	app, err := h.Queries.GetApplicationByID(ctx, db.GetApplicationByIDParams{
-		AppID:     req.ApplicationID, // Fixed: AppID instead of ApplicationID
+		AppID:     req.ApplicationID,
 		StudentID: studentID,
 	})
 	if err != nil {
@@ -47,22 +50,56 @@ func (h *Handler) HandleProcessPayment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Record Payment
-	_, err = h.Queries.CreatePayment(ctx, db.CreatePaymentParams{
-		AppID:  req.ApplicationID, // Fixed: AppID
+	// 3. Validate transaction ID against .env value
+	envTxID := os.Getenv("VALID_TX_ID")
+	if envTxID != "" && req.TransactionID != envTxID {
+		http.Error(w, "Invalid transaction ID", http.StatusBadRequest)
+		return
+	}
+
+	// 4. Verify payment amount matches/covers application fee
+	paidAmount, err := strconv.ParseFloat(req.Amount, 64)
+	if err != nil {
+		http.Error(w, "Invalid amount format in request payload", http.StatusBadRequest)
+		return
+	}
+
+	requiredAmount, err := strconv.ParseFloat(app.ApplicationFee, 64)
+	if err != nil {
+		requiredAmount = 0.00
+	}
+
+	if paidAmount < requiredAmount {
+		http.Error(w, "Insufficient payment amount. Required fee: "+app.ApplicationFee, http.StatusBadRequest)
+		return
+	}
+
+	// 5. Start a database transaction to record payment and create notification atomically
+	tx, err := h.DB.BeginTx(ctx, nil)
+	if err != nil {
+		http.Error(w, "Failed to start database transaction", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	qtx := h.Queries.WithTx(tx)
+
+	// Record Payment
+	_, err = qtx.CreatePayment(ctx, db.CreatePaymentParams{
+		AppID:  req.ApplicationID,
 		Amount: req.Amount,
-		Method: req.PaymentMethod, // Fixed: Method
-		TxID:   req.TransactionID, // Fixed: TxID
+		Method: req.PaymentMethod,
+		TxID:   req.TransactionID,
 	})
 	if err != nil {
 		http.Error(w, "Failed to record payment transaction", http.StatusInternalServerError)
 		return
 	}
 
-	// 4. Update Application Status to PAID
-	err = h.Queries.UpdateApplicationStatus(ctx, db.UpdateApplicationStatusParams{
+	// Update Application Status to PAID
+	err = qtx.UpdateApplicationStatus(ctx, db.UpdateApplicationStatusParams{
 		Status:    "PAID",
-		AppID:     req.ApplicationID, // Fixed: AppID
+		AppID:     req.ApplicationID,
 		StudentID: studentID,
 	})
 	if err != nil {
@@ -70,7 +107,36 @@ func (h *Handler) HandleProcessPayment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 5. Return Confirmation
+	// 6. Notify student of successful application & exam details
+	msg := "Your application for program " + app.ProgramName + " is successful!"
+	test, err := qtx.GetAdmissionTestByProgramID(ctx, sql.NullInt32{Int32: app.ProgramID, Valid: true})
+	if err == nil {
+		if test.ExamDate.Valid {
+			msg += " The exam will be held on " + test.ExamDate.Time.Format("2006-01-02")
+		}
+		if test.ExamCenter.Valid {
+			msg += " at " + test.ExamCenter.String
+		}
+	} else if err == sql.ErrNoRows {
+		msg += " Exam details will be notified soon."
+	}
+	msg += "."
+
+	_, err = qtx.CreateNotification(ctx, db.CreateNotificationParams{
+		StudentID: studentID,
+		Message:   msg,
+	})
+	if err != nil {
+		http.Error(w, "Failed to generate notification: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit payment transaction", http.StatusInternalServerError)
+		return
+	}
+
+	// 7. Return Confirmation
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]any{
