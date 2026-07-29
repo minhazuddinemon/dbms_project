@@ -27,15 +27,17 @@ func (h *Handler) HandleAdminLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Load from env or static values
-	adminEmail := os.Getenv("admin@system.com")
-	adminPassword := os.Getenv("admin123secret")
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
 
 	// Verify Credentials directly
 	if req.Email != adminEmail || req.Password != adminPassword {
 		http.Error(w, "Invalid admin credentials", http.StatusUnauthorized)
 		return
 	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
 
 	// Generate JWT Token with ADMIN role
 	claims := jwt.MapClaims{
@@ -45,7 +47,7 @@ func (h *Handler) HandleAdminLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte("YOUR_SECRET_KEY"))
+	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
