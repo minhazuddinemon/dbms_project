@@ -2,8 +2,9 @@
 <script lang="ts">
 	import { fetchPrograms } from '$lib/api/programs';
 	import { fetchUniversities } from '$lib/api/university';
+	import ProgramCard from '$lib/components/ProgramCard.svelte';
 	import type { Program, University } from '$lib/types/models';
-	import { Search, Building2, Calendar, Users, Filter, ArrowRight, Award, Sparkles, MapPin } from 'lucide-svelte';
+	import { Search, Building2 } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 
@@ -87,7 +88,7 @@
 				<input
 					type="text"
 					bind:value={search}
-					placeholder="Search by program name (e.g. Computer Science, Electrical)..."
+					placeholder="Search by program name (e.g. BSc, Unit A)..."
 					class="w-full pl-11 pr-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
 				/>
 			</div>
@@ -130,72 +131,7 @@
 		{:else}
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{#each programs as program}
-					<div class="glass-panel rounded-[2rem] border border-outline-variant/40 p-7 shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col justify-between space-y-6 bg-white/90 card-hover">
-						<div class="space-y-4">
-							<!-- Header with Logo and Unit -->
-							<div class="flex items-center justify-between gap-3 border-b border-outline-variant/20 pb-3">
-								<div class="flex items-center gap-3">
-									{#if getUniLogo(program)}
-										<img
-											src={getUniLogo(program)}
-											alt={program.university_name || program.u_name}
-											class="w-10 h-10 rounded-xl object-contain p-1 border border-outline-variant/30 bg-white shrink-0"
-										/>
-									{:else}
-										<div class="w-10 h-10 rounded-xl bg-primary-fixed text-primary flex items-center justify-center font-black text-lg shrink-0">
-											{(program.university_name || program.u_name || 'U').charAt(0)}
-										</div>
-									{/if}
-									<div>
-										<span class="block text-xs font-black text-primary uppercase leading-tight truncate">
-											{program.university_name || program.u_name || 'Public University'}
-										</span>
-										{#if program.university_location || program.location}
-											<span class="text-[11px] font-semibold text-on-surface-variant flex items-center gap-1">
-												<MapPin class="w-3 h-3 text-tertiary shrink-0" />
-												{program.university_location || program.location}
-											</span>
-										{/if}
-									</div>
-								</div>
-
-								<span class="px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed text-xs font-extrabold uppercase shrink-0">
-									Unit {program.p_unit || 'A'}
-								</span>
-							</div>
-
-							<h3 class="text-2xl font-extrabold text-on-surface leading-tight">
-								{program.p_name}
-							</h3>
-
-							<div class="space-y-2 text-sm text-on-surface-variant pt-1">
-								{#if program.prev_cutmarks}
-									<p class="flex items-center gap-2">
-										<Award class="w-4 h-4 text-tertiary shrink-0" />
-										<span>Previous Cutmark: <strong class="text-primary font-bold">{program.prev_cutmarks}</strong></span>
-									</p>
-								{/if}
-								<p class="flex items-center gap-2">
-									<Users class="w-4 h-4 text-outline shrink-0" />
-									<span>Total Seats: <strong class="text-on-surface font-bold">{program.total_seats}</strong></span>
-								</p>
-								<p class="flex items-center gap-2">
-									<Calendar class="w-4 h-4 text-outline shrink-0" />
-									<span>Deadline: <strong class="text-on-surface font-mono font-bold">{program.deadline ? program.deadline.split('T')[0] : 'N/A'}</strong></span>
-								</p>
-							</div>
-						</div>
-
-						<div class="pt-4 border-t border-outline-variant/30">
-							<a
-								href={`/apply/${program.program_id}`}
-								class="w-full py-3 px-4 rounded-xl text-center text-sm font-bold text-white bg-primary hover:bg-primary-container shadow-md shadow-primary/20 hover:shadow-lg transition-all flex items-center justify-center gap-2"
-							>
-								<span>Apply Now</span>
-								<ArrowRight class="w-4 h-4" />
-							</a>
-						</div>
-					</div>
+					<ProgramCard program={program} uniLogo={getUniLogo(program)} />
 				{/each}
 			</div>
 		{/if}

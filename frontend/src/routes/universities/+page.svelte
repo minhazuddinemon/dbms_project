@@ -2,7 +2,8 @@
 <script lang="ts">
 	import { fetchUniversities } from '$lib/api/university';
 	import type { University } from '$lib/types/models';
-	import { Search, Building2, MapPin, Globe, ArrowRight, ExternalLink } from 'lucide-svelte';
+	import UniversityCard from '$lib/components/UniversityCard.svelte';
+	import { Search, Building2 } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 
 	let universities = $state<University[]>([]);
@@ -92,75 +93,7 @@
 		{:else}
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 				{#each filteredUniversities as uni}
-					<div class="glass-panel rounded-[2.5rem] border border-outline-variant/40 p-7 shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col justify-between space-y-6 bg-white/95 card-hover group">
-						<div class="space-y-5">
-							<!-- Header with Logo, Name, Location & Official Website Link -->
-							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-outline-variant/20 pb-4">
-								<div class="flex items-center gap-3.5">
-									{#if uni.logo_url}
-										<img src={uni.logo_url} alt={uni.u_name} class="w-14 h-14 rounded-2xl object-contain p-1 border border-outline-variant/30 shadow-sm bg-white shrink-0" />
-									{:else}
-										<div class="w-14 h-14 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center font-black text-xl border border-primary/20 shrink-0">
-											{uni.u_name.charAt(0)}
-										</div>
-									{/if}
-									<div>
-										<h3 class="text-2xl font-black text-on-surface leading-tight group-hover:text-primary transition-colors">
-											{uni.u_name}
-										</h3>
-										{#if uni.location}
-											<p class="flex items-center gap-1 text-xs font-bold text-on-surface-variant mt-0.5">
-												<MapPin class="w-3.5 h-3.5 text-tertiary shrink-0" />
-												<span>{uni.location}</span>
-											</p>
-										{/if}
-									</div>
-								</div>
-
-								{#if uni.website}
-									<a
-										href={uni.website}
-										target="_blank"
-										rel="noopener noreferrer"
-										class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-fixed/50 hover:bg-primary-fixed text-primary text-xs font-extrabold transition-all border border-primary/20 self-start sm:self-auto shadow-xs hover:shadow-sm"
-										title="Visit Official University Website"
-									>
-										<Globe class="w-3.5 h-3.5 text-primary shrink-0" />
-										<span>Official Website</span>
-										<ExternalLink class="w-3 h-3 text-primary/80 shrink-0" />
-									</a>
-								{/if}
-							</div>
-
-							<!-- Both Description & History -->
-							<div class="space-y-3">
-								{#if uni.university_description}
-									<div class="space-y-1 text-xs text-on-surface-variant line-clamp-3 leading-relaxed">
-										{@html uni.university_description}
-									</div>
-								{/if}
-
-								{#if uni.university_history}
-									<div class="space-y-1">
-										<span class="text-[10px] font-mono font-bold uppercase tracking-wider text-outline">History</span>
-										<div class="text-xs text-on-surface-variant line-clamp-3 leading-relaxed">
-											{@html uni.university_history}
-										</div>
-									</div>
-								{/if}
-							</div>
-						</div>
-
-						<div class="pt-2">
-							<a
-								href={`/universities/${uni.u_id}`}
-								class="w-full py-3.5 px-4 rounded-2xl text-center text-xs font-black text-white bg-primary hover:bg-primary-container shadow-md shadow-primary/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 group-hover:shadow-primary/25"
-							>
-								<span>View University Details</span>
-								<ArrowRight class="w-4 h-4" />
-							</a>
-						</div>
-					</div>
+					<UniversityCard university={uni} />
 				{/each}
 			</div>
 		{/if}

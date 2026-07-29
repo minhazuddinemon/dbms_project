@@ -24,6 +24,8 @@
 	} from '$lib/api/admin';
 	import { fetchUniversities, fetchUniversityByID, fetchUniversityTransport } from '$lib/api/university';
 	import { fetchPrograms, fetchProgramByID } from '$lib/api/programs';
+	import UniversityCard from '$lib/components/UniversityCard.svelte';
+	import ProgramCard from '$lib/components/ProgramCard.svelte';
 	import { authState } from '$lib/state/auth.svelte';
 	import { getAdminToken } from '$lib/api/client';
 	import { toastState } from '$lib/state/toast.svelte';
@@ -767,51 +769,12 @@
 
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{#each universities as u}
-							<div class="glass-panel p-6 rounded-[2rem] border border-outline-variant/40 bg-white/95 shadow-md flex flex-col justify-between space-y-4">
-								<div class="space-y-3">
-									<div class="flex items-start justify-between gap-3">
-										<div class="flex items-center gap-3">
-											{#if u.logo_url}
-												<img src={u.logo_url} alt={u.u_name} class="w-12 h-12 rounded-2xl object-cover border shrink-0" />
-											{:else}
-												<div class="w-12 h-12 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center font-black text-xl shrink-0">
-													{u.u_name.charAt(0)}
-												</div>
-											{/if}
-											<div>
-												<h4 class="text-lg font-extrabold text-on-surface leading-tight">{u.u_name}</h4>
-												<p class="text-xs font-semibold text-on-surface-variant">{u.location || 'Location Not Specified'}</p>
-											</div>
-										</div>
-
-										<div class="flex gap-1 shrink-0">
-											<button onclick={() => openEditUniModal(u)} class="p-1.5 rounded-lg text-primary hover:bg-primary-fixed/40 transition-colors">
-												<Edit3 class="w-4 h-4" />
-											</button>
-											<button onclick={() => handleDeleteUniversity(u.u_id)} class="p-1.5 rounded-lg text-error hover:bg-error-container/40 transition-colors">
-												<Trash2 class="w-4 h-4" />
-											</button>
-										</div>
-									</div>
-
-									{#if u.website}
-										<a href={u.website} target="_blank" class="text-xs font-semibold text-primary hover:underline block truncate">{u.website}</a>
-									{/if}
-
-									{#if u.university_description}
-										<div class="space-y-0.5 text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
-											{@html u.university_description}
-										</div>
-									{/if}
-
-									{#if u.university_history}
-										<div class="space-y-0.5">
-											<span class="text-[10px] font-bold text-outline uppercase tracking-wider block">History</span>
-											<div class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">{@html u.university_history}</div>
-										</div>
-									{/if}
-								</div>
-							</div>
+							<UniversityCard
+								university={u}
+								isAdmin={true}
+								onedit={openEditUniModal}
+								ondelete={handleDeleteUniversity}
+							/>
 						{/each}
 					</div>
 				</div>
@@ -835,59 +798,12 @@
 
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{#each programs as p}
-							<div class="glass-panel p-6 rounded-[2rem] border border-outline-variant/40 bg-white/95 shadow-md flex flex-col justify-between space-y-4">
-								<div class="space-y-3">
-									<div class="flex items-center justify-between">
-										<span class="text-xs font-mono font-bold text-outline">ID #{p.program_id}</span>
-										<div class="flex gap-1.5">
-											<button onclick={() => openEditProgModal(p)} class="p-1.5 rounded-lg text-primary hover:bg-primary-fixed/40 transition-colors">
-												<Edit3 class="w-4 h-4" />
-											</button>
-											<button onclick={() => handleDeleteProgram(p.program_id)} class="p-1.5 rounded-lg text-error hover:bg-error-container/40 transition-colors">
-												<Trash2 class="w-4 h-4" />
-											</button>
-										</div>
-									</div>
-
-									<div>
-										<h4 class="text-xl font-black text-on-surface leading-tight">{p.p_name}</h4>
-										<p class="text-xs font-bold text-primary mt-0.5">{p.university_name || p.u_name || 'University ID #' + p.u_id}</p>
-									</div>
-
-									<div class="grid grid-cols-2 gap-2 text-xs font-semibold bg-surface-container-low/60 p-3 rounded-xl border border-outline-variant/30">
-										<div>
-											<span class="text-[10px] text-outline font-bold uppercase block">Unit & Seats</span>
-											<span class="text-on-surface">Unit {p.p_unit || 'A'} • {p.total_seats} seats</span>
-										</div>
-										<div>
-											<span class="text-[10px] text-outline font-bold uppercase block">App Fee</span>
-											<span class="text-emerald-700 font-extrabold">{p.application_fee ? `৳${p.application_fee}` : '৳500.00'}</span>
-										</div>
-										<div>
-											<span class="text-[10px] text-outline font-bold uppercase block">Cutmarks</span>
-											<span class="text-on-surface">{p.prev_cutmarks || '80.00'}</span>
-										</div>
-										<div>
-											<span class="text-[10px] text-outline font-bold uppercase block">Deadline</span>
-											<span class="text-on-surface">{p.deadline ? p.deadline.split('T')[0] : 'N/A'}</span>
-										</div>
-									</div>
-
-									<!-- Required Attributes Badges -->
-									{#if p.required_fields && p.required_fields.length > 0}
-										<div class="space-y-1 pt-1">
-											<span class="text-[10px] font-bold text-outline uppercase tracking-wider block">Required Documents & Info:</span>
-											<div class="flex flex-wrap gap-1">
-												{#each p.required_fields as rf}
-													<span class="text-[10px] font-mono font-bold px-2 py-0.5 bg-primary-fixed/40 text-primary rounded-md border border-primary/20">
-														{rf}
-													</span>
-												{/each}
-											</div>
-										</div>
-									{/if}
-								</div>
-							</div>
+							<ProgramCard
+								program={p}
+								isAdmin={true}
+								onedit={openEditProgModal}
+								ondelete={handleDeleteProgram}
+							/>
 						{/each}
 					</div>
 				</div>

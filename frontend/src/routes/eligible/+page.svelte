@@ -1,6 +1,6 @@
 <!-- src/routes/eligible/+page.svelte -->
 <script lang="ts">
-	import { fetchEligiblePrograms, fetchPrograms } from '$lib/api/programs';
+	import { fetchEligiblePrograms, fetchPrograms, formatUniName } from '$lib/api/programs';
 	import { fetchUniversities } from '$lib/api/university';
 	import type { EligibleProgram, University } from '$lib/types/models';
 	import { authState } from '$lib/state/auth.svelte';
@@ -227,7 +227,7 @@
 								</div>
 							{/if}
 							<div>
-								<h3 class="text-2xl font-extrabold text-on-surface leading-tight">{prog.university_name}</h3>
+								<h3 class="text-2xl font-extrabold text-on-surface leading-tight" title={prog.university_name}>{formatUniName(prog.university_name)}</h3>
 								<p class="text-xs font-semibold text-on-surface-variant">{prog.program_name}</p>
 							</div>
 						</div>

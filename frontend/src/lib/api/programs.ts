@@ -3,6 +3,18 @@
 import { apiFetch } from './client';
 import type { Program, EligibleProgram } from '$lib/types/models';
 
+export function formatUniName(name: string): string {
+	if (!name) return 'Public University';
+	let clean = name.trim();
+
+
+	if (clean.length > 24) {
+		clean = clean.replace(/\.\s*\(/g, ' (').replace(/\(\s*\)/g, '').trim();
+	}
+
+	return clean;
+}
+
 export function normalizeProgram(raw: any): Program {
 	if (!raw) return raw;
 

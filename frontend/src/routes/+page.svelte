@@ -3,6 +3,8 @@
 	import { fetchStats, fetchFeatures, fetchTestimonials } from '$lib/api/landing';
 	import { fetchPrograms } from '$lib/api/programs';
 	import { fetchUniversities } from '$lib/api/university';
+	import ProgramCard from '$lib/components/ProgramCard.svelte';
+	import UniversityCard from '$lib/components/UniversityCard.svelte';
 	import type { Stat, Feature, Testimonial } from '$lib/types/landing';
 	import type { Program, University } from '$lib/types/models';
 	import { authState } from '$lib/state/auth.svelte';
@@ -152,7 +154,7 @@
 			<input
 				type="text"
 				bind:value={searchKeyword}
-				placeholder="Search universities, programs, or units (e.g. Computer Science, Unit A)..."
+				placeholder="Search universities, programs, or units (e.g. BUET, Unit A)..."
 				class="w-full bg-transparent border-none text-base text-on-surface placeholder:text-outline p-3 focus:outline-none focus:ring-0"
 			/>
 			<button type="submit" class="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-container transition-all shrink-0 cursor-pointer">
@@ -212,73 +214,7 @@
 				{:else}
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{#each programsList.slice(0, 6) as prog}
-							<div class="glass-panel p-6 rounded-[2.5rem] border border-outline-variant/40 bg-white/95 shadow-md hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between space-y-5 group">
-								<div class="space-y-4">
-									<!-- University Header with Logo -->
-									<div class="flex items-center gap-3.5 border-b border-outline-variant/20 pb-3.5">
-										{#if getUniLogo(prog)}
-											<img
-												src={getUniLogo(prog)}
-												alt={prog.university_name || prog.u_name}
-												class="w-12 h-12 rounded-2xl object-contain p-1 border border-outline-variant/30 bg-white shadow-xs shrink-0"
-											/>
-										{:else}
-											<div class="w-12 h-12 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center font-black text-xl shrink-0 shadow-xs">
-												{(prog.university_name || prog.u_name || 'U').charAt(0)}
-											</div>
-										{/if}
-
-										<div class="flex-1 min-w-0">
-											<h5 class="text-xs font-black uppercase text-primary tracking-wider truncate">
-												{prog.university_name || prog.u_name || 'Public University'}
-											</h5>
-											{#if prog.university_location || prog.location}
-												<p class="text-[11px] font-semibold text-on-surface-variant flex items-center gap-1 truncate mt-0.5">
-													<MapPin class="w-3 h-3 text-tertiary shrink-0" />
-													{prog.university_location || prog.location}
-												</p>
-											{/if}
-										</div>
-
-										<span class="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed text-[11px] font-extrabold uppercase shrink-0">
-											Unit {prog.p_unit || 'A'}
-										</span>
-									</div>
-
-									<!-- Program Details -->
-									<div class="space-y-1">
-										<div class="flex items-center justify-between">
-											<span class="text-[10px] font-mono font-bold text-outline uppercase tracking-wider">Circular #{prog.program_id}</span>
-											<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Verified Program</span>
-										</div>
-										<h4 class="text-xl font-black text-on-surface group-hover:text-primary transition-colors leading-tight">{prog.p_name}</h4>
-									</div>
-
-									<!-- Key Parameters Grid -->
-									<div class="grid grid-cols-3 gap-2 text-xs font-semibold pt-1">
-										<div class="bg-surface-container-low/80 p-2.5 rounded-2xl border border-outline-variant/20 text-center">
-											<span class="block text-[10px] uppercase font-bold text-outline">Total Seats</span>
-											<span class="font-black text-on-surface text-sm">{prog.total_seats}</span>
-										</div>
-										<div class="bg-surface-container-low/80 p-2.5 rounded-2xl border border-outline-variant/20 text-center">
-											<span class="block text-[10px] uppercase font-bold text-outline">Cutmark</span>
-											<span class="font-black text-primary text-sm">{prog.prev_cutmarks || 'N/A'}</span>
-										</div>
-										<div class="bg-surface-container-low/80 p-2.5 rounded-2xl border border-outline-variant/20 text-center">
-											<span class="block text-[10px] uppercase font-bold text-outline">Deadline</span>
-											<span class="font-extrabold text-on-surface font-mono text-[11px] block mt-0.5">{prog.deadline ? prog.deadline.split('T')[0] : 'TBA'}</span>
-										</div>
-									</div>
-								</div>
-
-								<a
-									href={`/apply/${prog.program_id}`}
-									class="w-full py-3.5 px-4 rounded-2xl font-bold text-xs text-white bg-primary hover:bg-primary-container shadow-md transition-all flex items-center justify-center gap-2 group-hover:shadow-lg group-hover:shadow-primary/25 cursor-pointer"
-								>
-									<span>Apply Now</span>
-									<ArrowRight class="w-4 h-4" />
-								</a>
-							</div>
+							<ProgramCard program={prog} uniLogo={getUniLogo(prog)} />
 						{/each}
 					</div>
 
@@ -308,73 +244,7 @@
 				{:else}
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{#each universitiesList.slice(0, 6) as uni}
-							<div class="glass-panel p-6 rounded-[2.5rem] border border-outline-variant/40 bg-white/95 shadow-md hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between space-y-5 group">
-								<div class="space-y-4">
-									<!-- Header with Logo, Name, Location & Official Website Link -->
-									<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-outline-variant/20 pb-3.5">
-										<div class="flex items-center gap-3.5">
-											{#if uni.logo_url}
-												<img src={uni.logo_url} alt={uni.u_name} class="w-12 h-12 rounded-2xl object-contain p-1 border border-outline-variant/30 shadow-sm bg-white shrink-0" />
-											{:else}
-												<div class="w-12 h-12 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center font-black text-xl shrink-0">
-													{uni.u_name.charAt(0)}
-												</div>
-											{/if}
-											<div>
-												<h4 class="text-xl font-black text-on-surface group-hover:text-primary transition-colors leading-tight">{uni.u_name}</h4>
-												{#if uni.location}
-													<p class="text-xs font-bold text-on-surface-variant flex items-center gap-1 mt-0.5">
-														<MapPin class="w-3.5 h-3.5 text-tertiary shrink-0" />
-														{uni.location}
-													</p>
-												{/if}
-											</div>
-										</div>
-
-										{#if uni.website}
-											<a
-												href={uni.website}
-												target="_blank"
-												rel="noopener noreferrer"
-												class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-fixed/50 hover:bg-primary-fixed text-primary text-[11px] font-extrabold transition-all border border-primary/20 self-start sm:self-auto shadow-xs hover:shadow-sm shrink-0"
-												title="Visit Official University Website"
-											>
-												<Globe class="w-3.5 h-3.5 text-primary shrink-0" />
-												<span>Official Website</span>
-												<ExternalLink class="w-3 h-3 text-primary/80 shrink-0" />
-											</a>
-										{/if}
-									</div>
-
-									<!-- Both Description & History -->
-									<div class="space-y-2.5">
-										{#if uni.university_description}
-											<div class="space-y-0.5 text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
-												{@html uni.university_description}
-											</div>
-										{/if}
-
-										{#if uni.university_history}
-											<div class="space-y-0.5">
-												<span class="text-[10px] font-mono font-bold uppercase tracking-wider text-outline">History</span>
-												<div class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
-													{@html uni.university_history}
-												</div>
-											</div>
-										{/if}
-									</div>
-								</div>
-
-								<div class="pt-2 border-t border-outline-variant/20">
-									<a
-										href={`/universities/${uni.u_id}`}
-										class="w-full py-3.5 px-4 rounded-2xl font-extrabold text-xs text-white bg-primary hover:bg-primary-container shadow-md shadow-primary/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 group-hover:shadow-primary/25"
-									>
-										<span>View University Details</span>
-										<ArrowRight class="w-4 h-4" />
-									</a>
-								</div>
-							</div>
+							<UniversityCard university={uni} />
 						{/each}
 					</div>
 
