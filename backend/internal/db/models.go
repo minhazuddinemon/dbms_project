@@ -260,12 +260,12 @@ type StudentSubjectMark struct {
 
 type University struct {
 	UID                   int32          `json:"u_id"`
-	UName                 string         `json:"u_name"`
 	Website               string         `json:"website"`
 	Location              sql.NullString `json:"location"`
 	LogoUrl               sql.NullString `json:"logo_url"`
 	UniversityDescription sql.NullString `json:"university_description"`
 	UniversityHistory     sql.NullString `json:"university_history"`
+	UName                 string         `json:"u_name"`
 }
 
 type UniversityAlbum struct {

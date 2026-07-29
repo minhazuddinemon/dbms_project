@@ -44,7 +44,7 @@ type Querier interface {
 	GetStudentTestResults(ctx context.Context, studentID int32) ([]GetStudentTestResultsRow, error)
 	GetUniversityAlbum(ctx context.Context, uID int32) ([]UniversityAlbum, error)
 	GetUniversityApplications(ctx context.Context, uID int32) ([]GetUniversityApplicationsRow, error)
-	GetUniversityByID(ctx context.Context, uID int32) (University, error)
+	GetUniversityByID(ctx context.Context, uID int32) (GetUniversityByIDRow, error)
 	GetUniversityDepartments(ctx context.Context, uID int32) ([]UniversityDepartment, error)
 	GetUniversityTransportRoutes(ctx context.Context, uID int32) ([]UniversityTransport, error)
 	InsertAdmissionTest(ctx context.Context, arg InsertAdmissionTestParams) (sql.Result, error)
@@ -56,7 +56,7 @@ type Querier interface {
 	InsertUniversityTransportRoute(ctx context.Context, arg InsertUniversityTransportRouteParams) (sql.Result, error)
 	ListPrograms(ctx context.Context, arg ListProgramsParams) ([]ListProgramsRow, error)
 	ListProgramsByUniversity(ctx context.Context, uID int32) ([]Program, error)
-	ListUniversities(ctx context.Context) ([]University, error)
+	ListUniversities(ctx context.Context) ([]ListUniversitiesRow, error)
 	RecordPayment(ctx context.Context, arg RecordPaymentParams) (sql.Result, error)
 	RecordTestResult(ctx context.Context, arg RecordTestResultParams) error
 	UpdateAdmissionTest(ctx context.Context, arg UpdateAdmissionTestParams) (sql.Result, error)

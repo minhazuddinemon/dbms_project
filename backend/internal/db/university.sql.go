@@ -95,9 +95,19 @@ FROM University
 WHERE u_id = ?
 `
 
-func (q *Queries) GetUniversityByID(ctx context.Context, uID int32) (University, error) {
+type GetUniversityByIDRow struct {
+	UID                   int32          `json:"u_id"`
+	UName                 string         `json:"u_name"`
+	Website               string         `json:"website"`
+	Location              sql.NullString `json:"location"`
+	LogoUrl               sql.NullString `json:"logo_url"`
+	UniversityDescription sql.NullString `json:"university_description"`
+	UniversityHistory     sql.NullString `json:"university_history"`
+}
+
+func (q *Queries) GetUniversityByID(ctx context.Context, uID int32) (GetUniversityByIDRow, error) {
 	row := q.db.QueryRowContext(ctx, getUniversityByID, uID)
-	var i University
+	var i GetUniversityByIDRow
 	err := row.Scan(
 		&i.UID,
 		&i.UName,

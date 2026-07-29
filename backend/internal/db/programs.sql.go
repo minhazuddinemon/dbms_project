@@ -382,26 +382,32 @@ func (q *Queries) ListProgramsByUniversity(ctx context.Context, uID int32) ([]Pr
 }
 
 const listUniversities = `-- name: ListUniversities :many
-SELECT u_id, u_name, website, location, logo_url, university_description, university_history FROM University
+SELECT u_id, u_name, website, location, logo_url FROM University
 `
 
-func (q *Queries) ListUniversities(ctx context.Context) ([]University, error) {
+type ListUniversitiesRow struct {
+	UID      int32          `json:"u_id"`
+	UName    string         `json:"u_name"`
+	Website  string         `json:"website"`
+	Location sql.NullString `json:"location"`
+	LogoUrl  sql.NullString `json:"logo_url"`
+}
+
+func (q *Queries) ListUniversities(ctx context.Context) ([]ListUniversitiesRow, error) {
 	rows, err := q.db.QueryContext(ctx, listUniversities)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []University
+	var items []ListUniversitiesRow
 	for rows.Next() {
-		var i University
+		var i ListUniversitiesRow
 		if err := rows.Scan(
 			&i.UID,
 			&i.UName,
 			&i.Website,
 			&i.Location,
 			&i.LogoUrl,
-			&i.UniversityDescription,
-			&i.UniversityHistory,
 		); err != nil {
 			return nil, err
 		}

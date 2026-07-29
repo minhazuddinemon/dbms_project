@@ -287,14 +287,6 @@ Returns all universities.
     "logo_url": {
       "String": "https://example.com/buet.png",
       "Valid": true
-    },
-    "university_description": {
-      "String": "A leading engineering university.",
-      "Valid": true
-    },
-    "university_history": {
-      "String": "Founded in ...",
-      "Valid": true
     }
   }
 ]
