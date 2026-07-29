@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -27,8 +28,8 @@ func (h *Handler) HandleAdminLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Load from env or static values
-	adminEmail := "admin@system.com"
-	adminPassword := "admin123secret"
+	adminEmail := os.Getenv("admin@system.com")
+	adminPassword := os.Getenv("admin123secret")
 
 	// Verify Credentials directly
 	if req.Email != adminEmail || req.Password != adminPassword {
