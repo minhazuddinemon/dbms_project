@@ -12,6 +12,7 @@ import (
 type Querier interface {
 	AddStudentAcademic(ctx context.Context, arg AddStudentAcademicParams) error
 	AdminUpdateApplicationStatus(ctx context.Context, arg AdminUpdateApplicationStatusParams) error
+	CheckExistingApplication(ctx context.Context, arg CheckExistingApplicationParams) (int32, error)
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (sql.Result, error)
 	CreateNotification(ctx context.Context, arg CreateNotificationParams) (sql.Result, error)
 	CreatePayment(ctx context.Context, arg CreatePaymentParams) (sql.Result, error)

@@ -685,6 +685,16 @@ Creates an application for a program if required profile fields are complete.
 }
 ```
 
+#### Already applied response `409 Conflict`
+
+```json
+{
+  "status": "already_applied",
+  "message": "You have already applied to this program.",
+  "app_id": 14
+}
+```
+
 #### Other possible errors
 
 - `401 Unauthorized`

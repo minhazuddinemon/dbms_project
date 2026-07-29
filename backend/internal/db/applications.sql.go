@@ -10,6 +10,24 @@ import (
 	"database/sql"
 )
 
+const checkExistingApplication = `-- name: CheckExistingApplication :one
+SELECT app_id
+FROM Application
+WHERE student_id = ? AND program_id = ? LIMIT 1
+`
+
+type CheckExistingApplicationParams struct {
+	StudentID int32 `json:"student_id"`
+	ProgramID int32 `json:"program_id"`
+}
+
+func (q *Queries) CheckExistingApplication(ctx context.Context, arg CheckExistingApplicationParams) (int32, error) {
+	row := q.db.QueryRowContext(ctx, checkExistingApplication, arg.StudentID, arg.ProgramID)
+	var app_id int32
+	err := row.Scan(&app_id)
+	return app_id, err
+}
+
 const createApplication = `-- name: CreateApplication :execresult
 INSERT INTO Application (program_id, student_id, status)
 VALUES (?, ?, 'Pending')

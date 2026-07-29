@@ -4,10 +4,10 @@ services:
     container_name: admission_db
     restart: always
     environment:
-      MARIADB_USER: ${DB_USER:-admission_user}
-      MARIADB_PASSWORD: ${DB_PASSWORD:-secretpassword}
-      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
-      MARIADB_DATABASE: ${DB_NAME:-admission_db}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
     ports:
       - "3307:3306"
     volumes:

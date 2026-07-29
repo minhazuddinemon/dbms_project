@@ -29,3 +29,8 @@ WHERE program_id = ?;
 SELECT field_name
 FROM Student_Profile_Info
 WHERE student_id = ?;
+
+-- name: CheckExistingApplication :one
+SELECT app_id
+FROM Application
+WHERE student_id = ? AND program_id = ? LIMIT 1;

@@ -198,7 +198,23 @@ func (h *Handler) ApplyToProgram(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 6. If no fields are missing, insert the application! (Changed h.DB to h.Queries)
+	// 6. Check if student has already applied to this program
+	existingApp, err := h.Queries.CheckExistingApplication(ctx, db.CheckExistingApplicationParams{
+		StudentID: studentID,
+		ProgramID: req.ProgramID,
+	})
+	if err == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]any{
+			"status":  "already_applied",
+			"message": "You have already applied to this program.",
+			"app_id":  existingApp,
+		})
+		return
+	}
+
+	// 7. If no fields are missing and not applied yet, insert the application! (Changed h.DB to h.Queries)
 	res, err := h.Queries.CreateApplication(ctx, db.CreateApplicationParams{
 		StudentID: studentID,
 		ProgramID: req.ProgramID,

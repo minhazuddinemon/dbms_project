@@ -1,0 +1,1 @@
+ALTER TABLE University MODIFY u_name VARCHAR(150) NOT NULL;
