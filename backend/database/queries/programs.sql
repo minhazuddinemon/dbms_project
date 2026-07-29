@@ -1,5 +1,5 @@
 -- name: ListUniversities :many
-SELECT u_id, u_name, website, location, logo_url FROM University;
+SELECT u_id, u_name, website, location, logo_url, university_description, university_history FROM University;
 
 -- name: ListProgramsByUniversity :many
 SELECT * FROM Program

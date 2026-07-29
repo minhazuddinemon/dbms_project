@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"dbms-project/internal/db"
 )
@@ -248,6 +249,16 @@ func (h *Handler) HandleUpdateUniversity(w http.ResponseWriter, r *http.Request)
 	})
 }
 
+type UniversityOverviewResponse struct {
+	UID              int32  `json:"u_id"`
+	UName            string `json:"u_name"`
+	Website          string `json:"website"`
+	Location         string `json:"location"`
+	LogoURL          string `json:"logo_url"`
+	ShortDescription string `json:"university_description"`
+	ShortHistory     string `json:"university_history"`
+}
+
 // GET /universities (Public - Frontend List)
 func (h *Handler) HandleListUniversities(w http.ResponseWriter, r *http.Request) {
 	universities, err := h.Queries.ListUniversities(r.Context())
@@ -256,9 +267,25 @@ func (h *Handler) HandleListUniversities(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	response := make([]UniversityOverviewResponse, 0, len(universities))
+	for _, u := range universities {
+		desc := nullStringToString(u.UniversityDescription)
+		history := nullStringToString(u.UniversityHistory)
+
+		response = append(response, UniversityOverviewResponse{
+			UID:              u.UID,
+			UName:            extractNickname(u.UName),
+			Website:          u.Website,
+			Location:         nullStringToString(u.Location),
+			LogoURL:          nullStringToString(u.LogoUrl),
+			ShortDescription: extractShortDescription(desc),
+			ShortHistory:     extractShortHistory(history),
+		})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(universities)
+	json.NewEncoder(w).Encode(response)
 }
 
 // GET /universities/detail?u_id=1 (Public - Frontend Detail View)
@@ -311,20 +338,73 @@ func (h *Handler) HandleGetUniversityByID(w http.ResponseWriter, r *http.Request
 	}
 
 	resp := UniversityDetailResponse{
-		UID:                   university.UID,
-		UName:                 university.UName,
-		Website:               university.Website,
-		Location:              nullStringToString(university.Location),
-		LogoURL:               nullStringToString(university.LogoUrl),
-		Description:           nullStringToString(university.UniversityDescription),
-		History:               nullStringToString(university.UniversityHistory),
-		Departments:           deptResponses,
-		Album:                 albumResponses,
+		UID:         university.UID,
+		UName:       extractNameWithoutNickname(university.UName),
+		Website:     university.Website,
+		Location:    nullStringToString(university.Location),
+		LogoURL:     nullStringToString(university.LogoUrl),
+		Description: extractHTMLComponent(nullStringToString(university.UniversityDescription)),
+		History:     extractHTMLComponent(nullStringToString(university.UniversityHistory)),
+		Departments: deptResponses,
+		Album:       albumResponses,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resp)
+}
+
+// --- String Parsing Helper Functions ---
+
+func extractNickname(fullName string) string {
+	start := strings.Index(fullName, "(")
+	end := strings.Index(fullName, ")")
+	if start != -1 && end > start {
+		return fullName[start+1 : end]
+	}
+	return fullName
+}
+
+func extractNameWithoutNickname(fullName string) string {
+	before, _, ok := strings.Cut(fullName, "(")
+	if ok {
+		name := before
+		name = strings.TrimSuffix(name, ".")
+		return strings.TrimSpace(name)
+	}
+	return fullName
+}
+
+func extractShortDescription(fullDesc string) string {
+	lines := strings.Split(fullDesc, "\n")
+	if len(lines) > 0 {
+		firstLine := strings.TrimSpace(lines[0])
+		if strings.HasPrefix(strings.ToLower(firstLine), "short description:") {
+			return strings.TrimSpace(firstLine[18:])
+		}
+		return firstLine
+	}
+	return fullDesc
+}
+
+func extractShortHistory(fullHistory string) string {
+	lines := strings.Split(fullHistory, "\n")
+	if len(lines) > 0 {
+		firstLine := strings.TrimSpace(lines[0])
+		if strings.HasPrefix(strings.ToLower(firstLine), "short history:") {
+			return strings.TrimSpace(firstLine[14:])
+		}
+		return firstLine
+	}
+	return fullHistory
+}
+
+func extractHTMLComponent(fullText string) string {
+	idx := strings.Index(fullText, "<div")
+	if idx != -1 {
+		return strings.TrimSpace(fullText[idx:])
+	}
+	return fullText
 }
 
 // DELETE /admin/university?u_id=1
