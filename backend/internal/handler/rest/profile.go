@@ -48,3 +48,33 @@ func (h *Handler) HandleUpdateProfile(w http.ResponseWriter, r *http.Request) {
 		"message": "Profile updated successfully!",
 	})
 }
+
+func (h *Handler) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
+	studentID, ok := r.Context().Value(middleware.StudentIDKey).(int32)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	rows, err := h.DB.QueryContext(r.Context(),
+		"SELECT field_name, field_value FROM Student_Profile_Info WHERE student_id = ?",
+		studentID,
+	)
+	if err != nil {
+		http.Error(w, "Failed to fetch profile: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	profileData := make(map[string]string)
+	for rows.Next() {
+		var name, val string
+		if err := rows.Scan(&name, &val); err == nil {
+			profileData[name] = val
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(profileData)
+}

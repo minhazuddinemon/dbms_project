@@ -77,12 +77,14 @@ func main() {
 
 	// Protected Student Routes
 	mux.HandleFunc("GET /profile", middleware.RequireAuth(h.HandleProfile))
+	mux.HandleFunc("GET /student/profile", middleware.RequireAuth(h.HandleGetProfile))
 	mux.HandleFunc("PUT /student/profile", middleware.RequireAuth(h.HandleUpdateProfile))
 	mux.HandleFunc("POST /student/profile", middleware.RequireAuth(h.HandleUpdateProfile))
 	mux.HandleFunc("GET /student/mobile", middleware.RequireAuth(h.HandleGetStudentMobiles))
 	mux.HandleFunc("POST /student/mobile", middleware.RequireAuth(h.HandleAddStudentMobile))
 	mux.HandleFunc("PUT /student/mobile", middleware.RequireAuth(h.HandleUpdateStudentMobile))
 	mux.HandleFunc("DELETE /student/mobile", middleware.RequireAuth(h.HandleDeleteStudentMobile))
+	mux.HandleFunc("GET /student/academic", middleware.RequireAuth(h.HandleGetStudentAcademic))
 	mux.HandleFunc("POST /student/academic", middleware.RequireAuth(h.HandleAddStudentAcademic))
 	mux.HandleFunc("POST /student/subject-marks", middleware.RequireAuth(h.HandleAddStudentSubjectMarks))
 	mux.HandleFunc("GET /student/notifications", middleware.RequireAuth(h.HandleGetStudentNotifications))

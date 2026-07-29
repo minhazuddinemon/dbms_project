@@ -184,3 +184,55 @@ func (h *Handler) HandleGetStudentNotifications(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(notifs)
 }
+
+func (h *Handler) HandleGetStudentAcademic(w http.ResponseWriter, r *http.Request) {
+	studentID, ok := r.Context().Value(middleware.StudentIDKey).(int32)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	rows, err := h.DB.QueryContext(r.Context(),
+		"SELECT exam_level, year, roll_no, reg_no, gpa, board, edu_group FROM Student_Academics WHERE student_id = ?",
+		studentID,
+	)
+	if err != nil {
+		http.Error(w, "Failed to fetch academics: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var academics []StudentAcademicPayload
+	for rows.Next() {
+		var a StudentAcademicPayload
+		if err := rows.Scan(&a.ExamLevel, &a.Year, &a.RollNo, &a.RegNo, &a.Gpa, &a.Board, &a.EduGroup); err == nil {
+			academics = append(academics, a)
+		}
+	}
+
+	subRows, err := h.DB.QueryContext(r.Context(),
+		"SELECT subject_name, marks, grade FROM Student_Subject_Marks WHERE student_id = ?",
+		studentID,
+	)
+	var subjects []SubjectMarkPayload
+	if err == nil {
+		defer subRows.Close()
+		for subRows.Next() {
+			var s SubjectMarkPayload
+			var gradeVal sql.NullString
+			if err := subRows.Scan(&s.SubjectName, &s.Marks, &gradeVal); err == nil {
+				if gradeVal.Valid {
+					s.Grade = gradeVal.String
+				}
+				subjects = append(subjects, s)
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{
+		"academics":     academics,
+		"subject_marks": subjects,
+	})
+}
