@@ -261,7 +261,7 @@
 											<span class="font-black text-on-surface text-sm">{prog.total_seats}</span>
 										</div>
 										<div class="bg-surface-container-low/80 p-2.5 rounded-2xl border border-outline-variant/20 text-center">
-											<span class="block text-[10px] uppercase font-bold text-outline">Prev Cutmark</span>
+											<span class="block text-[10px] uppercase font-bold text-outline">Cutmark</span>
 											<span class="font-black text-primary text-sm">{prog.prev_cutmarks || 'N/A'}</span>
 										</div>
 										<div class="bg-surface-container-low/80 p-2.5 rounded-2xl border border-outline-variant/20 text-center">
@@ -349,19 +349,17 @@
 									<!-- Both Description & History -->
 									<div class="space-y-2.5">
 										{#if uni.university_description}
-											<div class="space-y-0.5">
-												<p class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
-													{uni.university_description}
-												</p>
+											<div class="space-y-0.5 text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
+												{@html uni.university_description}
 											</div>
 										{/if}
 
 										{#if uni.university_history}
 											<div class="space-y-0.5">
 												<span class="text-[10px] font-mono font-bold uppercase tracking-wider text-outline">History</span>
-												<p class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
-													{uni.university_history}
-												</p>
+												<div class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
+													{@html uni.university_history}
+												</div>
 											</div>
 										{/if}
 									</div>

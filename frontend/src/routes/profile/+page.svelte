@@ -1,7 +1,9 @@
 <!-- src/routes/profile/+page.svelte -->
 <script lang="ts">
 	import {
+		fetchStudentProfile,
 		updateStudentProfile,
+		fetchStudentAcademic,
 		saveStudentAcademic,
 		saveStudentSubjectMarks,
 		fetchStudentMobiles,
@@ -26,35 +28,43 @@
 		ArrowLeft,
 		ArrowRight,
 		Award,
-		ShieldCheck
+		ShieldCheck,
+		Image as ImageIcon,
+		FileText,
+		Camera,
+		Upload
 	} from 'lucide-svelte';
 	import { onMount } from 'svelte';
 
-	let presentAddress = $state('Dhaka, Bangladesh');
-	let permanentAddress = $state('Dhaka, Bangladesh');
+	let presentAddress = $state('');
+	let permanentAddress = $state('');
 	let fathersName = $state('');
 	let mothersName = $state('');
 	let bloodGroup = $state('O+');
 	let quota = $state('GENERAL');
+	let photoUrl = $state('');
+	let signatureUrl = $state('');
 
 	// Academics (Compulsory fields)
-	let examLevel = $state('HSC');
-	let passingYear = $state(2022);
-	let rollNo = $state('123456');
-	let regNo = $state('789012');
-	let sscGpa = $state('5.00');
-	let hscGpa = $state('5.00');
+	let regNo = $state('');
+	let sscYear = $state('');
+	let sscRollNo = $state('');
+	let sscGpa = $state('');
+
+	let hscYear = $state('');
+	let hscRollNo = $state('');
+	let hscGpa = $state('');
 	let board = $state('Dhaka');
 	let hscGroup = $state('Science');
 
 	// Subject Marks (Compulsory fields)
-	let physicsMarks = $state('85');
-	let mathMarks = $state('90');
-	let chemistryMarks = $state('88');
+	let physicsMarks = $state('');
+	let mathMarks = $state('');
+	let chemistryMarks = $state('');
 
 	// Saved marks indicator & summary
 	let hasSavedMarks = $state(false);
-	let savedMarksSummary = $state<{ hscGpa: string; physics: string; math: string; chemistry: string } | null>(null);
+	let savedMarksSummary = $state<{ hscGpa: string; sscGpa: string; physics: string; math: string; chemistry: string } | null>(null);
 
 	// Student Mobiles
 	let mobiles = $state<StudentMobile[]>([]);
@@ -62,7 +72,7 @@
 	let newOwnerType = $state<StudentMobileOwnerType>('self');
 	let editingMobileNo = $state<string | null>(null);
 
-	let activeTab = $state<'personal' | 'academics' | 'mobiles' | 'address'>('personal');
+	let activeTab = $state<'personal' | 'academics' | 'documents' | 'mobiles' | 'address'>('personal');
 	let isLoading = $state(false);
 	let successMessage = $state<string | null>(null);
 	let errorMessage = $state<string | null>(null);
@@ -86,11 +96,17 @@
 				if (data.mothersName) mothersName = data.mothersName;
 				if (data.bloodGroup) bloodGroup = data.bloodGroup;
 				if (data.quota) quota = data.quota;
+				if (data.photoUrl) photoUrl = data.photoUrl;
+				if (data.signatureUrl) signatureUrl = data.signatureUrl;
 				if (data.examLevel) examLevel = data.examLevel;
 				if (data.passingYear) passingYear = data.passingYear;
 				if (data.rollNo) rollNo = data.rollNo;
 				if (data.regNo) regNo = data.regNo;
+				if (data.sscYear) sscYear = data.sscYear;
+				if (data.sscRollNo) sscRollNo = data.sscRollNo;
 				if (data.sscGpa) sscGpa = data.sscGpa;
+				if (data.hscYear) hscYear = data.hscYear;
+				if (data.hscRollNo) hscRollNo = data.hscRollNo;
 				if (data.hscGpa) hscGpa = data.hscGpa;
 				if (data.board) board = data.board;
 				if (data.hscGroup) hscGroup = data.hscGroup;
@@ -101,7 +117,19 @@
 				if (data.hscGpa && data.physicsMarks && data.mathMarks && data.chemistryMarks) {
 					hasSavedMarks = true;
 					savedMarksSummary = {
+						hscGpa: String(data.hscGpa),
+						sscGpa:String(data.sscGpa),
+						physics: String(data.physicsMarks),
+						math: String(data.mathMarks),
+						chemistry: String(data.chemistryMarks)
+					};
+				}
+
+				if (data.hscGpa && data.physicsMarks && data.mathMarks && data.chemistryMarks) {
+					hasSavedMarks = true;
+					savedMarksSummary = {
 						hscGpa: data.hscGpa,
+						sscGpa: data.sscGpa,
 						physics: data.physicsMarks,
 						math: data.mathMarks,
 						chemistry: data.chemistryMarks
@@ -113,10 +141,74 @@
 		}
 	}
 
-	onMount(() => {
+	async function loadProfileDataFromBackend() {
+		try {
+			// 1. Fetch Profile Fields (Addresses, Guardian Info, Documents)
+			const fields = await fetchStudentProfile();
+			if (fields) {
+				if (fields.PRESENT_ADDRESS) presentAddress = fields.PRESENT_ADDRESS;
+				if (fields.PERMANENT_ADDRESS) permanentAddress = fields.PERMANENT_ADDRESS;
+				if (fields.FATHERS_NAME) fathersName = fields.FATHERS_NAME;
+				if (fields.MOTHERS_NAME) mothersName = fields.MOTHERS_NAME;
+				if (fields.BLOOD_GROUP) bloodGroup = fields.BLOOD_GROUP;
+				if (fields.QUOTA) quota = fields.QUOTA;
+				if (fields.PHOTO_URL) photoUrl = fields.PHOTO_URL;
+				if (fields.SIGNATURE_URL) signatureUrl = fields.SIGNATURE_URL;
+			}
+		} catch (e) {
+			console.error('Failed to fetch profile fields from backend:', e);
+		}
+
+		try {
+			// 2. Fetch Academics & Subject Marks
+			const res = await fetchStudentAcademic();
+			if (res && res.academics && res.academics.length > 0) {
+				for (const a of res.academics) {
+					if (a.reg_no) regNo = a.reg_no;
+					if (a.board) board = a.board;
+					if (a.edu_group) hscGroup = a.edu_group;
+
+					if (a.exam_level === 'SSC') {
+						if (a.year) sscYear = a.year;
+						if (a.roll_no) sscRollNo = a.roll_no;
+						if (a.gpa) sscGpa = a.gpa;
+					} else if (a.exam_level === 'HSC') {
+						if (a.year) hscYear = a.year;
+						if (a.roll_no) hscRollNo = a.roll_no;
+						if (a.gpa) hscGpa = a.gpa;
+					}
+				}
+			}
+
+			if (res && res.subject_marks && res.subject_marks.length > 0) {
+				for (const sm of res.subject_marks) {
+					const nameLower = sm.subject_name.toLowerCase();
+					if (nameLower.includes('physics')) physicsMarks = sm.marks;
+					else if (nameLower.includes('math')) mathMarks = sm.marks;
+					else if (nameLower.includes('chem')) chemistryMarks = sm.marks;
+				}
+			}
+		} catch (e) {
+			console.error('Failed to fetch academics from backend:', e);
+		}
+
+		if (hscGpa && physicsMarks && mathMarks && chemistryMarks) {
+			hasSavedMarks = true;
+			savedMarksSummary = {
+				hscGpa: String(hscGpa),
+				sscGpa: String(sscGpa),
+				physics: String(physicsMarks),
+				math: String(mathMarks),
+				chemistry: String(chemistryMarks)
+			};
+		}
+	}
+
+	onMount(async () => {
 		if (authState.isAuthenticated) {
 			loadMobiles();
 			loadSavedAcademicProfile();
+			await loadProfileDataFromBackend();
 		}
 	});
 
@@ -126,51 +218,74 @@
 		successMessage = null;
 		errorMessage = null;
 
+		const isFilled = (val: any): boolean => {
+			if (val === null || val === undefined) return false;
+			return String(val).trim().length > 0;
+		};
+
 		// Compulsory Academic Marks Validation
 		if (
-			!rollNo.trim() ||
-			!regNo.trim() ||
-			!sscGpa.trim() ||
-			!hscGpa.trim() ||
-			!physicsMarks.trim() ||
-			!mathMarks.trim() ||
-			!chemistryMarks.trim()
+			!isFilled(regNo) ||
+			!isFilled(sscRollNo) ||
+			!isFilled(sscGpa) ||
+			!isFilled(hscRollNo) ||
+			!isFilled(hscGpa) ||
+			!isFilled(physicsMarks) ||
+			!isFilled(mathMarks) ||
+			!isFilled(chemistryMarks)
 		) {
-			errorMessage = 'Academic marks (Roll No, Reg No, SSC GPA, HSC GPA, Physics, Mathematics, and Chemistry marks) are compulsory to save your profile!';
+			errorMessage = 'Academic marks (Registration No, SSC Roll, SSC GPA, HSC Roll, HSC GPA, Physics, Mathematics, and Chemistry marks) are compulsory to save your profile!';
 			toastState.error(errorMessage);
 			isLoading = false;
 			return;
 		}
 
 		try {
-			// 1. Update basic profile info
+			// 1. Update basic profile info & required documents
 			await updateStudentProfile({
-				PRESENT_ADDRESS: presentAddress,
-				PERMANENT_ADDRESS: permanentAddress,
-				FATHERS_NAME: fathersName,
-				MOTHERS_NAME: mothersName,
-				BLOOD_GROUP: bloodGroup,
-				QUOTA: quota
+				PRESENT_ADDRESS: String(presentAddress || ''),
+				PERMANENT_ADDRESS: String(permanentAddress || ''),
+				FATHERS_NAME: String(fathersName || ''),
+				MOTHERS_NAME: String(mothersName || ''),
+				BLOOD_GROUP: String(bloodGroup || 'O+'),
+				QUOTA: String(quota || 'GENERAL'),
+				PHOTO_URL: String(photoUrl || ''),
+				SIGNATURE_URL: String(signatureUrl || '')
 			});
 
-			// 2. Save Academic Record (SSC & HSC)
+			// 2. Save SSC Academic Record
+			try {
+				await saveStudentAcademic({
+					exam_level: 'SSC',
+					year: Number(sscYear),
+					roll_no: String(sscRollNo),
+					reg_no: String(regNo),
+					gpa: String(sscGpa),
+					board: String(board),
+					edu_group: String(hscGroup)
+				});
+			} catch (e) {
+				// Ignore duplicate key if already saved
+			}
+
+			// 3. Save HSC Academic Record
 			await saveStudentAcademic({
-				exam_level: examLevel,
-				year: Number(passingYear),
-				roll_no: rollNo,
-				reg_no: regNo,
-				gpa: hscGpa,
-				board: board,
-				edu_group: hscGroup
+				exam_level: 'HSC',
+				year: Number(hscYear),
+				roll_no: String(hscRollNo),
+				reg_no: String(regNo),
+				gpa: String(hscGpa),
+				board: String(board),
+				edu_group: String(hscGroup)
 			});
 
-			// 3. Save HSC Subject Marks
+			// 4. Save HSC Subject Marks
 			await saveStudentSubjectMarks({
 				exam_level: 'HSC',
 				subjects: [
-					{ subject_name: 'Physics', marks: physicsMarks, grade: 'A+' },
-					{ subject_name: 'Mathematics', marks: mathMarks, grade: 'A+' },
-					{ subject_name: 'Chemistry', marks: chemistryMarks, grade: 'A+' }
+					{ subject_name: 'Physics', marks: String(physicsMarks), grade: 'A+' },
+					{ subject_name: 'Mathematics', marks: String(mathMarks), grade: 'A+' },
+					{ subject_name: 'Chemistry', marks: String(chemistryMarks), grade: 'A+' }
 				]
 			});
 
@@ -182,32 +297,40 @@
 				mothersName,
 				bloodGroup,
 				quota,
-				examLevel,
-				passingYear,
-				rollNo,
-				regNo,
-				sscGpa,
-				hscGpa,
+				photoUrl,
+				signatureUrl,
+				regNo: String(regNo),
+				sscYear: Number(sscYear),
+				sscRollNo: String(sscRollNo),
+				sscGpa: String(sscGpa),
+				hscYear: Number(hscYear),
+				hscRollNo: String(hscRollNo),
+				hscGpa: String(hscGpa),
 				board,
 				hscGroup,
-				physicsMarks,
-				mathMarks,
-				chemistryMarks,
+				physicsMarks: String(physicsMarks),
+				mathMarks: String(mathMarks),
+				chemistryMarks: String(chemistryMarks),
 				savedAt: new Date().toISOString()
 			};
 			localStorage.setItem('uniapp_student_academic_profile', JSON.stringify(academicProfileData));
 			localStorage.setItem('uniapp_profile_created', 'true');
 			hasSavedMarks = true;
 			savedMarksSummary = {
-				hscGpa,
-				physics: physicsMarks,
-				math: mathMarks,
-				chemistry: chemistryMarks
+				hscGpa: String(hscGpa),
+				sscGpa: String(sscGpa),
+				physics: String(physicsMarks),
+				math: String(mathMarks),
+				chemistry: String(chemistryMarks)
 			};
 
 			successMessage = 'Profile, Academic Records & Subject Marks saved successfully!';
+			// SINGLE UNIFIED TOAST
+			toastState.success('Academic profile, exam records & subject marks saved successfully!');
 		} catch (err: any) {
+			console.error('Save profile error:', err);
 			errorMessage = err?.message || 'Failed to update academic profile fields.';
+			toastState.error(errorMessage);
 		} finally {
 			isLoading = false;
 		}
@@ -301,9 +424,9 @@
 							<ShieldCheck class="w-6 h-6" />
 						</div>
 						<div>
-							<h4 class="font-extrabold text-sm text-emerald-950">Submitted Academic Marks Active</h4>
+							<h4 class="font-extrabold text-sm text-emerald-950">Submitted Academic Marks</h4>
 							<p class="text-xs text-emerald-700 font-semibold mt-0.5">
-								HSC GPA: <strong>{savedMarksSummary.hscGpa}</strong> | Physics: <strong>{savedMarksSummary.physics}</strong> | Math: <strong>{savedMarksSummary.math}</strong> | Chemistry: <strong>{savedMarksSummary.chemistry}</strong>
+								HSC GPA: <strong>{savedMarksSummary.hscGpa}</strong> | SSC GPA: <strong>{savedMarksSummary.sscGpa}</strong> | Physics: <strong>{savedMarksSummary.physics}</strong> | Math: <strong>{savedMarksSummary.math}</strong> | Chemistry: <strong>{savedMarksSummary.chemistry}</strong>
 							</p>
 						</div>
 					</div>
@@ -345,11 +468,19 @@
 				</button>
 				<button
 					type="button"
+					onclick={() => activeTab = 'documents'}
+					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'documents' ? 'bg-white text-primary shadow-sm border border-outline-variant/30' : 'text-on-surface-variant hover:text-on-surface'}"
+				>
+					<Camera class="w-4 h-4" />
+					Photos & Docs
+				</button>
+				<button
+					type="button"
 					onclick={() => activeTab = 'mobiles'}
 					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'mobiles' ? 'bg-white text-primary shadow-sm border border-outline-variant/30' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
 					<Phone class="w-4 h-4" />
-					Mobile Numbers ({mobiles.length})
+					Mobiles ({mobiles.length})
 				</button>
 				<button
 					type="button"
@@ -534,21 +665,10 @@
 								<span class="text-xs font-extrabold text-error bg-error-container/60 px-3 py-1 rounded-full uppercase tracking-wider">Compulsory</span>
 							</div>
 
-							<div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+							<!-- Shared Identification & Board -->
+							<div class="grid grid-cols-1 sm:grid-cols-3 gap-6 p-4 rounded-2xl bg-surface-container-low/50 border border-outline-variant/30">
 								<div class="space-y-1.5">
-									<label for="rollNo" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">HSC Roll No <span class="text-error">*</span></label>
-									<input
-										id="rollNo"
-										type="text"
-										bind:value={rollNo}
-										placeholder="123456"
-										required
-										class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
-									/>
-								</div>
-
-								<div class="space-y-1.5">
-									<label for="regNo" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">HSC Registration No <span class="text-error">*</span></label>
+									<label for="regNo" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Registration No <span class="text-error">*</span></label>
 									<input
 										id="regNo"
 										type="text"
@@ -579,30 +699,6 @@
 								</div>
 
 								<div class="space-y-1.5">
-									<label for="sscGpa" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">SSC GPA <span class="text-error">*</span></label>
-									<input
-										id="sscGpa"
-										type="text"
-										bind:value={sscGpa}
-										placeholder="5.00"
-										required
-										class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
-									/>
-								</div>
-
-								<div class="space-y-1.5">
-									<label for="hscGpa" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">HSC GPA <span class="text-error">*</span></label>
-									<input
-										id="hscGpa"
-										type="text"
-										bind:value={hscGpa}
-										placeholder="5.00"
-										required
-										class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
-									/>
-								</div>
-
-								<div class="space-y-1.5">
 									<label for="hscGroup" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">HSC Group <span class="text-error">*</span></label>
 									<select
 										id="hscGroup"
@@ -616,9 +712,86 @@
 								</div>
 							</div>
 
-							<div class="pt-4 space-y-4">
-								<span class="block text-sm font-extrabold text-on-surface uppercase tracking-wider">HSC Subject Marks (Out of 100) <span class="text-error">*</span></span>
-								<div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+							<!-- SSC Academic Details -->
+							<div class="space-y-3">
+								<span class="block text-xs font-extrabold text-on-surface uppercase tracking-wider">Secondary School Certificate (SSC) Details</span>
+								<div class="grid grid-cols-1 sm:grid-cols-3 gap-6 p-4 rounded-2xl bg-white border border-outline-variant/30 shadow-xs">
+									<div class="space-y-1.5">
+										<label for="sscYear" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">SSC Exam Year <span class="text-error">*</span></label>
+										<input
+											id="sscYear"
+											type="number"
+											bind:value={sscYear}
+											placeholder="2022"
+											class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
+										/>
+									</div>
+									<div class="space-y-1.5">
+										<label for="sscRollNo" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">SSC Roll No <span class="text-error">*</span></label>
+										<input
+											id="sscRollNo"
+											type="text"
+											bind:value={sscRollNo}
+											placeholder="123456"
+											class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
+										/>
+									</div>
+									<div class="space-y-1.5">
+										<label for="sscGpa" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">SSC GPA <span class="text-error">*</span></label>
+										<input
+											id="sscGpa"
+											type="text"
+											bind:value={sscGpa}
+											placeholder="5.00"
+										required
+											class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
+										/>
+									</div>
+								</div>
+							</div>
+
+							<!-- HSC Academic Details -->
+							<div class="space-y-3">
+								<span class="block text-xs font-extrabold text-on-surface uppercase tracking-wider">Higher Secondary Certificate (HSC) Details</span>
+								<div class="grid grid-cols-1 sm:grid-cols-3 gap-6 p-4 rounded-2xl bg-white border border-outline-variant/30 shadow-xs">
+									<div class="space-y-1.5">
+										<label for="hscYear" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">HSC Exam Year <span class="text-error">*</span></label>
+										<input
+											id="hscYear"
+											type="number"
+											bind:value={hscYear}
+											placeholder="2024"
+											class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
+										/>
+									</div>
+									<div class="space-y-1.5">
+										<label for="hscRollNo" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">HSC Roll No <span class="text-error">*</span></label>
+										<input
+											id="hscRollNo"
+											type="text"
+											bind:value={hscRollNo}
+											placeholder="654321"
+											class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
+										/>
+									</div>
+									<div class="space-y-1.5">
+										<label for="hscGpa" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">HSC GPA <span class="text-error">*</span></label>
+										<input
+											id="hscGpa"
+											type="text"
+											bind:value={hscGpa}
+											placeholder="5.00"
+										required
+											class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
+										/>
+									</div>
+								</div>
+							</div>
+
+							<!-- HSC Subject Marks -->
+							<div class="pt-2 space-y-3">
+								<span class="block text-xs font-extrabold text-on-surface uppercase tracking-wider">HSC Subject Marks (Out of 100) <span class="text-error">*</span></span>
+								<div class="grid grid-cols-1 sm:grid-cols-3 gap-6 p-4 rounded-2xl bg-white border border-outline-variant/30 shadow-xs">
 									<div class="space-y-1.5">
 										<label for="physics" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Physics <span class="text-error">*</span></label>
 										<input
@@ -655,13 +828,7 @@
 								</div>
 							</div>
 
-							<!-- Compulsory Marks Reminder -->
-							<div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-center gap-2">
-								<AlertCircle class="w-4 h-4 text-amber-600 shrink-0" />
-								<span>Note: Filling HSC/SSC Academic Marks is <strong>compulsory</strong> to save your profile details.</span>
-							</div>
-
-							<!-- Navigation Buttons for Marks & GPA -->
+							<!-- Navigation Buttons for Marks & GPA Tab -->
 							<div class="pt-6 border-t border-outline-variant/30 flex items-center justify-between">
 								<button
 									type="button"
@@ -673,12 +840,122 @@
 								</button>
 								<button
 									type="button"
-									onclick={() => activeTab = 'mobiles'}
+									onclick={() => activeTab = 'documents'}
 									class="px-6 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary-container shadow-md transition-all flex items-center gap-2 text-sm"
 								>
-									Next: Mobile Numbers
+									Next: Photos & Docs
 									<ArrowRight class="w-4 h-4" />
 								</button>
+							</div>
+						</div>
+					{/if}
+
+					<!-- Tab: Photos & Required Documents (PHOTO_URL & SIGNATURE_URL) -->
+					{#if activeTab === 'documents'}
+						<div class="space-y-6 animate-fade-in-up">
+							<div class="flex items-center justify-between border-b border-outline-variant/30 pb-3">
+								<h3 class="text-xl font-extrabold text-on-surface flex items-center gap-2">
+									<Camera class="w-5 h-5 text-primary" />
+									Required Student Documents & Photos
+								</h3>
+							</div>
+
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+								<!-- PHOTO_URL Input & Live Preview -->
+								<div class="space-y-3 bg-surface-container-low/60 p-5 rounded-2xl border border-outline-variant/30">
+									<div class="space-y-1.5">
+										<label for="photoUrl" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+											<Camera class="w-4 h-4 text-primary" />
+											Student Photo URL (PHOTO_URL)
+										</label>
+										<input
+											id="photoUrl"
+											type="url"
+											bind:value={photoUrl}
+											placeholder="https://example.com/student-photo.jpg"
+											class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
+										/>
+									</div>
+
+									<!-- Live Photo Preview Box -->
+									<div class="space-y-1">
+										<span class="text-[11px] font-bold text-outline uppercase tracking-wider">Live Photo Preview</span>
+										<div class="w-32 h-36 rounded-2xl border-2 border-dashed border-outline-variant/50 bg-white flex flex-col items-center justify-center overflow-hidden shadow-inner">
+											{#if photoUrl && photoUrl.trim()}
+												<img
+													src={photoUrl}
+													alt="Student Photo Preview"
+													class="w-full h-full object-cover"
+													onerror={() => toastState.error('Failed to load photo from specified URL')}
+												/>
+											{:else}
+												<div class="text-center p-3 space-y-1">
+													<User class="w-8 h-8 text-outline mx-auto" />
+													<span class="text-[10px] font-bold text-outline block">No Photo URL</span>
+												</div>
+											{/if}
+										</div>
+									</div>
+								</div>
+
+								<!-- SIGNATURE_URL Input & Live Preview -->
+								<div class="space-y-3 bg-surface-container-low/60 p-5 rounded-2xl border border-outline-variant/30">
+									<div class="space-y-1.5">
+										<label for="signatureUrl" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5">
+											<FileText class="w-4 h-4 text-primary" />
+											Digital Signature URL (SIGNATURE_URL)
+										</label>
+										<input
+											id="signatureUrl"
+											type="url"
+											bind:value={signatureUrl}
+											placeholder="https://example.com/student-signature.png"
+											class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
+										/>
+									</div>
+
+									<!-- Live Signature Preview Box -->
+									<div class="space-y-1">
+										<span class="text-[11px] font-bold text-outline uppercase tracking-wider">Live Signature Preview</span>
+										<div class="w-full h-24 rounded-2xl border-2 border-dashed border-outline-variant/50 bg-white flex flex-col items-center justify-center overflow-hidden p-2 shadow-inner">
+											{#if signatureUrl && signatureUrl.trim()}
+												<img
+													src={signatureUrl}
+													alt="Student Signature Preview"
+													class="max-h-full object-contain"
+													onerror={() => toastState.error('Failed to load signature from specified URL')}
+												/>
+											{:else}
+												<div class="text-center p-2 space-y-1">
+													<FileText class="w-6 h-6 text-outline mx-auto" />
+													<span class="text-[10px] font-bold text-outline block">No Signature URL</span>
+												</div>
+											{/if}
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Navigation & Save Buttons for Documents Tab -->
+							<div class="pt-6 border-t border-outline-variant/30 flex flex-wrap items-center justify-between gap-3">
+								<button
+									type="button"
+									onclick={() => activeTab = 'academics'}
+									class="px-6 py-3 rounded-xl font-bold text-on-surface-variant hover:text-on-surface border border-outline-variant/50 hover:bg-surface-container transition-all flex items-center gap-2 text-sm"
+								>
+									<ArrowLeft class="w-4 h-4" />
+									Previous: Marks & GPA
+								</button>
+								<div class="flex gap-2">
+									<button
+										type="button"
+										onclick={() => activeTab = 'mobiles'}
+										class="px-6 py-3 rounded-xl font-bold text-on-surface-variant hover:text-on-surface border border-outline-variant/50 hover:bg-surface-container transition-all flex items-center gap-2 text-sm"
+									>
+										Next: Mobile Numbers
+										<ArrowRight class="w-4 h-4" />
+									</button>
+								</div>
 							</div>
 						</div>
 					{/if}

@@ -10,13 +10,39 @@ import type {
 	StudentNotification
 } from '$lib/types/models';
 
+export async function fetchStudentProfile(): Promise<Record<string, string>> {
+	return apiFetch<Record<string, string>>('/student/profile', {
+		method: 'GET'
+	});
+}
+
 export async function updateStudentProfile(
 	fields: Record<string, string>
 ): Promise<{ status: string; message: string }> {
 	return apiFetch<{ status: string; message: string }>('/student/profile', {
 		method: 'POST',
-		body: JSON.stringify(fields),
-		showSuccessToast: 'Profile updated successfully!'
+		body: JSON.stringify(fields)
+	});
+}
+
+export async function fetchStudentAcademic(): Promise<{
+	academics: Array<{
+		exam_level: string;
+		year: number;
+		roll_no: string;
+		reg_no: string;
+		gpa: string;
+		board: string;
+		edu_group: string;
+	}>;
+	subject_marks: Array<{
+		subject_name: string;
+		marks: string;
+		grade?: string;
+	}>;
+}> {
+	return apiFetch<any>('/student/academic', {
+		method: 'GET'
 	});
 }
 
@@ -60,8 +86,7 @@ export async function saveStudentAcademic(
 ): Promise<{ message: string }> {
 	return apiFetch<{ message: string }>('/student/academic', {
 		method: 'POST',
-		body: JSON.stringify(payload),
-		showSuccessToast: 'Academic record saved successfully!'
+		body: JSON.stringify(payload)
 	});
 }
 
@@ -70,8 +95,7 @@ export async function saveStudentSubjectMarks(
 ): Promise<{ message: string }> {
 	return apiFetch<{ message: string }>('/student/subject-marks', {
 		method: 'POST',
-		body: JSON.stringify(payload),
-		showSuccessToast: 'Subject marks saved successfully!'
+		body: JSON.stringify(payload)
 	});
 }
 

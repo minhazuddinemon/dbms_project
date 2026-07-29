@@ -135,19 +135,17 @@
 							<!-- Both Description & History -->
 							<div class="space-y-3">
 								{#if uni.university_description}
-									<div class="space-y-1">
-										<p class="text-xs text-on-surface-variant line-clamp-3 leading-relaxed">
-											{uni.university_description}
-										</p>
+									<div class="space-y-1 text-xs text-on-surface-variant line-clamp-3 leading-relaxed">
+										{@html uni.university_description}
 									</div>
 								{/if}
 
 								{#if uni.university_history}
 									<div class="space-y-1">
 										<span class="text-[10px] font-mono font-bold uppercase tracking-wider text-outline">History</span>
-										<p class="text-xs text-on-surface-variant line-clamp-3 leading-relaxed">
-											{uni.university_history}
-										</p>
+										<div class="text-xs text-on-surface-variant line-clamp-3 leading-relaxed">
+											{@html uni.university_history}
+										</div>
 									</div>
 								{/if}
 							</div>

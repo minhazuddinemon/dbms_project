@@ -1,6 +1,7 @@
 <!-- src/routes/admin/+page.svelte -->
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import {
 		adminLogin,
 		fetchUniversityApplications,
@@ -21,8 +22,8 @@
 		updateUniversityTransport,
 		deleteUniversityTransport
 	} from '$lib/api/admin';
-	import { fetchUniversities, fetchUniversityTransport } from '$lib/api/university';
-	import { fetchPrograms } from '$lib/api/programs';
+	import { fetchUniversities, fetchUniversityByID, fetchUniversityTransport } from '$lib/api/university';
+	import { fetchPrograms, fetchProgramByID } from '$lib/api/programs';
 	import { authState } from '$lib/state/auth.svelte';
 	import { getAdminToken } from '$lib/api/client';
 	import { toastState } from '$lib/state/toast.svelte';
@@ -31,7 +32,8 @@
 		Program,
 		StudentApplication,
 		ProgramEligibilityRule,
-		UniversityTransport
+		UniversityTransport,
+		RequiredProfileField
 	} from '$lib/types/models';
 	import {
 		Shield,
@@ -51,12 +53,15 @@
 		Clock,
 		Image as ImageIcon,
 		Users,
+		Eye,
+		EyeOff,
 		X
 	} from 'lucide-svelte';
 
-	let isAdminLoggedIn = $state(!!getAdminToken());
-	let adminEmail = $state('admin@system.com');
-	let adminPassword = $state('admin123secret');
+	let isAdminLoggedIn = $derived(authState.isAdmin);
+	let adminEmail = $state('');
+	let adminPassword = $state('');
+	let showAdminPassword = $state(false);
 
 	let activeTab = $state<'universities' | 'programs' | 'applications' | 'eligibility' | 'transport' | 'publish' | 'admissiontests'>('universities');
 	let isLoading = $state(false);
@@ -169,7 +174,37 @@
 	let progSeats = $state<number>(100);
 	let progCutmarks = $state<number>(80.0);
 	let progDeadline = $state('2026-12-31');
+	let progFee = $state<number>(500);
 	let progUniId = $state<number>(1);
+	let progRequiredFields = $state<RequiredProfileField[]>([
+		'PRESENT_ADDRESS',
+		'PERMANENT_ADDRESS',
+		'FATHERS_NAME',
+		'MOTHERS_NAME',
+		'BLOOD_GROUP',
+		'QUOTA',
+		'PHOTO_URL',
+		'SIGNATURE_URL'
+	]);
+
+	const availableRequiredFields: RequiredProfileField[] = [
+		'PRESENT_ADDRESS',
+		'PERMANENT_ADDRESS',
+		'FATHERS_NAME',
+		'MOTHERS_NAME',
+		'BLOOD_GROUP',
+		'QUOTA',
+		'PHOTO_URL',
+		'SIGNATURE_URL'
+	];
+
+	function toggleRequiredField(field: RequiredProfileField) {
+		if (progRequiredFields.includes(field)) {
+			progRequiredFields = progRequiredFields.filter(f => f !== field);
+		} else {
+			progRequiredFields = [...progRequiredFields, field];
+		}
+	}
 
 	async function handleAdminLogin(e: Event) {
 		e.preventDefault();
@@ -191,10 +226,13 @@
 
 	function handleAdminLogout() {
 		authState.logout();
-		isAdminLoggedIn = false;
+		adminEmail = '';
+		adminPassword = '';
+		showAdminPassword = false;
 		universities = [];
 		programs = [];
 		applications = [];
+		goto('/admin');
 	}
 
 	onMount(() => {
@@ -214,19 +252,25 @@
 			if (universities.length > 0) {
 				selectedUniversityID = universities[0].u_id;
 				transportUniversityID = universities[0].u_id;
-				await Promise.all([
-					loadApplications(selectedUniversityID),
-					loadTransport(transportUniversityID)
-				]);
 			}
 			if (programs.length > 0) {
 				selectedProgramID = programs[0].program_id;
-				await loadEligibilityRules(selectedProgramID);
 			}
 		} catch (err: any) {
 			console.error(err);
 		} finally {
 			isLoading = false;
+		}
+	}
+
+	function switchTab(tab: typeof activeTab) {
+		activeTab = tab;
+		if (tab === 'applications' && selectedUniversityID) {
+			loadApplications(selectedUniversityID);
+		} else if (tab === 'eligibility' && selectedProgramID) {
+			loadEligibilityRules(selectedProgramID);
+		} else if (tab === 'transport' && transportUniversityID) {
+			loadTransport(transportUniversityID);
 		}
 	}
 
@@ -268,7 +312,7 @@
 		showUniModal = true;
 	}
 
-	function openEditUniModal(u: University) {
+	async function openEditUniModal(u: University) {
 		editingUniId = u.u_id;
 		uniName = u.u_name;
 		uniWebsite = u.website;
@@ -279,6 +323,33 @@
 		uniDepartments = u.departments ? u.departments.map(d => ({ dept_name: d.dept_name, dept_description: d.dept_description, total_seats: d.total_seats })) : [];
 		uniAlbum = u.album ? u.album.map(a => ({ picture_title: a.picture_title, picture_url: a.picture_url })) : [];
 		showUniModal = true;
+
+		try {
+			const fullUni = await fetchUniversityByID(u.u_id);
+			if (fullUni) {
+				uniName = fullUni.u_name || uniName;
+				uniWebsite = fullUni.website || uniWebsite;
+				uniLocation = fullUni.location || uniLocation;
+				uniLogoUrl = fullUni.logo_url || uniLogoUrl;
+				uniDescription = fullUni.university_description || uniDescription;
+				uniHistory = fullUni.university_history || uniHistory;
+				if (fullUni.departments && fullUni.departments.length > 0) {
+					uniDepartments = fullUni.departments.map(d => ({
+						dept_name: d.dept_name,
+						dept_description: d.dept_description,
+						total_seats: d.total_seats
+					}));
+				}
+				if (fullUni.album && fullUni.album.length > 0) {
+					uniAlbum = fullUni.album.map(a => ({
+						picture_title: a.picture_title,
+						picture_url: a.picture_url
+					}));
+				}
+			}
+		} catch (err) {
+			console.error('Failed to load full university details:', err);
+		}
 	}
 
 	async function handleSaveUniversity(e: Event) {
@@ -330,19 +401,65 @@
 		progSeats = 100;
 		progCutmarks = 80.0;
 		progDeadline = '2026-12-31';
+		progFee = 500;
+		progRequiredFields = ['PRESENT_ADDRESS', 'PERMANENT_ADDRESS', 'FATHERS_NAME', 'MOTHERS_NAME', 'BLOOD_GROUP', 'QUOTA', 'PHOTO_URL', 'SIGNATURE_URL'];
 		progUniId = universities.length > 0 ? universities[0].u_id : 1;
 		showProgModal = true;
 	}
 
-	function openEditProgModal(p: Program) {
+	async function openEditProgModal(p: Program) {
 		editingProgId = p.program_id;
 		progName = p.p_name;
 		progUnit = p.p_unit || 'A';
 		progSeats = p.total_seats;
 		progCutmarks = typeof p.prev_cutmarks === 'number' ? p.prev_cutmarks : parseFloat(String(p.prev_cutmarks) || '80');
 		progDeadline = p.deadline ? p.deadline.split('T')[0] : '2026-12-31';
+
+		const parseFee = (fee: any): number => {
+			if (fee === undefined || fee === null || fee === '') return 500;
+			if (typeof fee === 'number') return isNaN(fee) ? 500 : fee;
+			if (typeof fee === 'string') {
+				const n = parseFloat(fee);
+				return isNaN(n) ? 500 : n;
+			}
+			if (typeof fee === 'object' && fee.String) {
+				const n = parseFloat(fee.String);
+				return isNaN(n) ? 500 : n;
+			}
+			return 500;
+		};
+
+		progFee = parseFee(p.application_fee);
+		progRequiredFields = p.required_fields || [
+			'PRESENT_ADDRESS',
+			'PERMANENT_ADDRESS',
+			'FATHERS_NAME',
+			'MOTHERS_NAME',
+			'BLOOD_GROUP',
+			'QUOTA',
+			'PHOTO_URL',
+			'SIGNATURE_URL'
+		];
 		progUniId = p.u_id;
 		showProgModal = true;
+
+		try {
+			const fullProg = await fetchProgramByID(p.program_id);
+			if (fullProg) {
+				progName = fullProg.p_name || progName;
+				progUnit = fullProg.p_unit || progUnit;
+				progSeats = fullProg.total_seats || progSeats;
+				progCutmarks = typeof fullProg.prev_cutmarks === 'number' ? fullProg.prev_cutmarks : parseFloat(String(fullProg.prev_cutmarks) || '80');
+				progDeadline = fullProg.deadline ? fullProg.deadline.split('T')[0] : progDeadline;
+				progFee = parseFee(fullProg.application_fee);
+				if (fullProg.required_fields && fullProg.required_fields.length > 0) {
+					progRequiredFields = fullProg.required_fields;
+				}
+				progUniId = fullProg.u_id || progUniId;
+			}
+		} catch (err) {
+			console.error('Failed to load full program details:', err);
+		}
 	}
 
 	async function handleSaveProgram(e: Event) {
@@ -355,7 +472,9 @@
 				total_seats: Number(progSeats),
 				prev_cutmarks: Number(progCutmarks),
 				deadline: progDeadline,
-				u_id: Number(progUniId)
+				u_id: Number(progUniId),
+				application_fee: Number(progFee),
+				required_fields: progRequiredFields
 			};
 			if (editingProgId) {
 				await updateProgram(editingProgId, payload);
@@ -522,6 +641,7 @@
 							id="adminEmail"
 							type="email"
 							bind:value={adminEmail}
+							placeholder="admin@gmail.com"
 							required
 							class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
 						/>
@@ -529,13 +649,28 @@
 
 					<div class="space-y-1">
 						<label for="adminPass" class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant">Admin Password</label>
-						<input
-							id="adminPass"
-							type="password"
-							bind:value={adminPassword}
-							required
-							class="w-full px-4 py-3 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
-						/>
+						<div class="relative">
+							<input
+								id="adminPass"
+								type={showAdminPassword ? 'text' : 'password'}
+								bind:value={adminPassword}
+								placeholder="Enter admin password"
+								required
+								class="w-full px-4 py-3 pr-11 rounded-xl border border-outline-variant/50 focus:ring-2 focus:ring-primary/40 text-sm bg-white"
+							/>
+							<button
+								type="button"
+								onclick={() => showAdminPassword = !showAdminPassword}
+								class="absolute right-3.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors p-1"
+								title={showAdminPassword ? 'Hide Password' : 'Show Password'}
+							>
+								{#if showAdminPassword}
+									<EyeOff class="w-4 h-4" />
+								{:else}
+									<Eye class="w-4 h-4" />
+								{/if}
+							</button>
+						</div>
 					</div>
 
 					<button
@@ -571,43 +706,43 @@
 			<!-- Navigation Tabs -->
 			<div class="flex items-center gap-2 bg-white/80 p-2 rounded-2xl border border-outline-variant/30 shadow-sm overflow-x-auto">
 				<button
-					onclick={() => activeTab = 'universities'}
+					onclick={() => switchTab('universities')}
 					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'universities' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
 					<Building2 class="w-4 h-4" /> Universities & Depts
 				</button>
 				<button
-					onclick={() => activeTab = 'programs'}
+					onclick={() => switchTab('programs')}
 					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'programs' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
 					<BookOpen class="w-4 h-4" /> Programs
 				</button>
 				<button
-					onclick={() => activeTab = 'eligibility'}
+					onclick={() => switchTab('eligibility')}
 					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'eligibility' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
 					<Award class="w-4 h-4" /> Cutoff Rules
 				</button>
 				<button
-					onclick={() => activeTab = 'transport'}
+					onclick={() => switchTab('transport')}
 					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'transport' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
 					<Bus class="w-4 h-4" /> Transport Routes
 				</button>
 				<button
-					onclick={() => activeTab = 'admissiontests'}
+					onclick={() => switchTab('admissiontests')}
 					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'admissiontests' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
 					<Clock class="w-4 h-4" /> Admission Tests
 				</button>
 				<button
-					onclick={() => activeTab = 'publish'}
+					onclick={() => switchTab('publish')}
 					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'publish' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
 					<Send class="w-4 h-4" /> Publish Results
 				</button>
 				<button
-					onclick={() => activeTab = 'applications'}
+					onclick={() => switchTab('applications')}
 					class="flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap {activeTab === 'applications' ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:text-on-surface'}"
 				>
 					<FileCheck class="w-4 h-4" /> Applications
@@ -664,14 +799,17 @@
 									{/if}
 
 									{#if u.university_description}
-										<p class="text-xs text-on-surface-variant line-clamp-2">{u.university_description}</p>
+										<div class="space-y-0.5 text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
+											{@html u.university_description}
+										</div>
 									{/if}
 
-									<!-- Departments & Album Summary -->
-									<div class="pt-2 border-t border-outline-variant/30 flex items-center justify-between text-xs text-on-surface-variant font-semibold">
-										<span>{u.departments ? u.departments.length : 0} Departments</span>
-										<span>{u.album ? u.album.length : 0} Photos</span>
-									</div>
+									{#if u.university_history}
+										<div class="space-y-0.5">
+											<span class="text-[10px] font-bold text-outline uppercase tracking-wider block">History</span>
+											<div class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">{@html u.university_history}</div>
+										</div>
+									{/if}
 								</div>
 							</div>
 						{/each}
@@ -695,13 +833,13 @@
 						</button>
 					</div>
 
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{#each programs as p}
 							<div class="glass-panel p-6 rounded-[2rem] border border-outline-variant/40 bg-white/95 shadow-md flex flex-col justify-between space-y-4">
-								<div class="space-y-2">
+								<div class="space-y-3">
 									<div class="flex items-center justify-between">
 										<span class="text-xs font-mono font-bold text-outline">ID #{p.program_id}</span>
-										<div class="flex gap-2">
+										<div class="flex gap-1.5">
 											<button onclick={() => openEditProgModal(p)} class="p-1.5 rounded-lg text-primary hover:bg-primary-fixed/40 transition-colors">
 												<Edit3 class="w-4 h-4" />
 											</button>
@@ -710,9 +848,44 @@
 											</button>
 										</div>
 									</div>
-									<h4 class="text-xl font-bold text-on-surface">{p.p_name}</h4>
-									<p class="text-xs font-semibold text-primary">Unit {p.p_unit || 'A'} | Seats: {p.total_seats}</p>
-									<p class="text-xs text-on-surface-variant">Prev Cutmark: {p.prev_cutmarks || '80.0'}</p>
+
+									<div>
+										<h4 class="text-xl font-black text-on-surface leading-tight">{p.p_name}</h4>
+										<p class="text-xs font-bold text-primary mt-0.5">{p.university_name || p.u_name || 'University ID #' + p.u_id}</p>
+									</div>
+
+									<div class="grid grid-cols-2 gap-2 text-xs font-semibold bg-surface-container-low/60 p-3 rounded-xl border border-outline-variant/30">
+										<div>
+											<span class="text-[10px] text-outline font-bold uppercase block">Unit & Seats</span>
+											<span class="text-on-surface">Unit {p.p_unit || 'A'} • {p.total_seats} seats</span>
+										</div>
+										<div>
+											<span class="text-[10px] text-outline font-bold uppercase block">App Fee</span>
+											<span class="text-emerald-700 font-extrabold">{p.application_fee ? `৳${p.application_fee}` : '৳500.00'}</span>
+										</div>
+										<div>
+											<span class="text-[10px] text-outline font-bold uppercase block">Cutmarks</span>
+											<span class="text-on-surface">{p.prev_cutmarks || '80.00'}</span>
+										</div>
+										<div>
+											<span class="text-[10px] text-outline font-bold uppercase block">Deadline</span>
+											<span class="text-on-surface">{p.deadline ? p.deadline.split('T')[0] : 'N/A'}</span>
+										</div>
+									</div>
+
+									<!-- Required Attributes Badges -->
+									{#if p.required_fields && p.required_fields.length > 0}
+										<div class="space-y-1 pt-1">
+											<span class="text-[10px] font-bold text-outline uppercase tracking-wider block">Required Documents & Info:</span>
+											<div class="flex flex-wrap gap-1">
+												{#each p.required_fields as rf}
+													<span class="text-[10px] font-mono font-bold px-2 py-0.5 bg-primary-fixed/40 text-primary rounded-md border border-primary/20">
+														{rf}
+													</span>
+												{/each}
+											</div>
+										</div>
+									{/if}
 								</div>
 							</div>
 						{/each}
@@ -986,25 +1159,40 @@
 							<div class="divide-y divide-outline-variant/30 space-y-4">
 								{#each applications as app}
 									<div class="pt-4 first:pt-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-										<div>
+										<div class="space-y-1">
 											<div class="flex items-center gap-2">
-												<h4 class="font-bold text-on-surface text-base">App #{app.app_id}</h4>
-												<span class="text-xs font-bold px-2.5 py-0.5 rounded-full {app.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : app.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}">
+												<h4 class="font-black text-on-surface text-base">App #{app.app_id}</h4>
+												<span class="text-xs font-bold px-2.5 py-0.5 rounded-full {app.status === 'APPROVED' || app.status === 'Accepted' ? 'bg-emerald-100 text-emerald-700' : app.status === 'VERIFIED' || app.status === 'Verified' ? 'bg-blue-100 text-blue-700' : app.status === 'REJECTED' || app.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}">
 													{app.status}
 												</span>
 											</div>
-											<p class="text-xs text-on-surface-variant mt-1">Student ID: {app.student_id} | Program ID: {app.program_id}</p>
+											<p class="text-xs font-bold text-primary">
+												{app.program_name ? app.program_name : 'Program #' + app.program_id}
+											</p>
+											<p class="text-xs text-on-surface-variant">
+												Student: {app.first_name ? `${app.first_name} ${app.last_name || ''}` : `ID #${app.student_id}`} {app.email ? `(${app.email})` : ''}
+											</p>
+											{#if app.sub_date}
+												<p class="text-[10px] text-outline font-medium">Submitted: {new Date(app.sub_date).toLocaleString()}</p>
+											{/if}
 										</div>
-										<div class="flex gap-2">
+
+										<div class="flex flex-wrap gap-2 shrink-0">
 											<button
 												onclick={() => handleUpdateStatus(app.app_id, 'APPROVED')}
-												class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1"
+												class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-xs"
 											>
 												<CheckCircle2 class="w-3.5 h-3.5" /> Approve
 											</button>
 											<button
+												onclick={() => handleUpdateStatus(app.app_id, 'VERIFIED')}
+												class="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-1 shadow-xs"
+											>
+												<ShieldCheck class="w-3.5 h-3.5" /> Verify
+											</button>
+											<button
 												onclick={() => handleUpdateStatus(app.app_id, 'REJECTED')}
-												class="px-4 py-2 rounded-xl text-xs font-bold bg-error text-white hover:bg-red-700 transition-colors flex items-center gap-1"
+												class="px-3.5 py-2 rounded-xl text-xs font-bold bg-error text-white hover:bg-red-700 transition-colors flex items-center gap-1 shadow-xs"
 											>
 												<XCircle class="w-3.5 h-3.5" /> Reject
 											</button>
@@ -1156,13 +1344,39 @@
 						<input id="pDead" type="date" bind:value={progDeadline} required class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 text-sm" />
 					</div>
 				</div>
-				<div>
-					<label for="pUni" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">University</label>
-					<select id="pUni" bind:value={progUniId} class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 text-sm">
-						{#each universities as u}
-							<option value={u.u_id}>{u.u_name}</option>
+				<div class="grid grid-cols-2 gap-3">
+					<div>
+						<label for="pFee" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">Application Fee (BDT)</label>
+						<input id="pFee" type="number" step="10" bind:value={progFee} required class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 text-sm" />
+					</div>
+					<div>
+						<label for="pUni" class="block text-xs font-bold uppercase text-on-surface-variant mb-1">University</label>
+						<select id="pUni" bind:value={progUniId} class="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/50 text-sm">
+							{#each universities as u}
+								<option value={u.u_id}>{u.u_name}</option>
+							{/each}
+						</select>
+					</div>
+				</div>
+
+				<!-- Required Student Attributes Checklist -->
+				<div class="space-y-2 pt-1">
+					<label class="block text-xs font-extrabold uppercase tracking-wider text-on-surface-variant">
+						Required Student Attributes & Docs
+					</label>
+					<div class="grid grid-cols-2 gap-1.5 p-3 rounded-2xl bg-surface-container-low/60 border border-outline-variant/30 text-xs">
+						{#each availableRequiredFields as field}
+							<label class="flex items-center gap-2 font-semibold text-on-surface select-none cursor-pointer hover:text-primary transition-colors">
+								<input
+									type="checkbox"
+									checked={progRequiredFields.includes(field)}
+									onchange={() => toggleRequiredField(field)}
+									class="rounded text-primary focus:ring-primary/40 w-3.5 h-3.5"
+								/>
+								<span class="truncate">{field}</span>
+							</label>
 						{/each}
-					</select>
+					</div>
 				</div>
 				<div class="flex gap-3 pt-2">
 					<button type="button" onclick={() => showProgModal = false} class="flex-1 py-2.5 px-4 rounded-xl font-semibold border text-sm">Cancel</button>

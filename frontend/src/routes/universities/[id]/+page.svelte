@@ -128,9 +128,9 @@
 								<Building2 class="w-5 h-5 text-primary" />
 								About {university.u_name}
 							</h3>
-							<p class="text-on-surface-variant leading-relaxed text-sm whitespace-pre-line">
-								{university.university_description}
-							</p>
+							<div class="text-on-surface-variant leading-relaxed text-sm prose prose-slate max-w-none">
+								{@html university.university_description}
+							</div>
 						</div>
 					{/if}
 
@@ -140,9 +140,9 @@
 								<History class="w-5 h-5 text-tertiary" />
 								University History
 							</h3>
-							<p class="text-on-surface-variant leading-relaxed text-sm whitespace-pre-line">
-								{university.university_history}
-							</p>
+							<div class="text-on-surface-variant leading-relaxed text-sm prose prose-slate max-w-none">
+								{@html university.university_history}
+							</div>
 						</div>
 					{/if}
 

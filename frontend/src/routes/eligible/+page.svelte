@@ -227,7 +227,7 @@
 								</div>
 							{/if}
 							<div>
-								<h3 class="text-2xl font-extrabold text-on-surface leading-tight">{prog.university_name || 'BUET'}</h3>
+								<h3 class="text-2xl font-extrabold text-on-surface leading-tight">{prog.university_name}</h3>
 								<p class="text-xs font-semibold text-on-surface-variant">{prog.program_name}</p>
 							</div>
 						</div>
@@ -244,16 +244,6 @@
 									<TrendingUp class="w-4 h-4 text-emerald-600" />
 									<p class="text-sm font-black text-emerald-600">Eligible</p>
 								</div>
-							</div>
-						</div>
-
-						<!-- Eligible Departments Tags -->
-						<div class="space-y-2">
-							<p class="text-xs font-bold text-outline uppercase tracking-wider">Eligible Departments</p>
-							<div class="flex flex-wrap gap-2">
-								<span class="px-2.5 py-1 rounded-lg bg-secondary-fixed/50 text-on-secondary-fixed text-xs font-bold">CSE</span>
-								<span class="px-2.5 py-1 rounded-lg bg-primary-fixed/50 text-on-primary-fixed text-xs font-bold">EEE</span>
-								<span class="px-2.5 py-1 rounded-lg bg-tertiary-fixed/40 text-on-tertiary-fixed-variant text-xs font-bold">Architecture</span>
 							</div>
 						</div>
 

@@ -31,7 +31,7 @@ JOIN University u ON p.u_id = u.u_id
 WHERE
     (p.p_name LIKE CONCAT('%', ?, '%') OR u.u_name LIKE CONCAT('%', ?, '%'))
     AND (p.p_unit = ? OR ? = '')
-ORDER BY p.program_id DESC;
+ORDER BY p.program_id ASC;
 
 -- name: GetProgramByID :one
 SELECT

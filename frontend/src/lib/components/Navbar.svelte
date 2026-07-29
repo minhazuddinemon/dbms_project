@@ -1,6 +1,8 @@
 <!-- src/lib/components/Navbar.svelte -->
 <script lang="ts">
 	import { authState } from '$lib/state/auth.svelte';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import {
 		GraduationCap,
 		Building2,
@@ -24,7 +26,13 @@
 	}
 
 	function handleLogout() {
+		const isAdminPage = page.url.pathname.startsWith('/admin');
 		authState.logout();
+		if (isAdminPage) {
+			goto('/admin');
+		} else {
+			goto('/login');
+		}
 	}
 </script>
 

@@ -40,6 +40,8 @@ export interface Program {
 	website?: string;
 	logo_url?: string;
 	university_logo?: string;
+	application_fee?: number | string;
+	required_fields?: RequiredProfileField[];
 }
 
 export interface EligibleProgram {
@@ -122,6 +124,8 @@ export interface ProgramPayload {
 	prev_cutmarks: number;
 	deadline: string;
 	u_id: number;
+	application_fee?: number;
+	required_fields?: RequiredProfileField[];
 }
 
 export interface StudentApplication {
