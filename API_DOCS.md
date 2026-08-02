@@ -245,6 +245,7 @@ GET /programs/detail?id=3
   },
   "deadline": "2026-12-31T00:00:00Z",
   "u_id": 1,
+  "application_fee": "900.00",
   "university_name": "BUET",
   "website": "https://buet.ac.bd",
   "location": {
@@ -715,6 +716,7 @@ Returns all applications of the logged-in student.
     },
     "status": "PAID",
     "program_name": "Computer Science and Engineering",
+    "program_fee": "1200.00",
     "university_name": "BUET"
   }
 ]

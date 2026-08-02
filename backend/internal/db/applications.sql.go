@@ -78,6 +78,7 @@ SELECT
     a.sub_date,
     a.status,
     p.p_name AS program_name,
+    p.application_fee As program_fee,
     u.u_name AS university_name
 FROM Application a
 JOIN Program p ON a.program_id = p.program_id
@@ -92,6 +93,7 @@ type GetStudentApplicationsRow struct {
 	SubDate        sql.NullTime `json:"sub_date"`
 	Status         string       `json:"status"`
 	ProgramName    string       `json:"program_name"`
+	ProgramFee     string       `json:"program_fee"`
 	UniversityName string       `json:"university_name"`
 }
 
@@ -110,6 +112,7 @@ func (q *Queries) GetStudentApplications(ctx context.Context, studentID int32) (
 			&i.SubDate,
 			&i.Status,
 			&i.ProgramName,
+			&i.ProgramFee,
 			&i.UniversityName,
 		); err != nil {
 			return nil, err

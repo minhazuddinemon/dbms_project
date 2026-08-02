@@ -9,6 +9,7 @@ SELECT
     a.sub_date,
     a.status,
     p.p_name AS program_name,
+    p.application_fee As program_fee,
     u.u_name AS university_name
 FROM Application a
 JOIN Program p ON a.program_id = p.program_id
