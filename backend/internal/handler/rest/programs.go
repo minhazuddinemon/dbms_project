@@ -52,7 +52,7 @@ func (h *Handler) HandleGetProgramByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	program, err := h.Queries.GetProgramByID(r.Context(), int32(programID))
+	program, err := h.Queries.GetProgramDetails(r.Context(), int32(programID))
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Program not found", http.StatusNotFound)
