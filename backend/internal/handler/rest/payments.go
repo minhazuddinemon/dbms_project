@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"dbms-project/internal/db"
 	"dbms-project/internal/middleware"
@@ -52,7 +53,8 @@ func (h *Handler) HandleProcessPayment(w http.ResponseWriter, r *http.Request) {
 
 	// 3. Validate transaction ID against .env value
 	envTxID := os.Getenv("VALID_TX_ID")
-	if envTxID != "" && req.TransactionID != envTxID {
+
+	if envTxID != "" && !strings.HasPrefix(req.TransactionID, envTxID) {
 		http.Error(w, "Invalid transaction ID", http.StatusBadRequest)
 		return
 	}
@@ -110,14 +112,15 @@ func (h *Handler) HandleProcessPayment(w http.ResponseWriter, r *http.Request) {
 	// 6. Notify student of successful application & exam details
 	msg := "Your application for program " + app.ProgramName + " is successful!"
 	test, err := qtx.GetAdmissionTestByProgramID(ctx, sql.NullInt32{Int32: app.ProgramID, Valid: true})
-	if err == nil {
+	switch err {
+	case nil:
 		if test.ExamDate.Valid {
 			msg += " The exam will be held on " + test.ExamDate.Time.Format("2006-01-02")
 		}
 		if test.ExamCenter.Valid {
 			msg += " at " + test.ExamCenter.String
 		}
-	} else if err == sql.ErrNoRows {
+	case sql.ErrNoRows:
 		msg += " Exam details will be notified soon."
 	}
 	msg += "."
