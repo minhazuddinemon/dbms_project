@@ -133,6 +133,8 @@ export interface StudentApplication {
 	sub_date: string;
 	status: string;
 	program_id: number;
+	program_fee?: string;
+	application_fee?: string;
 	program_name?: string;
 	university_name?: string;
 	student_id?: number;

@@ -252,7 +252,7 @@
 										Payment Completed
 									</div>
 								{:else}
-									<a href="/payment" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-primary text-white text-sm hover:bg-primary-container shadow-lg shadow-primary/25 transition-all">
+									<a href={`/payment?app_id=${existingApplication.app_id}`} class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold bg-primary text-white text-sm hover:bg-primary-container shadow-lg shadow-primary/25 transition-all">
 										<CreditCard class="w-4 h-4" />
 										Proceed to Payment
 									</a>
@@ -332,7 +332,7 @@
 									<div class="flex items-center justify-between">
 										<div>
 											<span class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider">Application Fee</span>
-											<span class="text-2xl font-black text-on-surface">BDT 500.00</span>
+											<span class="text-2xl font-black text-on-surface">BDT {program?.application_fee}</span>
 										</div>
 										<div class="w-12 h-12 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center">
 											<CreditCard class="w-6 h-6" />

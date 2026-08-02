@@ -1,6 +1,7 @@
 // src/lib/api/admin.ts
 
 import { apiFetch, setAuthToken, setAdminToken } from './client';
+import { normalizeApplication } from './applications';
 import type {
 	AdminLoginResponse,
 	LoginRequest,
@@ -28,9 +29,10 @@ export async function adminLogin(payload: LoginRequest): Promise<AdminLoginRespo
 }
 
 export async function fetchUniversityApplications(uId: number): Promise<StudentApplication[]> {
-	return apiFetch<StudentApplication[]>(`/admin/applications?u_id=${uId}`, {
+	const data = await apiFetch<any[]>(`/admin/applications?u_id=${uId}`, {
 		method: 'GET'
 	});
+	return (data || []).map(normalizeApplication);
 }
 
 export async function updateApplicationStatus(appId: number, status: string): Promise<{ status: string; message: string }> {

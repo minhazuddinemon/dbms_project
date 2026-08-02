@@ -1,8 +1,10 @@
 <!-- src/lib/components/Navbar.svelte -->
 <script lang="ts">
 	import { authState } from '$lib/state/auth.svelte';
+	import { fetchStudentNotifications } from '$lib/api/student';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import {
 		GraduationCap,
 		Building2,
@@ -20,6 +22,30 @@
 	} from 'lucide-svelte';
 
 	let mobileMenuOpen = $state(false);
+	let notificationCount = $state<number>(0);
+
+	async function loadNotifications() {
+		if (authState.isAuthenticated && !authState.isAdmin) {
+			try {
+				const notifs = await fetchStudentNotifications();
+				notificationCount = notifs ? notifs.length : 0;
+			} catch (err) {
+				notificationCount = 0;
+			}
+		} else {
+			notificationCount = 0;
+		}
+	}
+
+	$effect(() => {
+		if (authState.isAuthenticated && !authState.isAdmin) {
+			loadNotifications();
+		}
+	});
+
+	onMount(() => {
+		loadNotifications();
+	});
 
 	function toggleMenu() {
 		mobileMenuOpen = !mobileMenuOpen;
@@ -78,9 +104,14 @@
 					</a>
 
 					<!-- 5. Dashboard (Only if Logged In as student) -->
-					<a href="/dashboard" class="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-white transition-all duration-200 flex items-center gap-2">
+					<a href="/dashboard" class="relative px-4 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-white transition-all duration-200 flex items-center gap-2">
 						<LayoutDashboard class="w-4 h-4 text-primary" />
-						Dashboard
+						<span>Dashboard</span>
+						{#if notificationCount > 0}
+							<span class="inline-flex items-center justify-center h-5 min-w-5 px-1.5 text-[10px] font-black text-white rounded-full bg-red-600 animate-blink-red shadow-sm ml-0.5">
+								{notificationCount}
+							</span>
+						{/if}
 					</a>
 				{/if}
 
@@ -171,8 +202,15 @@
 				<a href="/eligible" onclick={() => mobileMenuOpen = false} class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-on-surface hover:bg-surface-container">
 					<Award class="w-5 h-5 text-tertiary" /> Eligible Uni
 				</a>
-				<a href="/dashboard" onclick={() => mobileMenuOpen = false} class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-on-surface hover:bg-surface-container">
-					<LayoutDashboard class="w-5 h-5 text-primary" /> Dashboard
+				<a href="/dashboard" onclick={() => mobileMenuOpen = false} class="flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-on-surface hover:bg-surface-container">
+					<div class="flex items-center gap-3">
+						<LayoutDashboard class="w-5 h-5 text-primary" /> Dashboard
+					</div>
+					{#if notificationCount > 0}
+						<span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-black text-white rounded-full bg-red-600 animate-blink-red">
+							{notificationCount}
+						</span>
+					{/if}
 				</a>
 			{/if}
 

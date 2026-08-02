@@ -136,7 +136,7 @@
 				class="bg-primary text-white text-base font-bold px-8 py-3.5 rounded-2xl hover:bg-primary-container hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2.5 shadow-lg shadow-primary/25 cursor-pointer"
 			>
 				<Search class="w-5 h-5" />
-				<span>Brose Programs</span>
+				<span>Browse Programs</span>
 			</button>
 			<button
 				type="button"

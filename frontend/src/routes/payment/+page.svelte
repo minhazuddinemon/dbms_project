@@ -7,6 +7,8 @@
 	import type { StudentApplication } from '$lib/types/models';
 	import { CreditCard, CheckCircle2, AlertCircle, ShieldCheck, ArrowRight, DollarSign, Wallet, RefreshCw } from 'lucide-svelte';
 
+	import { page } from '$app/state';
+
 	let selectedMethod = $state<'bKash' | 'Nagad' | 'Card'>('bKash');
 	let txId = $state('');
 	let selectedAppId = $state<number | null>(null);
@@ -16,13 +18,18 @@
 
 	let applications = $state<StudentApplication[]>([]);
 	let pendingApplications = $derived(applications.filter(a => a.status !== 'PAID' && a.status !== 'APPROVED'));
+	let selectedApp = $derived(pendingApplications.find(a => a.app_id === selectedAppId) || null);
+	let selectedAppFee = $derived(selectedApp?.program_fee || selectedApp?.application_fee);
 
 	async function reloadApplications() {
 		if (!authState.isAuthenticated) return;
 		try {
 			applications = await fetchStudentApplications();
 			if (pendingApplications.length > 0) {
-				if (!selectedAppId || !pendingApplications.some(a => a.app_id === selectedAppId)) {
+				const urlAppId = Number(page.url.searchParams.get('app_id'));
+				if (urlAppId && pendingApplications.some(a => a.app_id === urlAppId)) {
+					selectedAppId = urlAppId;
+				} else if (!selectedAppId || !pendingApplications.some(a => a.app_id === selectedAppId)) {
 					selectedAppId = pendingApplications[0].app_id;
 				}
 			} else {
@@ -47,7 +54,7 @@
 		try {
 			await processPayment({
 				application_id: selectedAppId,
-				amount: "500.00",
+				amount: String(selectedAppFee),
 				payment_method: selectedMethod,
 				transaction_id: txId
 			});
@@ -127,7 +134,7 @@
 										<p class="text-sm font-semibold text-on-surface-variant">{app.university_name || 'University'}</p>
 									</div>
 									<div class="text-right">
-										<span class="block text-2xl font-black text-primary">BDT 500.00</span>
+										<span class="block text-2xl font-black text-primary">BDT {app.program_fee || app.application_fee || '500.00'}</span>
 										<span class="text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full uppercase tracking-wider">{app.status}</span>
 									</div>
 								</button>
@@ -219,7 +226,7 @@
 							{#if isProcessing}
 								<span>Verifying Payment...</span>
 							{:else}
-								<span>Submit Payment BDT 500.00</span>
+								<span>Submit Payment BDT {selectedAppFee}</span>
 								<ArrowRight class="w-4 h-4" />
 							{/if}
 						</button>

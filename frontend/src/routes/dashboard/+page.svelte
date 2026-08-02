@@ -94,13 +94,19 @@
 			</div>
 		</div>
 
-		<!-- Notifications Alert Widget -->
-		{#if notifications.length > 0}
-			<div class="glass-panel p-6 rounded-[2.5rem] border border-sky-200 bg-sky-50/70 shadow-md space-y-3">
-				<div class="flex items-center gap-2 text-sky-900 font-extrabold text-base border-b border-sky-200/60 pb-2">
+		<!-- Notifications Alert Widget (Always Visible) -->
+		<div class="glass-panel p-6 rounded-[2.5rem] border border-sky-200/80 bg-sky-50/70 shadow-md space-y-3">
+			<div class="flex items-center justify-between border-b border-sky-200/60 pb-2">
+				<div class="flex items-center gap-2 text-sky-900 font-extrabold text-base">
 					<Bell class="w-5 h-5 text-sky-600" />
-					System Notifications & Announcements ({notifications.length})
+					<span>System Notifications & Announcements</span>
 				</div>
+				<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-100 text-sky-800 border border-sky-200">
+					{notifications.length} {notifications.length === 1 ? 'Notice' : 'Notices'}
+				</span>
+			</div>
+
+			{#if notifications.length > 0}
 				<div class="space-y-2">
 					{#each notifications as n}
 						<div class="p-3.5 rounded-xl bg-white border border-sky-100 shadow-xs flex items-start gap-3">
@@ -112,8 +118,14 @@
 						</div>
 					{/each}
 				</div>
-			</div>
-		{/if}
+			{:else}
+				<div class="p-6 rounded-2xl bg-white/80 border border-sky-100/70 text-center space-y-1">
+					<Bell class="w-8 h-8 text-sky-300 mx-auto" />
+					<p class="text-xs font-bold text-slate-600">No new system notifications</p>
+					<p class="text-[11px] text-slate-400">All admission announcements and application status updates will appear here.</p>
+				</div>
+			{/if}
+		</div>
 
 		<!-- 4 Key Stats Overview -->
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -220,15 +232,28 @@
 									<Building2 class="w-6 h-6" />
 								</div>
 								<div>
-									<h4 class="font-bold text-on-surface text-base">{app.program_name || 'Program #' + app.program_id}</h4>
-									<p class="text-xs text-on-surface-variant">{app.university_name || 'Public University'}</p>
-									<span class="text-xs font-semibold px-3 py-0.5 rounded-full inline-block mt-1.5 {app.status === 'PAID' || app.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-										Status: {app.status}
-									</span>
+									<div class="flex items-center gap-2">
+										<h4 class="font-extrabold text-on-surface text-base">{app.program_name || 'Program #' + app.program_id}</h4>
+										{#if app.app_id}
+											<span class="text-[10px] font-mono font-bold text-outline uppercase">App #{app.app_id}</span>
+										{/if}
+									</div>
+									<p class="text-xs font-bold text-primary mt-0.5">{app.university_name || 'Public University'}</p>
+									<div class="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-on-surface-variant">
+										<span class="font-extrabold px-3 py-0.5 rounded-full inline-block {app.status === 'PAID' || app.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+											Status: {app.status}
+										</span>
+										{#if app.program_fee || app.application_fee}
+											<span class="font-mono font-bold text-slate-700">Fee: BDT {app.program_fee || app.application_fee}</span>
+										{/if}
+										{#if app.sub_date}
+											<span class="text-slate-400 font-mono text-[11px]">Date: {new Date(typeof app.sub_date === 'string' ? app.sub_date : app.sub_date.Time || app.sub_date).toLocaleDateString()}</span>
+										{/if}
+									</div>
 								</div>
 							</div>
 							{#if app.status !== 'PAID' && app.status !== 'APPROVED'}
-								<a href="/payment" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all shadow-md shadow-amber-600/20">
+								<a href={`/payment?app_id=${app.app_id}`} class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all shadow-md shadow-amber-600/20 whitespace-nowrap">
 									Pay Application Fee
 								</a>
 							{/if}
